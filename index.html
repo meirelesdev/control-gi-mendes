@@ -1,0 +1,80 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Gi Finanças - Gestão Financeira de Eventos</title>
+    <link rel="stylesheet" href="styles/main.css">
+</head>
+<body>
+    <div class="app-container">
+        <header class="app-header">
+            <h1>Gi Finanças</h1>
+            <p class="subtitle">Gestão Financeira de Eventos Culinários</p>
+        </header>
+
+        <nav class="app-nav">
+            <a href="#" class="nav-link active" data-view="dashboard">Dashboard</a>
+            <a href="#" class="nav-link" data-view="eventos">Eventos</a>
+            <a href="#" class="nav-link" data-view="despesas">Despesas</a>
+            <a href="#" class="nav-link" data-view="receitas">Receitas</a>
+            <a href="#" class="nav-link" data-view="configuracoes">Configurações</a>
+        </nav>
+
+        <main class="app-main">
+            <div id="app-content"></div>
+        </main>
+    </div>
+
+    <!-- Domain Layer -->
+    <script src="domain/entities/Evento.js"></script>
+    <script src="domain/entities/Despesa.js"></script>
+    <script src="domain/entities/Receita.js"></script>
+    <script src="domain/entities/Configuracao.js"></script>
+    <script src="domain/repositories/IEventoRepository.js"></script>
+    <script src="domain/repositories/IDespesaRepository.js"></script>
+    <script src="domain/repositories/IReceitaRepository.js"></script>
+    <script src="domain/repositories/IConfiguracaoRepository.js"></script>
+
+    <!-- Application Layer -->
+    <script src="application/use-cases/CriarEventoUseCase.js"></script>
+    <script src="application/use-cases/ListarEventosUseCase.js"></script>
+    <script src="application/use-cases/AtualizarEventoUseCase.js"></script>
+    <script src="application/use-cases/RemoverEventoUseCase.js"></script>
+    <script src="application/use-cases/CriarDespesaUseCase.js"></script>
+    <script src="application/use-cases/ListarDespesasUseCase.js"></script>
+    <script src="application/use-cases/AtualizarDespesaUseCase.js"></script>
+    <script src="application/use-cases/MarcarNotaFiscalEmitidaUseCase.js"></script>
+    <script src="application/use-cases/RemoverDespesaUseCase.js"></script>
+    <script src="application/use-cases/CriarReceitaUseCase.js"></script>
+    <script src="application/use-cases/ListarReceitasUseCase.js"></script>
+    <script src="application/use-cases/AtualizarReceitaUseCase.js"></script>
+    <script src="application/use-cases/RemoverReceitaUseCase.js"></script>
+    <script src="application/use-cases/ObterConfiguracaoUseCase.js"></script>
+    <script src="application/use-cases/AtualizarConfiguracaoUseCase.js"></script>
+    <script src="application/use-cases/ObterResumoFinanceiroUseCase.js"></script>
+
+    <!-- Infrastructure Layer -->
+    <script src="infrastructure/repositories/LocalStorageEventoRepository.js"></script>
+    <script src="infrastructure/repositories/LocalStorageDespesaRepository.js"></script>
+    <script src="infrastructure/repositories/LocalStorageReceitaRepository.js"></script>
+    <script src="infrastructure/repositories/LocalStorageConfiguracaoRepository.js"></script>
+
+    <!-- Presentation Layer -->
+    <script src="presentation/controllers/EventoController.js"></script>
+    <script src="presentation/controllers/DespesaController.js"></script>
+    <script src="presentation/controllers/ReceitaController.js"></script>
+    <script src="presentation/controllers/ConfiguracaoController.js"></script>
+    <script src="presentation/controllers/ResumoController.js"></script>
+    <script src="presentation/views/AppView.js"></script>
+    <script src="presentation/views/DashboardView.js"></script>
+    <script src="presentation/views/EventosView.js"></script>
+    <script src="presentation/views/DespesasView.js"></script>
+    <script src="presentation/views/ReceitasView.js"></script>
+    <script src="presentation/views/ConfiguracoesView.js"></script>
+
+    <!-- App Initialization -->
+    <script src="app.js"></script>
+</body>
+</html>
+
