@@ -50,15 +50,14 @@ class AddTransaction {
         throw new Error('Evento não encontrado');
       }
 
-      // Verifica se Transaction está disponível (fallback para cache)
-      let TransactionClass = Transaction;
+      // Importa Transaction dinamicamente para garantir que está disponível
+      // Isso resolve problemas de cache do navegador
+      const TransactionModule = await import('../../domain/entities/Transaction.js');
+      const TransactionClass = TransactionModule.Transaction;
+      
       if (!TransactionClass || typeof TransactionClass.createExpense !== 'function') {
-        console.warn('Transaction não encontrado no import estático, tentando import dinâmico...');
-        const TransactionModule = await import('../../domain/entities/Transaction.js');
-        TransactionClass = TransactionModule.Transaction;
-        if (!TransactionClass) {
-          throw new Error('Transaction não pôde ser importado');
-        }
+        console.error('Transaction não encontrado:', TransactionModule);
+        throw new Error('Transaction não pôde ser carregado. Verifique o console para mais detalhes.');
       }
 
       let transaction;
@@ -137,7 +136,10 @@ class AddTransaction {
     let settings = await this.settingsRepository.find();
     if (!settings) {
       // Se não existir, cria com valores padrão
-      settings = Settings.createDefault();
+      // Importa Settings dinamicamente para evitar problemas de cache
+      const SettingsModule = await import('../../domain/entities/Settings.js');
+      const SettingsClass = SettingsModule.Settings;
+      settings = SettingsClass.createDefault();
       await this.settingsRepository.save(settings);
     }
     return settings;

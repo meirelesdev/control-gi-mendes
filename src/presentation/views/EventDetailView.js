@@ -256,11 +256,18 @@ class EventDetailView {
   }
 
   async markReceiptAsIssued(transactionId) {
-    const transaction = await this.transactionRepository.findById(transactionId);
-    if (transaction) {
-      transaction.markReceiptAsIssued();
-      await this.transactionRepository.save(transaction);
-      await this.render(this.currentEventId);
+    try {
+      const transaction = await this.transactionRepository.findById(transactionId);
+      if (transaction) {
+        transaction.markReceiptAsIssued();
+        await this.transactionRepository.save(transaction);
+        window.toast.success('Nota fiscal marcada como emitida!');
+        await this.render(this.currentEventId);
+      } else {
+        window.toast.error('Transação não encontrada');
+      }
+    } catch (error) {
+      window.toast.error(`Erro ao marcar nota fiscal: ${error.message}`);
     }
   }
 
