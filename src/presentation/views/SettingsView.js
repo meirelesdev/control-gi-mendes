@@ -86,6 +86,7 @@ class SettingsView {
     });
 
     if (result.success) {
+      window.toast.success('Configurações salvas com sucesso!');
       // Mostra feedback visual
       const btn = document.querySelector('#form-settings button[type="submit"]');
       const originalText = btn.textContent;
@@ -97,7 +98,7 @@ class SettingsView {
         btn.style.background = '';
       }, 2000);
     } else {
-      alert(`Erro: ${result.error}`);
+      window.toast.error(`Erro: ${result.error}`);
     }
   }
 }

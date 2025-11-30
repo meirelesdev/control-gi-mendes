@@ -32,6 +32,7 @@ import { UpdateSettings } from './application/use-cases/UpdateSettings.js';
 
 // Presentation Layer
 import { App } from './presentation/App.js';
+import { toast } from './presentation/utils/Toast.js';
 
 // ============================================
 // 2. INSTÂNCIA DOS REPOSITÓRIOS
@@ -93,6 +94,9 @@ document.addEventListener('DOMContentLoaded', () => {
 
     // Inicializar a aplicação
     const app = new App(dependencies);
+    
+    // Torna toast disponível globalmente
+    window.toast = toast;
     
     console.log('✅ Gi Finanças inicializado com sucesso!');
     

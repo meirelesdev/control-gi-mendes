@@ -220,9 +220,10 @@ class EventDetailView {
     });
 
     if (result.success) {
+      window.toast.success('Despesa adicionada com sucesso!');
       await this.render(this.currentEventId);
     } else {
-      alert(`Erro: ${result.error}`);
+      window.toast.error(`Erro: ${result.error}`);
     }
   }
 
@@ -247,9 +248,10 @@ class EventDetailView {
     const result = await this.addTransactionUseCase.execute(input);
 
     if (result.success) {
+      window.toast.success('Transação adicionada com sucesso!');
       await this.render(this.currentEventId);
     } else {
-      alert(`Erro: ${result.error}`);
+      window.toast.error(`Erro: ${result.error}`);
     }
   }
 

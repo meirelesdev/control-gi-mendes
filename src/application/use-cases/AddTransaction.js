@@ -5,6 +5,9 @@
  * Para transações de KM ou Tempo de Viagem, calcula automaticamente
  * o valor monetário usando as configurações atuais (Settings)
  */
+import { Transaction } from '../../domain/entities/Transaction.js';
+import { Settings } from '../../domain/entities/Settings.js';
+
 class AddTransaction {
   constructor(transactionRepository, eventRepository, settingsRepository) {
     if (!transactionRepository) {
@@ -47,11 +50,22 @@ class AddTransaction {
         throw new Error('Evento não encontrado');
       }
 
+      // Verifica se Transaction está disponível (fallback para cache)
+      let TransactionClass = Transaction;
+      if (!TransactionClass || typeof TransactionClass.createExpense !== 'function') {
+        console.warn('Transaction não encontrado no import estático, tentando import dinâmico...');
+        const TransactionModule = await import('../../domain/entities/Transaction.js');
+        TransactionClass = TransactionModule.Transaction;
+        if (!TransactionClass) {
+          throw new Error('Transaction não pôde ser importado');
+        }
+      }
+
       let transaction;
 
       if (input.type === 'EXPENSE') {
         // Cria transação do tipo EXPENSE
-        transaction = Transaction.createExpense(
+        transaction = TransactionClass.createExpense(
           input.eventId,
           input.description,
           input.amount,
@@ -65,7 +79,7 @@ class AddTransaction {
             throw new Error('Distância é obrigatória para transações de KM');
           }
           const settings = await this._getSettings();
-          transaction = Transaction.createKmIncome(
+          transaction = TransactionClass.createKmIncome(
             input.eventId,
             input.description,
             input.distance,
@@ -78,7 +92,7 @@ class AddTransaction {
             throw new Error('Horas de viagem são obrigatórias para transações de tempo de viagem');
           }
           const settings = await this._getSettings();
-          transaction = Transaction.createTravelTimeIncome(
+          transaction = TransactionClass.createTravelTimeIncome(
             input.eventId,
             input.description,
             input.hours,
@@ -90,7 +104,7 @@ class AddTransaction {
           if (!input.amount && input.amount !== 0) {
             throw new Error('Valor é obrigatório para este tipo de transação');
           }
-          transaction = Transaction.createIncome(
+          transaction = TransactionClass.createIncome(
             input.eventId,
             input.description,
             input.amount,

@@ -259,7 +259,7 @@ class DashboardView {
     const description = document.getElementById('event-description').value.trim();
 
     if (!name || !date) {
-      alert('Por favor, preencha todos os campos obrigatórios.');
+      window.toast.warning('Por favor, preencha todos os campos obrigatórios.');
       return;
     }
 
@@ -273,13 +273,14 @@ class DashboardView {
       if (result.success) {
         // Fecha o modal
         document.body.removeChild(modal);
+        window.toast.success('Evento criado com sucesso!');
         // Recarrega o dashboard
         await this.render();
       } else {
-        alert(`Erro ao criar evento: ${result.error}`);
+        window.toast.error(`Erro ao criar evento: ${result.error}`);
       }
     } catch (error) {
-      alert(`Erro ao criar evento: ${error.message}`);
+      window.toast.error(`Erro ao criar evento: ${error.message}`);
     }
   }
 }
