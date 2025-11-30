@@ -131,14 +131,19 @@
             downloadCanvas(canvas192, 'icon-192.png');
             setTimeout(() => {
                 downloadCanvas(canvas512, 'icon-512.png');
+                alert('✅ Ícones baixados! Coloque-os na raiz do projeto (mesma pasta do index.html) e recarregue a página.');
             }, 500);
-            
-            alert('✅ Ícones baixados! Coloque-os na raiz do projeto.');
         }
         
         // Gera automaticamente ao carregar
         window.addEventListener('load', () => {
             generateIcons();
+            // Auto-download após 1 segundo
+            setTimeout(() => {
+                if (confirm('Deseja baixar os ícones automaticamente?')) {
+                    downloadAll();
+                }
+            }, 1000);
         });
     </script>
 </body>

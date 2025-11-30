@@ -1,0 +1,224 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Gerador de Ícones - Gi Finanças</title>
+    <style>
+        * { margin: 0; padding: 0; box-sizing: border-box; }
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Arial, sans-serif;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            min-height: 100vh;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            padding: 20px;
+        }
+        .container {
+            background: white;
+            padding: 40px;
+            border-radius: 20px;
+            box-shadow: 0 20px 60px rgba(0,0,0,0.3);
+            max-width: 600px;
+            width: 100%;
+        }
+        h1 {
+            color: #667eea;
+            margin-bottom: 10px;
+            font-size: 28px;
+        }
+        .subtitle {
+            color: #666;
+            margin-bottom: 30px;
+            font-size: 14px;
+        }
+        canvas {
+            border: 3px solid #e0e0e0;
+            border-radius: 15px;
+            margin: 15px;
+            display: block;
+            box-shadow: 0 4px 10px rgba(0,0,0,0.1);
+        }
+        .preview-container {
+            text-align: center;
+            margin: 20px 0;
+        }
+        .preview-container h3 {
+            color: #333;
+            margin-bottom: 15px;
+            font-size: 18px;
+        }
+        button {
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            color: white;
+            border: none;
+            padding: 15px 30px;
+            border-radius: 10px;
+            cursor: pointer;
+            font-size: 16px;
+            font-weight: 600;
+            margin: 10px 5px;
+            transition: transform 0.2s, box-shadow 0.2s;
+            box-shadow: 0 4px 15px rgba(102, 126, 234, 0.4);
+        }
+        button:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 6px 20px rgba(102, 126, 234, 0.5);
+        }
+        button:active {
+            transform: translateY(0);
+        }
+        .instructions {
+            background: #f0f4ff;
+            padding: 20px;
+            border-radius: 10px;
+            margin: 20px 0;
+            border-left: 4px solid #667eea;
+        }
+        .instructions h3 {
+            color: #667eea;
+            margin-bottom: 10px;
+            font-size: 16px;
+        }
+        .instructions ol {
+            margin-left: 20px;
+            color: #555;
+            line-height: 1.8;
+        }
+        .instructions code {
+            background: #e0e7ff;
+            padding: 2px 6px;
+            border-radius: 4px;
+            font-size: 13px;
+            color: #667eea;
+        }
+        .success {
+            background: #d4edda;
+            color: #155724;
+            padding: 15px;
+            border-radius: 10px;
+            margin: 15px 0;
+            border-left: 4px solid #28a745;
+            display: none;
+        }
+        .success.show {
+            display: block;
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <h1>🎨 Gerador de Ícones PWA</h1>
+        <p class="subtitle">Gi Finanças - Gestão Financeira de Eventos</p>
+        
+        <div class="instructions">
+            <h3>📋 Instruções Rápidas:</h3>
+            <ol>
+                <li>Os ícones já foram gerados automaticamente abaixo</li>
+                <li>Clique em <strong>"💾 Baixar Todos os Ícones"</strong></li>
+                <li>Coloque os arquivos <code>icon-192.png</code> e <code>icon-512.png</code> na <strong>raiz do projeto</strong> (mesma pasta do index.html)</li>
+                <li>Recarregue a página da aplicação</li>
+            </ol>
+        </div>
+
+        <div class="preview-container">
+            <h3>Preview dos Ícones:</h3>
+            <div id="preview"></div>
+        </div>
+        
+        <div style="text-align: center; margin-top: 20px;">
+            <button onclick="downloadAll()">💾 Baixar Todos os Ícones</button>
+        </div>
+
+        <div class="success" id="success-message">
+            ✅ Ícones baixados! Agora coloque-os na raiz do projeto e recarregue a aplicação.
+        </div>
+
+        <canvas id="canvas192" width="192" height="192" style="display: none;"></canvas>
+        <canvas id="canvas512" width="512" height="512" style="display: none;"></canvas>
+    </div>
+
+    <script>
+        function generateIcons() {
+            // Ícone 192x192
+            const canvas192 = document.getElementById('canvas192');
+            const ctx192 = canvas192.getContext('2d');
+            
+            // Fundo com gradiente
+            const gradient192 = ctx192.createLinearGradient(0, 0, 192, 192);
+            gradient192.addColorStop(0, '#667eea');
+            gradient192.addColorStop(1, '#764ba2');
+            ctx192.fillStyle = gradient192;
+            ctx192.fillRect(0, 0, 192, 192);
+            
+            // Texto "GF"
+            ctx192.fillStyle = 'white';
+            ctx192.font = 'bold 80px Arial';
+            ctx192.textAlign = 'center';
+            ctx192.textBaseline = 'middle';
+            ctx192.fillText('GF', 96, 96);
+            
+            // Ícone 512x512
+            const canvas512 = document.getElementById('canvas512');
+            const ctx512 = canvas512.getContext('2d');
+            
+            const gradient512 = ctx512.createLinearGradient(0, 0, 512, 512);
+            gradient512.addColorStop(0, '#667eea');
+            gradient512.addColorStop(1, '#764ba2');
+            ctx512.fillStyle = gradient512;
+            ctx512.fillRect(0, 0, 512, 512);
+            
+            ctx512.fillStyle = 'white';
+            ctx512.font = 'bold 200px Arial';
+            ctx512.textAlign = 'center';
+            ctx512.textBaseline = 'middle';
+            ctx512.fillText('GF', 256, 256);
+            
+            // Mostra preview
+            document.getElementById('preview').innerHTML = `
+                <div style="display: flex; justify-content: center; gap: 20px; flex-wrap: wrap;">
+                    <div>
+                        <p style="margin-bottom: 10px; color: #666; font-size: 14px;">192x192</p>
+                        <img src="${canvas192.toDataURL()}" alt="192x192" style="width: 192px; height: 192px; border: 3px solid #e0e0e0; border-radius: 15px; box-shadow: 0 4px 10px rgba(0,0,0,0.1);">
+                    </div>
+                    <div>
+                        <p style="margin-bottom: 10px; color: #666; font-size: 14px;">512x512</p>
+                        <img src="${canvas512.toDataURL()}" alt="512x512" style="width: 256px; height: 256px; border: 3px solid #e0e0e0; border-radius: 15px; box-shadow: 0 4px 10px rgba(0,0,0,0.1);">
+                    </div>
+                </div>
+            `;
+        }
+        
+        function downloadCanvas(canvas, filename) {
+            const link = document.createElement('a');
+            link.download = filename;
+            link.href = canvas.toDataURL('image/png');
+            document.body.appendChild(link);
+            link.click();
+            document.body.removeChild(link);
+        }
+        
+        function downloadAll() {
+            const canvas192 = document.getElementById('canvas192');
+            const canvas512 = document.getElementById('canvas512');
+            
+            if (canvas192.width === 0 || canvas512.width === 0) {
+                alert('Por favor, aguarde os ícones serem gerados...');
+                return;
+            }
+            
+            downloadCanvas(canvas192, 'icon-192.png');
+            setTimeout(() => {
+                downloadCanvas(canvas512, 'icon-512.png');
+                document.getElementById('success-message').classList.add('show');
+            }, 500);
+        }
+        
+        // Gera automaticamente ao carregar
+        window.addEventListener('load', () => {
+            generateIcons();
+        });
+    </script>
+</body>
+</html>

@@ -12,7 +12,11 @@ const urlsToCache = [
   '/src/presentation/styles/variables.css',
   '/src/presentation/styles/base.css',
   '/src/presentation/styles/components.css',
-  '/manifest.json',
+  '/manifest.json'
+];
+
+// Ícones opcionais (só faz cache se existirem)
+const optionalUrls = [
   '/icon-192.png',
   '/icon-512.png'
 ];
@@ -23,7 +27,24 @@ self.addEventListener('install', (event) => {
     caches.open(CACHE_NAME)
       .then((cache) => {
         console.log('Service Worker: Cache aberto');
-        return cache.addAll(urlsToCache);
+        // Faz cache dos arquivos essenciais
+        return cache.addAll(urlsToCache).then(() => {
+          // Tenta fazer cache dos ícones opcionais (não falha se não existirem)
+          return Promise.allSettled(
+            optionalUrls.map(url => 
+              fetch(url)
+                .then(response => {
+                  if (response.ok) {
+                    return cache.put(url, response);
+                  }
+                })
+                .catch(() => {
+                  // Ignora erros de recursos opcionais
+                  console.log(`Service Worker: Ícone ${url} não encontrado (opcional)`);
+                })
+            )
+          );
+        });
       })
       .catch((error) => {
         console.error('Service Worker: Erro ao fazer cache', error);
@@ -51,6 +72,12 @@ self.addEventListener('activate', (event) => {
 
 // Interceptação de requisições
 self.addEventListener('fetch', (event) => {
+  // Ignora requisições de extensões do navegador
+  if (event.request.url.startsWith('chrome-extension://') || 
+      event.request.url.startsWith('moz-extension://')) {
+    return;
+  }
+
   event.respondWith(
     caches.match(event.request)
       .then((response) => {
@@ -63,12 +90,29 @@ self.addEventListener('fetch', (event) => {
           if (!response || response.status !== 200 || response.type !== 'basic') {
             return response;
           }
+          // Ignora cache de extensões
+          if (response.url.startsWith('chrome-extension://') || 
+              response.url.startsWith('moz-extension://')) {
+            return response;
+          }
           // Clona a resposta para cache
           const responseToCache = response.clone();
           caches.open(CACHE_NAME).then((cache) => {
-            cache.put(event.request, responseToCache);
+            cache.put(event.request, responseToCache).catch(() => {
+              // Ignora erros ao fazer cache (pode ser extensão ou recurso não suportado)
+            });
           });
           return response;
+        }).catch(() => {
+          // Se falhar ao buscar, retorna página offline se for navegação
+          if (event.request.mode === 'navigate') {
+            return caches.match('/index.html');
+          }
+          // Para outros recursos, retorna erro silenciosamente
+          return new Response('Recurso não disponível offline', { 
+            status: 404, 
+            statusText: 'Not Found' 
+          });
         });
       })
       .catch(() => {
@@ -76,6 +120,10 @@ self.addEventListener('fetch', (event) => {
         if (event.request.mode === 'navigate') {
           return caches.match('/index.html');
         }
+        return new Response('Recurso não disponível', { 
+          status: 404, 
+          statusText: 'Not Found' 
+        });
       })
   );
 });
