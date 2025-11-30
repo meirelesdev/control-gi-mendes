@@ -156,26 +156,44 @@ Failed to execute 'put' on 'Cache': Request scheme 'chrome-extension' is unsuppo
 ## 🟡 Erros que Precisam Atenção
 
 ### 1. **Transaction is not defined** ⚠️
-**Status**: Corrigido com import dinâmico, mas pode persistir por cache
+**Status**: ✅ Melhorado com import dinâmico robusto e retry automático
 
 **Sintomas**:
 - Erro ao tentar adicionar despesa
-- Mensagem: "Erro: Transaction is not defined"
+- Mensagem: "Erro: Transaction is not defined" ou "Erro ao carregar Transaction"
 
 **Solução Aplicada**:
-- ✅ Import dinâmico implementado como fallback
-- ✅ Mensagens de erro melhoradas
+- ✅ Import dinâmico com retry automático (tenta 2 vezes)
+- ✅ Validação robusta do módulo carregado
+- ✅ Mensagens de erro detalhadas e úteis
+- ✅ Logs de debug no console para diagnóstico
+- ✅ Tratamento específico para diferentes tipos de erro
 
 **Como Verificar**:
 1. Abra o console (F12)
 2. Tente adicionar uma despesa
-3. Se aparecer "Transaction não encontrado:", é problema de cache
-4. **Solução**: Limpar cache do navegador (Ctrl+Shift+Delete)
+3. Se aparecer erro, verifique os logs detalhados no console
+4. Os logs mostrarão exatamente o que está errado
 
-**Se Persistir**:
+**Soluções por Tipo de Erro**:
+
+**Se aparecer "Failed to fetch" ou "404"**:
 - Verifique se o arquivo `src/domain/entities/Transaction.js` existe
+- Verifique se está usando um servidor HTTP (não `file://`)
+
+**Se aparecer "Unexpected token"**:
+- Pode haver erro de sintaxe no arquivo Transaction.js
+- Verifique o console para detalhes do erro de sintaxe
+
+**Se aparecer "Transaction não foi exportado corretamente"**:
 - Verifique se o export está correto: `export { Transaction };`
-- Verifique o console para erros de importação
+- Verifique se não há erros de sintaxe no arquivo
+
+**Solução Geral**:
+1. Limpar cache do navegador: `Ctrl + Shift + Delete` → Limpar tudo
+2. Hard refresh: `Ctrl + F5`
+3. Recarregar a página: `F5`
+4. Se persistir, verifique os logs detalhados no console (F12)
 
 ---
 
@@ -335,11 +353,19 @@ Erro ao carregar dashboard: [mensagem]
 ### Problema: "Transaction is not defined"
 **Causa**: Cache do navegador ou problema de importação
 
-**Soluções**:
-1. Limpar cache: `Ctrl + Shift + Delete` → Limpar tudo
-2. Hard refresh: `Ctrl + F5`
-3. Verificar console para erros de importação
-4. Verificar se `Transaction.js` existe e tem export correto
+**Soluções** (em ordem de prioridade):
+1. **Recarregar a página**: `F5` (o sistema agora tenta automaticamente 2 vezes)
+2. **Hard refresh**: `Ctrl + F5` (força recarregar sem cache)
+3. **Limpar cache**: `Ctrl + Shift + Delete` → Limpar tudo
+4. **Verificar console**: Abra F12 e veja os logs detalhados de erro
+5. **Verificar arquivo**: Confirme que `src/domain/entities/Transaction.js` existe
+6. **Verificar export**: Confirme que tem `export { Transaction };` no final do arquivo
+
+**Melhorias Implementadas**:
+- ✅ Retry automático (tenta importar 2 vezes)
+- ✅ Validação robusta do módulo
+- ✅ Mensagens de erro mais específicas
+- ✅ Logs detalhados no console para diagnóstico
 
 ### Problema: Toast com texto branco ilegível
 **Status**: ✅ Corrigido

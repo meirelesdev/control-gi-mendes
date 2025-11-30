@@ -4,9 +4,9 @@
  * 
  * Para transações de KM ou Tempo de Viagem, calcula automaticamente
  * o valor monetário usando as configurações atuais (Settings)
+ * 
+ * NOTA: Usa import dinâmico para evitar problemas de cache do navegador
  */
-import { Transaction } from '../../domain/entities/Transaction.js';
-import { Settings } from '../../domain/entities/Settings.js';
 
 class AddTransaction {
   constructor(transactionRepository, eventRepository, settingsRepository) {
@@ -52,12 +52,64 @@ class AddTransaction {
 
       // Importa Transaction dinamicamente para garantir que está disponível
       // Isso resolve problemas de cache do navegador
-      const TransactionModule = await import('../../domain/entities/Transaction.js');
-      const TransactionClass = TransactionModule.Transaction;
+      let TransactionClass;
+      const modulePath = '../../domain/entities/Transaction.js';
       
-      if (!TransactionClass || typeof TransactionClass.createExpense !== 'function') {
-        console.error('Transaction não encontrado:', TransactionModule);
-        throw new Error('Transaction não pôde ser carregado. Verifique o console para mais detalhes.');
+      try {
+        // Primeira tentativa: import normal
+        const TransactionModule = await import(modulePath);
+        TransactionClass = TransactionModule?.Transaction;
+        
+        // Se não encontrou, tenta novamente após um pequeno delay
+        if (!TransactionClass) {
+          console.warn('Transaction não encontrado na primeira tentativa, tentando novamente...');
+          await new Promise(resolve => setTimeout(resolve, 100));
+          const TransactionModule2 = await import(modulePath);
+          TransactionClass = TransactionModule2?.Transaction;
+        }
+        
+        // Valida se TransactionClass está correto
+        if (!TransactionClass) {
+          const moduleKeys = Object.keys(TransactionModule || {});
+          throw new Error(`Transaction não foi exportado corretamente. Chaves disponíveis no módulo: ${moduleKeys.join(', ')}`);
+        }
+        
+        // Valida se os métodos necessários existem
+        if (typeof TransactionClass.createExpense !== 'function') {
+          const methods = Object.getOwnPropertyNames(TransactionClass).filter(
+            name => typeof TransactionClass[name] === 'function'
+          );
+          throw new Error(`Transaction.createExpense não é uma função. Métodos disponíveis: ${methods.join(', ')}`);
+        }
+        
+        // Log de sucesso (apenas em desenvolvimento)
+        if (console.debug) {
+          console.debug('Transaction carregado com sucesso:', {
+            hasCreateExpense: typeof TransactionClass.createExpense === 'function',
+            hasCreateIncome: typeof TransactionClass.createIncome === 'function',
+            hasCreateKmIncome: typeof TransactionClass.createKmIncome === 'function'
+          });
+        }
+      } catch (importError) {
+        console.error('❌ Erro ao importar Transaction:', importError);
+        console.error('Detalhes do erro:', {
+          message: importError.message,
+          stack: importError.stack,
+          name: importError.name,
+          modulePath: modulePath
+        });
+        
+        // Mensagem de erro mais útil
+        let errorMsg = `Erro ao carregar Transaction: ${importError.message}`;
+        if (importError.message.includes('Failed to fetch') || importError.message.includes('404')) {
+          errorMsg += '\n\nO arquivo Transaction.js pode não estar acessível. Verifique se o arquivo existe em: src/domain/entities/Transaction.js';
+        } else if (importError.message.includes('Unexpected token')) {
+          errorMsg += '\n\nPode haver um erro de sintaxe no arquivo Transaction.js. Verifique o console para mais detalhes.';
+        } else {
+          errorMsg += '\n\nTente limpar o cache do navegador (Ctrl+Shift+Delete) e recarregar a página (F5).';
+        }
+        
+        throw new Error(errorMsg);
       }
 
       let transaction;
@@ -121,9 +173,22 @@ class AddTransaction {
         data: savedTransaction
       };
     } catch (error) {
+      // Log detalhado do erro para debug
+      console.error('Erro em AddTransaction.execute:', {
+        message: error.message,
+        stack: error.stack,
+        input: input
+      });
+      
+      // Mensagem de erro mais amigável
+      let errorMessage = error.message;
+      if (error.message.includes('Transaction')) {
+        errorMessage = 'Erro ao processar transação. Por favor, recarregue a página (F5) e tente novamente. Se o problema persistir, limpe o cache do navegador (Ctrl+Shift+Delete).';
+      }
+      
       return {
         success: false,
-        error: error.message
+        error: errorMessage
       };
     }
   }
@@ -137,10 +202,29 @@ class AddTransaction {
     if (!settings) {
       // Se não existir, cria com valores padrão
       // Importa Settings dinamicamente para evitar problemas de cache
-      const SettingsModule = await import('../../domain/entities/Settings.js');
-      const SettingsClass = SettingsModule.Settings;
-      settings = SettingsClass.createDefault();
-      await this.settingsRepository.save(settings);
+      try {
+        const modulePath = '../../domain/entities/Settings.js';
+        const SettingsModule = await import(modulePath);
+        let SettingsClass = SettingsModule?.Settings;
+        
+        // Se não encontrou, tenta novamente após um pequeno delay
+        if (!SettingsClass) {
+          await new Promise(resolve => setTimeout(resolve, 100));
+          const SettingsModule2 = await import(modulePath);
+          SettingsClass = SettingsModule2?.Settings;
+        }
+        
+        if (!SettingsClass || typeof SettingsClass.createDefault !== 'function') {
+          const moduleKeys = Object.keys(SettingsModule || {});
+          throw new Error(`Settings não pôde ser carregado corretamente. Chaves disponíveis: ${moduleKeys.join(', ')}`);
+        }
+        
+        settings = SettingsClass.createDefault();
+        await this.settingsRepository.save(settings);
+      } catch (importError) {
+        console.error('Erro ao importar Settings:', importError);
+        throw new Error(`Erro ao carregar configurações: ${importError.message}`);
+      }
     }
     return settings;
   }

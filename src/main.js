@@ -98,6 +98,34 @@ document.addEventListener('DOMContentLoaded', () => {
     // Torna toast disponível globalmente
     window.toast = toast;
     
+    // Handler global de erros para evitar alerts nativos
+    window.addEventListener('error', (event) => {
+      event.preventDefault();
+      const errorMsg = event.error?.message || event.message || 'Erro desconhecido';
+      console.error('Erro global capturado:', errorMsg, event.error);
+      
+      if (window.toast) {
+        window.toast.error(`Erro: ${errorMsg}`);
+      } else {
+        console.error('Erro (toast não disponível):', errorMsg);
+      }
+      
+      return false; // Previne comportamento padrão (alert)
+    });
+    
+    // Handler para promessas rejeitadas não tratadas
+    window.addEventListener('unhandledrejection', (event) => {
+      event.preventDefault();
+      const errorMsg = event.reason?.message || event.reason || 'Erro em promessa não tratada';
+      console.error('Promessa rejeitada não tratada:', errorMsg, event.reason);
+      
+      if (window.toast) {
+        window.toast.error(`Erro: ${errorMsg}`);
+      } else {
+        console.error('Erro (toast não disponível):', errorMsg);
+      }
+    });
+    
     console.log('✅ Gi Finanças inicializado com sucesso!');
     
     // Registrar Service Worker para PWA

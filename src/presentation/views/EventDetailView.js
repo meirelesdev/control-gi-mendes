@@ -149,8 +149,11 @@ class EventDetailView {
 
     document.getElementById('form-add-expense').addEventListener('submit', async (e) => {
       e.preventDefault();
-      await this.saveExpense();
-      modal.remove();
+      const result = await this.saveExpense();
+      // Só remove o modal se saveExpense retornou sucesso (sem erro)
+      if (result !== false) {
+        modal.remove();
+      }
     });
   }
 
@@ -201,57 +204,108 @@ class EventDetailView {
 
     document.getElementById('form-add-km-travel').addEventListener('submit', async (e) => {
       e.preventDefault();
-      await this.saveKmTravel();
-      modal.remove();
+      const result = await this.saveKmTravel();
+      // Só remove o modal se saveKmTravel retornou sucesso (sem erro)
+      if (result !== false) {
+        modal.remove();
+      }
     });
   }
 
   async saveExpense() {
-    const description = document.getElementById('expense-description').value;
-    const amount = parseFloat(document.getElementById('expense-amount').value);
-    const hasReceipt = document.getElementById('expense-has-receipt').checked;
+    try {
+      const description = document.getElementById('expense-description').value;
+      const amount = parseFloat(document.getElementById('expense-amount').value);
+      const hasReceipt = document.getElementById('expense-has-receipt').checked;
 
-    const result = await this.addTransactionUseCase.execute({
-      eventId: this.currentEventId,
-      type: 'EXPENSE',
-      description,
-      amount,
-      hasReceipt
-    });
+      const result = await this.addTransactionUseCase.execute({
+        eventId: this.currentEventId,
+        type: 'EXPENSE',
+        description,
+        amount,
+        hasReceipt
+      });
 
-    if (result.success) {
-      window.toast.success('Despesa adicionada com sucesso!');
-      await this.render(this.currentEventId);
-    } else {
-      window.toast.error(`Erro: ${result.error}`);
+      if (result.success) {
+        if (window.toast) {
+          window.toast.success('Despesa adicionada com sucesso!');
+        } else {
+          console.log('✅ Despesa adicionada com sucesso!');
+        }
+        await this.render(this.currentEventId);
+        return true; // Retorna true para indicar sucesso
+      } else {
+        const errorMsg = result.error || 'Erro desconhecido ao adicionar despesa';
+        console.error('Erro ao adicionar despesa:', errorMsg);
+        if (window.toast) {
+          window.toast.error(errorMsg);
+        } else {
+          console.error('Toast não disponível. Erro:', errorMsg);
+        }
+        return false; // Retorna false para indicar erro
+      }
+    } catch (error) {
+      const errorMsg = `Erro ao adicionar despesa: ${error.message}`;
+      console.error('Erro em saveExpense:', error);
+      
+      if (window.toast) {
+        window.toast.error(errorMsg);
+      } else {
+        console.error('Toast não disponível. Erro:', errorMsg);
+      }
+      return false; // Retorna false para indicar erro
     }
   }
 
   async saveKmTravel() {
-    const type = document.getElementById('km-travel-type').value;
-    const description = document.getElementById('km-travel-description').value;
-    
-    let input = {
-      eventId: this.currentEventId,
-      type: 'INCOME',
-      description,
-      category: type,
-      isReimbursement: true
-    };
+    try {
+      const type = document.getElementById('km-travel-type').value;
+      const description = document.getElementById('km-travel-description').value;
+      
+      let input = {
+        eventId: this.currentEventId,
+        type: 'INCOME',
+        description,
+        category: type,
+        isReimbursement: true
+      };
 
-    if (type === 'km') {
-      input.distance = parseFloat(document.getElementById('km-distance').value);
-    } else if (type === 'tempo_viagem') {
-      input.hours = parseFloat(document.getElementById('travel-hours').value);
-    }
+      if (type === 'km') {
+        input.distance = parseFloat(document.getElementById('km-distance').value);
+      } else if (type === 'tempo_viagem') {
+        input.hours = parseFloat(document.getElementById('travel-hours').value);
+      }
 
-    const result = await this.addTransactionUseCase.execute(input);
+      const result = await this.addTransactionUseCase.execute(input);
 
-    if (result.success) {
-      window.toast.success('Transação adicionada com sucesso!');
-      await this.render(this.currentEventId);
-    } else {
-      window.toast.error(`Erro: ${result.error}`);
+      if (result.success) {
+        if (window.toast) {
+          window.toast.success('Transação adicionada com sucesso!');
+        } else {
+          console.log('✅ Transação adicionada com sucesso!');
+        }
+        await this.render(this.currentEventId);
+        return true; // Retorna true para indicar sucesso
+      } else {
+        const errorMsg = result.error || 'Erro desconhecido ao adicionar transação';
+        console.error('Erro ao adicionar transação:', errorMsg);
+        if (window.toast) {
+          window.toast.error(errorMsg);
+        } else {
+          console.error('Toast não disponível. Erro:', errorMsg);
+        }
+        return false; // Retorna false para indicar erro
+      }
+    } catch (error) {
+      const errorMsg = `Erro ao adicionar transação: ${error.message}`;
+      console.error('Erro em saveKmTravel:', error);
+      
+      if (window.toast) {
+        window.toast.error(errorMsg);
+      } else {
+        console.error('Toast não disponível. Erro:', errorMsg);
+      }
+      return false; // Retorna false para indicar erro
     }
   }
 
