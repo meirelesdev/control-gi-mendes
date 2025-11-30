@@ -92,9 +92,60 @@ Todos os dados são armazenados no `localStorage` do navegador, usando as seguin
 - `gi_financas_receitas`
 - `gi_financas_configuracao`
 
-## 🌐 Hospedagem
+## 🌐 Hospedagem no GitHub Pages
 
 O sistema foi projetado para ser hospedado no GitHub Pages, funcionando apenas com HTML, CSS e JavaScript puro, sem necessidade de servidor backend.
+
+### 📋 Passo a Passo para Deploy
+
+1. **Crie um repositório no GitHub**
+   - Vá para [github.com/new](https://github.com/new)
+   - Nome do repositório: `gi-financas` (ou outro nome de sua preferência)
+   - Escolha se será público ou privado
+   - **NÃO** marque "Initialize this repository with a README" (você já tem um)
+
+2. **Faça upload dos arquivos**
+   ```bash
+   git init
+   git add .
+   git commit -m "Initial commit: Gi Finanças"
+   git branch -M main
+   git remote add origin https://github.com/SEU-USUARIO/gi-financas.git
+   git push -u origin main
+   ```
+   
+   Ou use a interface web do GitHub:
+   - Clique em "uploading an existing file"
+   - Arraste todos os arquivos do projeto
+   - Faça commit
+
+3. **Ative o GitHub Pages**
+   - Vá em **Settings** do repositório
+   - Role até a seção **Pages**
+   - Em **Source**, selecione **Deploy from a branch**
+   - Escolha a branch **main** (ou **master**)
+   - Escolha a pasta **/ (root)**
+   - Clique em **Save**
+
+4. **Acesse seu site**
+   - Aguarde alguns minutos para o GitHub processar
+   - Seu site estará disponível em:
+     `https://SEU-USUARIO.github.io/gi-financas/`
+
+### ⚠️ Erro de Domínio Personalizado
+
+Se você recebeu o erro:
+> "The custom domain `gi-financas` is not properly formatted"
+
+**Solução**: Você não precisa configurar um domínio personalizado! O GitHub Pages funciona automaticamente sem isso.
+
+**Se você realmente quiser usar um domínio personalizado:**
+- Você precisa ter um domínio registrado (ex: `gi-financas.com`)
+- O formato correto seria `gi-financas.com` ou `www.gi-financas.com` (não apenas `gi-financas`)
+- Configure o DNS do seu domínio apontando para o GitHub Pages
+- Adicione o domínio completo nas configurações do GitHub Pages
+
+**Recomendação**: Para começar, use apenas o GitHub Pages sem domínio personalizado. É mais simples e funciona perfeitamente!
 
 ## 📝 Licença
 
