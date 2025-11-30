@@ -51,10 +51,32 @@ O sistema segue os princípios da **Clean Architecture** com as seguintes camada
 ## 🚀 Como Usar
 
 1. Abra o arquivo `index.html` em um navegador moderno que suporte ES6 Modules
+   - **Importante:** Use um servidor HTTP local (não abra o arquivo diretamente)
+   - Python: `python -m http.server 8000`
+   - Node.js: `npx http-server -p 8000`
+   - PHP/XAMPP: Coloque em `htdocs` e acesse via `http://localhost`
 2. Os dados são armazenados localmente no navegador (localStorage)
 3. Navegue pelas seções usando o menu superior (Dashboard, Configurações)
 4. Crie eventos e adicione transações (despesas e receitas)
 5. Configure as taxas de KM e Hora de Viagem nas Configurações
+
+## 📱 Instalação como App (PWA)
+
+A aplicação pode ser instalada no seu dispositivo móvel como um app nativo!
+
+### Para Instalar:
+
+**Android (Chrome):**
+1. Acesse a aplicação no Chrome
+2. Toque no menu (3 pontos) > **"Adicionar à tela inicial"** ou **"Instalar app"**
+3. Confirme a instalação
+
+**iOS (Safari):**
+1. Acesse a aplicação no Safari
+2. Toque no botão de compartilhar > **"Adicionar à Tela de Início"**
+3. Confirme
+
+**Nota:** Antes de instalar, você precisa criar os ícones. Veja `PWA-SETUP.md` para instruções completas.
 
 ## 📦 Estrutura de Arquivos
 

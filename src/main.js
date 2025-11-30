@@ -95,6 +95,30 @@ document.addEventListener('DOMContentLoaded', () => {
     const app = new App(dependencies);
     
     console.log('✅ Gi Finanças inicializado com sucesso!');
+    
+    // Registrar Service Worker para PWA
+    if ('serviceWorker' in navigator) {
+      window.addEventListener('load', () => {
+        navigator.serviceWorker.register('/sw.js')
+          .then((registration) => {
+            console.log('✅ Service Worker registrado com sucesso:', registration.scope);
+            
+            // Verifica atualizações do service worker
+            registration.addEventListener('updatefound', () => {
+              const newWorker = registration.installing;
+              newWorker.addEventListener('statechange', () => {
+                if (newWorker.state === 'installed' && navigator.serviceWorker.controller) {
+                  // Novo service worker disponível
+                  console.log('🔄 Nova versão disponível! Recarregue a página.');
+                }
+              });
+            });
+          })
+          .catch((error) => {
+            console.warn('⚠️ Service Worker não pôde ser registrado:', error);
+          });
+      });
+    }
   } catch (error) {
     console.error('❌ Erro ao inicializar Gi Finanças:', error);
     
