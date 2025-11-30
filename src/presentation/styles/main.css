@@ -1,0 +1,9 @@
+/**
+ * Estilos Principais - Gi Finanças
+ * Importa todos os estilos
+ */
+
+@import './variables.css';
+@import './base.css';
+@import './components.css';
+
