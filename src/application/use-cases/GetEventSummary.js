@@ -192,10 +192,14 @@ class GetEventSummary {
   async _getSettings() {
     let settings = await this.settingsRepository.find();
     if (!settings) {
+      const { Settings } = await import('../../domain/entities/Settings.js');
       settings = Settings.createDefault();
       await this.settingsRepository.save(settings);
     }
     return settings;
   }
 }
+
+// Export para uso em módulos ES6
+export { GetEventSummary };
 

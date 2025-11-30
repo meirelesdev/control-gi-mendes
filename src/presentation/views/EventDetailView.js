@@ -300,3 +300,6 @@ class EventDetailView {
   }
 }
 
+// Export para uso em módulos ES6
+export { EventDetailView };
+

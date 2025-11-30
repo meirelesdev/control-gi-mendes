@@ -2,6 +2,10 @@
  * Aplicação Principal - Gi Finanças
  * Gerencia navegação e inicialização das views
  */
+import { DashboardView } from './views/DashboardView.js';
+import { EventDetailView } from './views/EventDetailView.js';
+import { SettingsView } from './views/SettingsView.js';
+
 class App {
   constructor(dependencies) {
     this.dependencies = dependencies;
@@ -68,15 +72,16 @@ class App {
       eventRepository, 
       transactionRepository, 
       settingsRepository,
-      addTransactionUseCase,
-      updateSettingsUseCase
+      addTransaction,
+      updateSettings
     } = this.dependencies;
 
     if (this.currentView === 'dashboard') {
       const dashboardView = new DashboardView(
         eventRepository,
         transactionRepository,
-        settingsRepository
+        settingsRepository,
+        this.dependencies.createEvent
       );
       const content = document.getElementById('dashboard-content');
       if (content) {
@@ -88,7 +93,7 @@ class App {
         eventRepository,
         transactionRepository,
         settingsRepository,
-        addTransactionUseCase
+        addTransaction
       );
       const content = document.getElementById('event-detail-content');
       if (content) {
@@ -100,7 +105,7 @@ class App {
     } else if (this.currentView === 'settings') {
       const settingsView = new SettingsView(
         settingsRepository,
-        updateSettingsUseCase
+        updateSettings
       );
       const content = document.getElementById('settings-content');
       if (content) {
@@ -110,4 +115,7 @@ class App {
     }
   }
 }
+
+// Export para uso em módulos ES6
+export { App };
 

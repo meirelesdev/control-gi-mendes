@@ -2,6 +2,8 @@
  * View: Configurações
  * Permite alterar valores de KM e Hora de Viagem
  */
+import { Settings } from '../../domain/entities/Settings.js';
+
 class SettingsView {
   constructor(settingsRepository, updateSettingsUseCase) {
     this.settingsRepository = settingsRepository;
@@ -99,4 +101,7 @@ class SettingsView {
     }
   }
 }
+
+// Export para uso em módulos ES6
+export { SettingsView };
 

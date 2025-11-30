@@ -200,3 +200,6 @@ class Event {
   }
 }
 
+// Export para uso em módulos ES6
+export { Event };
+

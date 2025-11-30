@@ -133,3 +133,6 @@ class EventRepository {
   }
 }
 
+// Export para uso em módulos ES6
+export { EventRepository };
+

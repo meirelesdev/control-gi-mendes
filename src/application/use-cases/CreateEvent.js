@@ -2,6 +2,8 @@
  * Caso de Uso: Criar Evento
  * Cria um novo evento no sistema
  */
+import { Event } from '../../domain/entities/Event.js';
+
 class CreateEvent {
   constructor(eventRepository) {
     if (!eventRepository) {
@@ -68,4 +70,7 @@ class CreateEvent {
     // A validação completa será feita pela entidade Event
   }
 }
+
+// Export para uso em módulos ES6
+export { CreateEvent };
 

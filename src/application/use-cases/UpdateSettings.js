@@ -72,3 +72,6 @@ class UpdateSettings {
   }
 }
 
+// Export para uso em módulos ES6
+export { UpdateSettings };
+

@@ -164,3 +164,6 @@ class AddTransaction {
   }
 }
 
+// Export para uso em módulos ES6
+export { AddTransaction };
+

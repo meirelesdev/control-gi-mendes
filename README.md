@@ -50,29 +50,42 @@ O sistema segue os princípios da **Clean Architecture** com as seguintes camada
 
 ## 🚀 Como Usar
 
-1. Abra o arquivo `index.html` em um navegador moderno
+1. Abra o arquivo `index.html` em um navegador moderno que suporte ES6 Modules
 2. Os dados são armazenados localmente no navegador (localStorage)
-3. Navegue pelas seções usando o menu superior
+3. Navegue pelas seções usando o menu superior (Dashboard, Configurações)
+4. Crie eventos e adicione transações (despesas e receitas)
+5. Configure as taxas de KM e Hora de Viagem nas Configurações
 
 ## 📦 Estrutura de Arquivos
 
+O projeto possui duas estruturas:
+
+### Estrutura Nova (Ativa) - `/src`
+```
+src/
+├── domain/              # Entidades e interfaces de repositórios
+│   ├── entities/        # Settings, Event, Transaction
+│   └── repositories/    # Interfaces
+├── application/         # Casos de uso
+│   └── use-cases/       # CreateEvent, AddTransaction, etc.
+├── infrastructure/      # Implementação com localStorage
+│   └── repositories/     # LocalStorageEventRepository, etc.
+├── presentation/        # UI e Views
+│   ├── styles/          # CSS modular (variables, base, components)
+│   └── views/           # DashboardView, EventDetailView, SettingsView
+└── main.js             # Ponto de entrada principal
+```
+
+### Estrutura Antiga (Referência) - Raiz
 ```
 control-gi-mendes/
-├── domain/
-│   ├── entities/          # Entidades de domínio
-│   └── repositories/      # Interfaces de repositórios
-├── application/
-│   └── use-cases/         # Casos de uso
-├── infrastructure/
-│   └── repositories/      # Implementação com localStorage
-├── presentation/
-│   ├── controllers/       # Controllers da UI
-│   └── views/            # Views da aplicação
-├── styles/
-│   └── main.css          # Estilos da aplicação
-├── index.html            # Arquivo principal
-├── app.js               # Inicialização da aplicação
-└── README.md            # Este arquivo
+├── domain/              # Estrutura antiga
+├── application/         # Estrutura antiga
+├── infrastructure/      # Estrutura antiga
+├── presentation/        # Estrutura antiga
+├── styles/             # CSS antigo
+├── index.html          # HTML principal
+└── app.js              # Inicialização antiga
 ```
 
 ## 🎯 Regras de Negócio
@@ -87,6 +100,13 @@ control-gi-mendes/
 ## 💾 Armazenamento
 
 Todos os dados são armazenados no `localStorage` do navegador, usando as seguintes chaves:
+
+**Nova Arquitetura:**
+- `gi_financas_events` - Eventos
+- `gi_financas_transactions` - Transações (despesas e receitas unificadas)
+- `gi_financas_settings` - Configurações
+
+**Estrutura Antiga (compatibilidade):**
 - `gi_financas_eventos`
 - `gi_financas_despesas`
 - `gi_financas_receitas`
@@ -146,6 +166,26 @@ Se você recebeu o erro:
 - Adicione o domínio completo nas configurações do GitHub Pages
 
 **Recomendação**: Para começar, use apenas o GitHub Pages sem domínio personalizado. É mais simples e funciona perfeitamente!
+
+## 📚 Documentação Completa
+
+Para uma visão detalhada do projeto, consulte:
+
+- **[PROJETO.md](./PROJETO.md)** - Documentação completa com status de todos os arquivos
+- **[ESTRUTURA.md](./ESTRUTURA.md)** - Estrutura visual em árvore do projeto
+- **[DEPLOY.md](./DEPLOY.md)** - Guia completo de deploy no GitHub Pages
+
+## 📊 Status do Projeto
+
+O projeto está **funcional** com a nova arquitetura mais robusta:
+
+- ✅ **Domain Layer** - 100% completo (nova arquitetura)
+- ✅ **Application Layer** - 100% completo (funcionalidades principais)
+- ✅ **Infrastructure Layer** - 100% completo (nova arquitetura)
+- ✅ **Presentation Layer** - 100% completo (nova arquitetura)
+
+**Estrutura nova**: Sistema operacional e pronto para uso
+**Estrutura antiga**: 100% funcional e completa (mantida para referência)
 
 ## 📝 Licença
 

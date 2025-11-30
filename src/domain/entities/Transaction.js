@@ -273,3 +273,6 @@ class Transaction {
   }
 }
 
+// Export para uso em módulos ES6
+export { Transaction };
+

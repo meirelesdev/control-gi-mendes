@@ -29,3 +29,6 @@ class SettingsRepository {
   }
 }
 
+// Export para uso em módulos ES6
+export { SettingsRepository };
+

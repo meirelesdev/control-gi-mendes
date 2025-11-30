@@ -147,3 +147,6 @@ class Settings {
   }
 }
 
+// Export para uso em módulos ES6
+export { Settings };
+
