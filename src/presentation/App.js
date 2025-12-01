@@ -73,6 +73,7 @@ class App {
       transactionRepository, 
       settingsRepository,
       addTransaction,
+      deleteTransaction,
       updateSettings
     } = this.dependencies;
 
@@ -93,7 +94,8 @@ class App {
         eventRepository,
         transactionRepository,
         settingsRepository,
-        addTransaction
+        addTransaction,
+        deleteTransaction
       );
       const content = document.getElementById('event-detail-content');
       if (content) {

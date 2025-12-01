@@ -13,6 +13,13 @@ import { Settings } from './domain/entities/Settings.js';
 import { Event } from './domain/entities/Event.js';
 import { Transaction } from './domain/entities/Transaction.js';
 
+// Verifica se Transaction foi carregado corretamente
+if (!Transaction) {
+  console.error('⚠️ Transaction não foi importado corretamente');
+} else {
+  console.log('✅ Transaction importado com sucesso no main.js');
+}
+
 // Domain Repository Interfaces (necessárias para os repositórios estenderem)
 import { SettingsRepository } from './domain/repositories/SettingsRepository.js';
 import { EventRepository } from './domain/repositories/EventRepository.js';
@@ -28,6 +35,7 @@ import {
 // Application Use Cases
 import { CreateEvent } from './application/use-cases/CreateEvent.js';
 import { AddTransaction } from './application/use-cases/AddTransaction.js';
+import { DeleteTransaction } from './application/use-cases/DeleteTransaction.js';
 import { GetEventSummary } from './application/use-cases/GetEventSummary.js';
 import { UpdateSettings } from './application/use-cases/UpdateSettings.js';
 
@@ -62,6 +70,9 @@ const addTransaction = new AddTransaction(
   settingsRepository
 );
 
+// Use Case: Excluir Transação
+const deleteTransaction = new DeleteTransaction(transactionRepository);
+
 // Use Case: Obter Resumo do Evento
 const getEventSummary = new GetEventSummary(
   eventRepository,
@@ -89,6 +100,7 @@ document.addEventListener('DOMContentLoaded', () => {
       // Use Cases
       createEvent,
       addTransaction,
+      deleteTransaction,
       getEventSummary,
       updateSettings
     };

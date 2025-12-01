@@ -3,11 +3,12 @@
  * Exibe detalhes do evento, botões de ação e lista de despesas
  */
 class EventDetailView {
-  constructor(eventRepository, transactionRepository, settingsRepository, addTransactionUseCase) {
+  constructor(eventRepository, transactionRepository, settingsRepository, addTransactionUseCase, deleteTransactionUseCase = null) {
     this.eventRepository = eventRepository;
     this.transactionRepository = transactionRepository;
     this.settingsRepository = settingsRepository;
     this.addTransactionUseCase = addTransactionUseCase;
+    this.deleteTransactionUseCase = deleteTransactionUseCase;
     this.currentEventId = null;
   }
 
@@ -110,6 +111,14 @@ class EventDetailView {
           await this.markReceiptAsIssued(transactionId);
         });
       });
+
+      // Event listeners para excluir transações
+      container.querySelectorAll('.btn-delete-transaction').forEach(btn => {
+        btn.addEventListener('click', async (e) => {
+          const transactionId = e.target.dataset.transactionId;
+          await this.deleteTransaction(transactionId);
+        });
+      });
     } catch (error) {
       container.innerHTML = `
         <div class="card" style="border-left-color: var(--color-danger);">
@@ -128,16 +137,23 @@ class EventDetailView {
           <div class="expense-item-description">${this.escapeHtml(expense.description)}</div>
           <div class="expense-item-value">${this.formatCurrency(expense.amount)}</div>
         </div>
-        ${!hasReceipt ? `
-          <div class="expense-item-receipt">
-            <span>⚠️</span>
-            <button class="btn btn-sm btn-success btn-mark-receipt" data-transaction-id="${expense.id}">
-              Marcar NF
-            </button>
-          </div>
-        ` : `
-          <span class="badge badge-success">NF OK</span>
-        `}
+        <div class="expense-item-actions">
+          ${!hasReceipt ? `
+            <div class="expense-item-receipt">
+              <span>⚠️</span>
+              <button class="btn btn-sm btn-success btn-mark-receipt" data-transaction-id="${expense.id}">
+                Marcar NF
+              </button>
+            </div>
+          ` : `
+            <span class="badge badge-success">NF OK</span>
+          `}
+          <button class="btn btn-sm btn-delete-transaction" 
+                  data-transaction-id="${expense.id}"
+                  title="Excluir despesa">
+            🗑️
+          </button>
+        </div>
       </div>
     `;
   }
@@ -162,6 +178,13 @@ class EventDetailView {
             ${isReimbursement ? '<span class="badge badge-secondary" style="margin-left: var(--spacing-xs);">Reembolso</span>' : ''}
           </div>
           <div class="expense-item-value" style="color: var(--color-success);">${this.formatCurrency(income.amount)}</div>
+        </div>
+        <div class="expense-item-actions">
+          <button class="btn btn-sm btn-delete-transaction" 
+                  data-transaction-id="${income.id}"
+                  title="Excluir receita">
+            🗑️
+          </button>
         </div>
       </div>
     `;
@@ -373,6 +396,34 @@ class EventDetailView {
       }
     } catch (error) {
       window.toast.error(`Erro ao marcar nota fiscal: ${error.message}`);
+    }
+  }
+
+  async deleteTransaction(transactionId) {
+    if (!this.deleteTransactionUseCase) {
+      window.toast.error('Funcionalidade de exclusão não disponível');
+      return;
+    }
+
+    // Confirmação antes de excluir
+    const confirmed = window.confirm('Tem certeza que deseja excluir esta transação?');
+    if (!confirmed) {
+      return;
+    }
+
+    try {
+      const result = await this.deleteTransactionUseCase.execute(transactionId);
+      
+      if (result.success) {
+        window.toast.success('Transação excluída com sucesso!');
+        // Recarrega os dados da tela para refletir a remoção
+        await this.render(this.currentEventId);
+      } else {
+        window.toast.error(`Erro ao excluir transação: ${result.error}`);
+      }
+    } catch (error) {
+      console.error('Erro ao excluir transação:', error);
+      window.toast.error(`Erro ao excluir transação: ${error.message}`);
     }
   }
 

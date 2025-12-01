@@ -207,6 +207,7 @@
   display: flex;
   justify-content: space-between;
   align-items: center;
+  gap: var(--spacing-md);
   transition: all var(--transition-fast);
 }
 
@@ -251,6 +252,33 @@
   gap: var(--spacing-xs);
   font-size: var(--font-size-xs);
   color: var(--color-warning);
+}
+
+.expense-item-actions {
+  display: flex;
+  align-items: center;
+  gap: var(--spacing-sm);
+}
+
+.btn-delete-transaction {
+  color: #999;
+  background: transparent;
+  border: none;
+  padding: 4px 8px;
+  cursor: pointer;
+  font-size: 18px;
+  transition: color 0.2s, transform 0.1s;
+  border-radius: 4px;
+  line-height: 1;
+}
+
+.btn-delete-transaction:hover {
+  color: var(--color-danger);
+  transform: scale(1.1);
+}
+
+.btn-delete-transaction:active {
+  transform: scale(0.95);
 }
 
 /* Botões */

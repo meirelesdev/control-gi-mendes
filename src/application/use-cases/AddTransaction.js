@@ -51,65 +51,93 @@ class AddTransaction {
       }
 
       // Importa Transaction dinamicamente para garantir que está disponível
-      // Isso resolve problemas de cache do navegador
+      // Usa cache global para evitar recarregamentos desnecessários
       let TransactionClass;
-      const modulePath = '../../domain/entities/Transaction.js';
       
-      try {
-        // Primeira tentativa: import normal
-        const TransactionModule = await import(modulePath);
-        TransactionClass = TransactionModule?.Transaction;
+      // Verifica se já temos Transaction em cache global
+      if (window._TransactionCache) {
+        console.log('✅ Usando Transaction do cache global');
+        TransactionClass = window._TransactionCache;
+      } else {
+        const modulePath = '../../domain/entities/Transaction.js';
         
-        // Se não encontrou, tenta novamente após um pequeno delay
-        if (!TransactionClass) {
-          console.warn('Transaction não encontrado na primeira tentativa, tentando novamente...');
-          await new Promise(resolve => setTimeout(resolve, 100));
-          const TransactionModule2 = await import(modulePath);
-          TransactionClass = TransactionModule2?.Transaction;
-        }
+        console.log('🔄 Tentando carregar Transaction pela primeira vez...');
         
-        // Valida se TransactionClass está correto
-        if (!TransactionClass) {
-          const moduleKeys = Object.keys(TransactionModule || {});
-          throw new Error(`Transaction não foi exportado corretamente. Chaves disponíveis no módulo: ${moduleKeys.join(', ')}`);
-        }
-        
-        // Valida se os métodos necessários existem
-        if (typeof TransactionClass.createExpense !== 'function') {
-          const methods = Object.getOwnPropertyNames(TransactionClass).filter(
-            name => typeof TransactionClass[name] === 'function'
-          );
-          throw new Error(`Transaction.createExpense não é uma função. Métodos disponíveis: ${methods.join(', ')}`);
-        }
-        
-        // Log de sucesso (apenas em desenvolvimento)
-        if (console.debug) {
-          console.debug('Transaction carregado com sucesso:', {
+        try {
+          // Primeira tentativa: import normal
+          console.log('📦 Importando Transaction (tentativa 1)...');
+          const TransactionModule = await import(modulePath);
+          TransactionClass = TransactionModule?.Transaction;
+          
+          console.log('📦 Resultado do import:', {
+            hasTransaction: !!TransactionClass,
+            moduleKeys: Object.keys(TransactionModule || {}),
+            moduleType: typeof TransactionModule
+          });
+          
+          // Se não encontrou, tenta novamente após um pequeno delay
+          if (!TransactionClass) {
+            console.warn('⚠️ Transaction não encontrado na primeira tentativa, tentando novamente...');
+            await new Promise(resolve => setTimeout(resolve, 100));
+            console.log('📦 Importando Transaction (tentativa 2)...');
+            const TransactionModule2 = await import(modulePath);
+            TransactionClass = TransactionModule2?.Transaction;
+            console.log('📦 Resultado do import (tentativa 2):', {
+              hasTransaction: !!TransactionClass,
+              moduleKeys: Object.keys(TransactionModule2 || {})
+            });
+          }
+          
+          // Valida se TransactionClass está correto
+          if (!TransactionClass) {
+            const moduleKeys = Object.keys(TransactionModule || {});
+            console.error('❌ Transaction não encontrado. Chaves do módulo:', moduleKeys);
+            console.error('❌ Módulo completo:', TransactionModule);
+            throw new Error(`Transaction não foi exportado corretamente. Chaves disponíveis no módulo: ${moduleKeys.join(', ')}`);
+          }
+          
+          // Valida se os métodos necessários existem
+          if (typeof TransactionClass.createExpense !== 'function') {
+            const methods = Object.getOwnPropertyNames(TransactionClass).filter(
+              name => typeof TransactionClass[name] === 'function'
+            );
+            console.error('❌ Transaction.createExpense não é função. Métodos disponíveis:', methods);
+            console.error('❌ TransactionClass completo:', TransactionClass);
+            throw new Error(`Transaction.createExpense não é uma função. Métodos disponíveis: ${methods.join(', ')}`);
+          }
+          
+          // Salva no cache global para próximas vezes
+          window._TransactionCache = TransactionClass;
+          
+          console.log('✅ Transaction carregado e cacheado com sucesso:', {
             hasCreateExpense: typeof TransactionClass.createExpense === 'function',
             hasCreateIncome: typeof TransactionClass.createIncome === 'function',
-            hasCreateKmIncome: typeof TransactionClass.createKmIncome === 'function'
+            hasCreateKmIncome: typeof TransactionClass.createKmIncome === 'function',
+            constructor: TransactionClass.name || 'Anonymous'
           });
+        } catch (importError) {
+          console.error('❌ Erro ao importar Transaction:', importError);
+          console.error('📋 Detalhes completos do erro:', {
+            message: importError.message,
+            stack: importError.stack,
+            name: importError.name,
+            modulePath: modulePath,
+            error: importError,
+            errorType: typeof importError
+          });
+          
+          // Mensagem de erro mais útil
+          let errorMsg = `Erro ao carregar Transaction: ${importError.message}`;
+          if (importError.message.includes('Failed to fetch') || importError.message.includes('404')) {
+            errorMsg += '\n\nO arquivo Transaction.js pode não estar acessível. Verifique se o arquivo existe em: src/domain/entities/Transaction.js';
+          } else if (importError.message.includes('Unexpected token')) {
+            errorMsg += '\n\nPode haver um erro de sintaxe no arquivo Transaction.js. Verifique o console para mais detalhes.';
+          } else {
+            errorMsg += '\n\nTente limpar o cache do navegador (Ctrl+Shift+Delete) e recarregar a página (F5).';
+          }
+          
+          throw new Error(errorMsg);
         }
-      } catch (importError) {
-        console.error('❌ Erro ao importar Transaction:', importError);
-        console.error('Detalhes do erro:', {
-          message: importError.message,
-          stack: importError.stack,
-          name: importError.name,
-          modulePath: modulePath
-        });
-        
-        // Mensagem de erro mais útil
-        let errorMsg = `Erro ao carregar Transaction: ${importError.message}`;
-        if (importError.message.includes('Failed to fetch') || importError.message.includes('404')) {
-          errorMsg += '\n\nO arquivo Transaction.js pode não estar acessível. Verifique se o arquivo existe em: src/domain/entities/Transaction.js';
-        } else if (importError.message.includes('Unexpected token')) {
-          errorMsg += '\n\nPode haver um erro de sintaxe no arquivo Transaction.js. Verifique o console para mais detalhes.';
-        } else {
-          errorMsg += '\n\nTente limpar o cache do navegador (Ctrl+Shift+Delete) e recarregar a página (F5).';
-        }
-        
-        throw new Error(errorMsg);
       }
 
       let transaction;
