@@ -116,7 +116,12 @@ document.addEventListener('DOMContentLoaded', () => {
     // Registrar Service Worker para PWA
     if ('serviceWorker' in navigator) {
       window.addEventListener('load', () => {
-        navigator.serviceWorker.register('/sw.js')
+        // Detecta o caminho base (para funcionar tanto localmente quanto no GitHub Pages)
+        const basePath = window.location.pathname.includes('/control-gi-mendes/') 
+          ? '/control-gi-mendes/sw.js' 
+          : '/sw.js';
+        
+        navigator.serviceWorker.register(basePath, { scope: '/control-gi-mendes/' })
           .then((registration) => {
             console.log('✅ Service Worker registrado com sucesso:', registration.scope);
             

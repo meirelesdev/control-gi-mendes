@@ -4,21 +4,24 @@
  */
 
 const CACHE_NAME = 'gi-financas-v1';
+// Base path para GitHub Pages
+const BASE_PATH = '/control-gi-mendes';
+
 const urlsToCache = [
-  '/',
-  '/index.html',
-  '/src/main.js',
-  '/src/presentation/styles/main.css',
-  '/src/presentation/styles/variables.css',
-  '/src/presentation/styles/base.css',
-  '/src/presentation/styles/components.css',
-  '/manifest.json'
+  `${BASE_PATH}/`,
+  `${BASE_PATH}/index.html`,
+  `${BASE_PATH}/src/main.js`,
+  `${BASE_PATH}/src/presentation/styles/main.css`,
+  `${BASE_PATH}/src/presentation/styles/variables.css`,
+  `${BASE_PATH}/src/presentation/styles/base.css`,
+  `${BASE_PATH}/src/presentation/styles/components.css`,
+  `${BASE_PATH}/manifest.json`
 ];
 
 // Ícones opcionais (só faz cache se existirem)
 const optionalUrls = [
-  '/icon-192.png',
-  '/icon-512.png'
+  `${BASE_PATH}/icon-192.png`,
+  `${BASE_PATH}/icon-512.png`
 ];
 
 // Instalação do Service Worker
@@ -106,7 +109,7 @@ self.addEventListener('fetch', (event) => {
         }).catch(() => {
           // Se falhar ao buscar, retorna página offline se for navegação
           if (event.request.mode === 'navigate') {
-            return caches.match('/index.html');
+            return caches.match(`${BASE_PATH}/index.html`) || caches.match('/index.html');
           }
           // Para outros recursos, retorna erro silenciosamente
           return new Response('Recurso não disponível offline', { 
@@ -118,7 +121,7 @@ self.addEventListener('fetch', (event) => {
       .catch(() => {
         // Se falhar, retorna página offline se for navegação
         if (event.request.mode === 'navigate') {
-          return caches.match('/index.html');
+          return caches.match(`${BASE_PATH}/index.html`) || caches.match('/index.html');
         }
         return new Response('Recurso não disponível', { 
           status: 404, 

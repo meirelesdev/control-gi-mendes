@@ -2,20 +2,21 @@
   "name": "Gi Finanças",
   "short_name": "Gi Finanças",
   "description": "Gestão Financeira de Eventos Culinários",
-  "start_url": "/",
+  "start_url": "/control-gi-mendes/",
+  "scope": "/control-gi-mendes/",
   "display": "standalone",
   "background_color": "#1a1d29",
   "theme_color": "#667eea",
   "orientation": "portrait-primary",
   "icons": [
     {
-      "src": "icon-192.png",
+      "src": "/control-gi-mendes/icon-192.png",
       "sizes": "192x192",
       "type": "image/png",
       "purpose": "any"
     },
     {
-      "src": "icon-512.png",
+      "src": "/control-gi-mendes/icon-512.png",
       "sizes": "512x512",
       "type": "image/png",
       "purpose": "any"
@@ -29,15 +30,15 @@
       "name": "Dashboard",
       "short_name": "Dashboard",
       "description": "Ver eventos ativos",
-      "url": "/",
-      "icons": [{ "src": "icon-192.png", "sizes": "192x192" }]
+      "url": "/control-gi-mendes/",
+      "icons": [{ "src": "/control-gi-mendes/icon-192.png", "sizes": "192x192" }]
     },
     {
       "name": "Configurações",
       "short_name": "Config",
       "description": "Configurar taxas",
-      "url": "/#settings",
-      "icons": [{ "src": "icon-192.png", "sizes": "192x192" }]
+      "url": "/control-gi-mendes/#settings",
+      "icons": [{ "src": "/control-gi-mendes/icon-192.png", "sizes": "192x192" }]
     }
   ]
 }
