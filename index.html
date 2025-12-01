@@ -42,6 +42,40 @@
         </main>
     </div>
 
+    <!-- Handler Global de Erros (ANTES de tudo) -->
+    <script>
+      // Handler global de erros para evitar alerts nativos
+      // Registrado ANTES de qualquer código para capturar todos os erros
+      window.addEventListener('error', function(event) {
+        event.preventDefault();
+        const errorMsg = event.error?.message || event.message || 'Erro desconhecido';
+        console.error('❌ Erro global capturado:', errorMsg, event.error);
+        
+        // NUNCA usar alert - sempre usar toast ou console
+        if (window.toast) {
+          window.toast.error('Erro: ' + errorMsg);
+        } else {
+          console.error('Erro (toast não disponível ainda):', errorMsg);
+        }
+        
+        return false; // Previne comportamento padrão (alert)
+      }, true); // true = captura na fase de captura (antes de outros handlers)
+      
+      // Handler para promessas rejeitadas não tratadas
+      window.addEventListener('unhandledrejection', function(event) {
+        event.preventDefault();
+        const errorMsg = event.reason?.message || event.reason || 'Erro em promessa não tratada';
+        console.error('❌ Promessa rejeitada não tratada:', errorMsg, event.reason);
+        
+        // NUNCA usar alert - sempre usar toast ou console
+        if (window.toast) {
+          window.toast.error('Erro: ' + errorMsg);
+        } else {
+          console.error('Erro (toast não disponível ainda):', errorMsg);
+        }
+      });
+    </script>
+    
     <!-- Domain Layer -->
     <script type="module" src="src/main.js"></script>
 </body>

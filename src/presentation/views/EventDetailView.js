@@ -29,6 +29,11 @@ class EventDetailView {
       const transactions = await this.transactionRepository.findByEventId(eventId);
       const expenses = transactions.filter(t => t.type === 'EXPENSE');
       const expensesWithoutReceipt = expenses.filter(e => !e.metadata.hasReceipt);
+      const incomes = transactions.filter(t => t.type === 'INCOME');
+      
+      // Calcula totais
+      const totalExpenses = expenses.reduce((sum, e) => sum + e.amount, 0);
+      const totalIncomes = incomes.reduce((sum, i) => sum + i.amount, 0);
 
       container.innerHTML = `
         <div class="card">
@@ -55,6 +60,9 @@ class EventDetailView {
             ${expensesWithoutReceipt.length > 0 ? `
               <span class="badge badge-warning">${expensesWithoutReceipt.length} sem NF</span>
             ` : ''}
+            ${expenses.length > 0 ? `
+              <span class="badge badge-info">Total: ${this.formatCurrency(totalExpenses)}</span>
+            ` : ''}
           </div>
           ${expenses.length === 0 ? `
             <div class="empty-state">
@@ -63,6 +71,24 @@ class EventDetailView {
           ` : `
             <div class="expense-list">
               ${expenses.map(expense => this.renderExpenseItem(expense)).join('')}
+            </div>
+          `}
+        </div>
+
+        <div class="card">
+          <div class="card-header">
+            <h3 class="card-title">KM / Viagens</h3>
+            ${incomes.length > 0 ? `
+              <span class="badge badge-success">Total: ${this.formatCurrency(totalIncomes)}</span>
+            ` : ''}
+          </div>
+          ${incomes.length === 0 ? `
+            <div class="empty-state">
+              <p class="text-muted">Nenhuma KM/Viagem cadastrada ainda.</p>
+            </div>
+          ` : `
+            <div class="expense-list">
+              ${incomes.map(income => this.renderIncomeItem(income)).join('')}
             </div>
           `}
         </div>
@@ -112,6 +138,31 @@ class EventDetailView {
         ` : `
           <span class="badge badge-success">NF OK</span>
         `}
+      </div>
+    `;
+  }
+
+  renderIncomeItem(income) {
+    const category = income.metadata.category || '';
+    const categoryLabels = {
+      'km': 'KM Rodado',
+      'tempo_viagem': 'Tempo de Viagem',
+      'diaria': 'Diária',
+      'hora_extra': 'Hora Extra'
+    };
+    const categoryLabel = categoryLabels[category] || category || 'Receita';
+    const isReimbursement = income.metadata.isReimbursement !== false;
+    
+    return `
+      <div class="expense-item">
+        <div class="expense-item-info">
+          <div class="expense-item-description">
+            ${this.escapeHtml(income.description)}
+            <span class="badge badge-info" style="margin-left: var(--spacing-sm);">${categoryLabel}</span>
+            ${isReimbursement ? '<span class="badge badge-secondary" style="margin-left: var(--spacing-xs);">Reembolso</span>' : ''}
+          </div>
+          <div class="expense-item-value" style="color: var(--color-success);">${this.formatCurrency(income.amount)}</div>
+        </div>
       </div>
     `;
   }
