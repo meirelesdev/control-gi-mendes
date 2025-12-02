@@ -3,7 +3,13 @@
  * Agregado principal que representa um evento culinário
  */
 class Event {
-  constructor(id, name, date, status = 'PLANNED', description = '') {
+  // Constantes de status
+  static STATUS_PLANNED = 'PLANNED';
+  static STATUS_DONE = 'DONE';
+  static STATUS_REPORT_SENT = 'REPORT_SENT';
+  static STATUS_PAID = 'PAID';
+
+  constructor(id, name, date, status = 'PLANNED', description = '', expectedPaymentDate = null) {
     this._validateId(id);
     this._validateName(name);
     this._validateDate(date);
@@ -15,6 +21,7 @@ class Event {
     this.date = date;
     this.status = status;
     this.description = description.trim();
+    this.expectedPaymentDate = expectedPaymentDate; // Data prevista de pagamento (calculada quando status = REPORT_SENT)
     this.createdAt = new Date().toISOString();
     this.updatedAt = this.createdAt;
   }
@@ -82,7 +89,16 @@ class Event {
    * @private
    */
   _validateStatus(status) {
-    const validStatuses = ['PLANNED', 'IN_PROGRESS', 'COMPLETED', 'CANCELLED'];
+    const validStatuses = [
+      Event.STATUS_PLANNED,
+      Event.STATUS_DONE,
+      Event.STATUS_REPORT_SENT,
+      Event.STATUS_PAID,
+      // Mantém compatibilidade com status antigos
+      'IN_PROGRESS',
+      'COMPLETED',
+      'CANCELLED'
+    ];
     if (!validStatuses.includes(status)) {
       throw new Error(`Status inválido. Deve ser um dos: ${validStatuses.join(', ')}`);
     }
@@ -129,6 +145,32 @@ class Event {
   }
 
   /**
+   * Marca o evento como "Relatório/NF Enviada"
+   * Calcula automaticamente a data prevista de pagamento baseada nos dias padrão de reembolso
+   * @param {Date|string} reportSentDate - Data em que o relatório foi enviado (padrão: hoje)
+   * @param {number} reimbursementDays - Número de dias para reembolso (padrão: 21)
+   */
+  markAsReportSent(reportSentDate = new Date(), reimbursementDays = 21) {
+    const sentDate = reportSentDate instanceof Date ? reportSentDate : new Date(reportSentDate);
+    
+    if (isNaN(sentDate.getTime())) {
+      throw new Error('Data de envio do relatório inválida');
+    }
+
+    if (!Number.isInteger(reimbursementDays) || reimbursementDays < 1) {
+      throw new Error('Dias de reembolso deve ser um número inteiro positivo');
+    }
+
+    // Calcula data prevista de pagamento: data de envio + dias de reembolso
+    const expectedDate = new Date(sentDate);
+    expectedDate.setDate(expectedDate.getDate() + reimbursementDays);
+    
+    this.status = Event.STATUS_REPORT_SENT;
+    this.expectedPaymentDate = expectedDate.toISOString().split('T')[0];
+    this.updatedAt = new Date().toISOString();
+  }
+
+  /**
    * Atualiza a descrição do evento
    */
   updateDescription(description) {
@@ -151,21 +193,42 @@ class Event {
    * Verifica se o evento está planejado
    */
   isPlanned() {
-    return this.status === 'PLANNED';
+    return this.status === Event.STATUS_PLANNED || this.status === 'PLANNED';
   }
 
   /**
-   * Verifica se o evento está em progresso
+   * Verifica se o evento foi realizado
+   */
+  isDone() {
+    return this.status === Event.STATUS_DONE || this.status === 'DONE' || this.status === 'COMPLETED';
+  }
+
+  /**
+   * Verifica se o relatório foi enviado
+   */
+  isReportSent() {
+    return this.status === Event.STATUS_REPORT_SENT || this.status === 'REPORT_SENT';
+  }
+
+  /**
+   * Verifica se o evento foi pago/finalizado
+   */
+  isPaid() {
+    return this.status === Event.STATUS_PAID || this.status === 'PAID';
+  }
+
+  /**
+   * Verifica se o evento está em progresso (compatibilidade)
    */
   isInProgress() {
     return this.status === 'IN_PROGRESS';
   }
 
   /**
-   * Verifica se o evento está completo
+   * Verifica se o evento está completo (compatibilidade)
    */
   isCompleted() {
-    return this.status === 'COMPLETED';
+    return this.status === 'COMPLETED' || this.isDone();
   }
 
   /**
@@ -190,13 +253,15 @@ class Event {
     if (!data) {
       throw new Error('Dados do evento são obrigatórios');
     }
-    return new Event(
+    const event = new Event(
       data.id,
       data.name,
       data.date,
       data.status || 'PLANNED',
-      data.description || ''
+      data.description || '',
+      data.expectedPaymentDate || null
     );
+    return event;
   }
 }
 

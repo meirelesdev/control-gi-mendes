@@ -30,6 +30,7 @@ class LocalStorageEventRepository extends EventRepository {
         date: event.date,
         status: event.status,
         description: event.description,
+        expectedPaymentDate: event.expectedPaymentDate || null,
         createdAt: event.createdAt,
         updatedAt: event.updatedAt
       };

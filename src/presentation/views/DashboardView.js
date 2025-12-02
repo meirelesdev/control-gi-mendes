@@ -8,6 +8,7 @@ class DashboardView {
     this.transactionRepository = transactionRepository;
     this.settingsRepository = settingsRepository;
     this.createEventUseCase = createEventUseCase;
+    this.currentFilter = 'all'; // 'all', 'pending', 'paid'
   }
 
   async render() {
@@ -23,16 +24,41 @@ class DashboardView {
         order: 'desc'
       });
 
-      const activeEvents = events.filter(e => e.status !== 'CANCELLED');
+      let activeEvents = events.filter(e => e.status !== 'CANCELLED');
+      
+      // Aplica filtro de status
+      if (this.currentFilter === 'pending') {
+        // A Receber: DONE ou REPORT_SENT
+        activeEvents = activeEvents.filter(e => 
+          e.status === 'DONE' || 
+          e.status === 'REPORT_SENT' || 
+          e.status === 'COMPLETED' ||
+          e.status === 'IN_PROGRESS'
+        );
+      } else if (this.currentFilter === 'paid') {
+        // Pagos: PAID
+        activeEvents = activeEvents.filter(e => e.status === 'PAID');
+      }
+      // 'all' não filtra nada
 
-      // Calcula total a receber em aberto
+      // Calcula total a receber em aberto (apenas eventos realizados ou com relatório enviado)
       let totalToReceive = 0;
-      for (const event of activeEvents) {
+      const eventsToReceive = events.filter(e => 
+        e.status !== 'CANCELLED' && 
+        (e.status === 'DONE' || e.status === 'REPORT_SENT' || e.status === 'COMPLETED' || e.status === 'IN_PROGRESS')
+      );
+      
+      for (const event of eventsToReceive) {
         const transactions = await this.transactionRepository.findByEventId(event.id);
         const expenses = transactions.filter(t => t.type === 'EXPENSE');
-        const fees = transactions.filter(t => t.type === 'INCOME' && !t.metadata.isReimbursement);
-        totalToReceive += expenses.reduce((sum, e) => sum + e.amount, 0) + 
-                          fees.reduce((sum, f) => sum + f.amount, 0);
+        const fees = transactions.filter(t => 
+          t.type === 'INCOME' && 
+          (t.metadata.category === 'diaria' || t.metadata.category === 'hora_extra' || 
+           t.metadata.isReimbursement === false)
+        );
+        // Total a receber = Honorários (lucro) + Despesas (reembolsos)
+        totalToReceive += fees.reduce((sum, f) => sum + f.amount, 0) + 
+                          expenses.reduce((sum, e) => sum + e.amount, 0);
       }
 
       // Renderiza
@@ -51,6 +77,23 @@ class DashboardView {
             </button>
           ` : ''}
         </div>
+
+        <div class="card" style="margin-bottom: var(--spacing-md);">
+          <div style="display: flex; gap: var(--spacing-sm); flex-wrap: wrap;">
+            <button class="btn btn-sm ${this.currentFilter === 'all' ? 'btn-primary' : 'btn-secondary'}" 
+                    id="filter-all" data-filter="all">
+              Todos
+            </button>
+            <button class="btn btn-sm ${this.currentFilter === 'pending' ? 'btn-primary' : 'btn-secondary'}" 
+                    id="filter-pending" data-filter="pending">
+              A Receber
+            </button>
+            <button class="btn btn-sm ${this.currentFilter === 'paid' ? 'btn-primary' : 'btn-secondary'}" 
+                    id="filter-paid" data-filter="paid">
+              Pagos
+            </button>
+          </div>
+        </div>
         
         ${activeEvents.length === 0 ? `
           <div class="empty-state">
@@ -68,6 +111,16 @@ class DashboardView {
           </div>
         `}
       `;
+
+      // Adiciona event listeners para filtros
+      container.querySelectorAll('[data-filter]').forEach(btn => {
+        btn.addEventListener('click', (e) => {
+          e.stopPropagation();
+          const filter = btn.dataset.filter;
+          this.currentFilter = filter;
+          this.render();
+        });
+      });
 
       // Adiciona event listeners
       container.querySelectorAll('.event-item').forEach(item => {
@@ -119,21 +172,65 @@ class DashboardView {
   }
 
   renderEventItem(event) {
-    const statusLabels = {
-      'PLANNED': 'Planejado',
-      'IN_PROGRESS': 'Em Andamento',
-      'COMPLETED': 'Concluído'
-    };
+    const statusConfig = this._getStatusConfig(event.status);
 
     return `
       <div class="event-item" data-event-id="${event.id}">
         <div class="event-item-header">
           <div class="event-item-name">${this.escapeHtml(event.name)}</div>
-          <span class="event-item-status">${statusLabels[event.status] || event.status}</span>
+          <span class="badge" style="background-color: ${statusConfig.badgeColor}; color: ${statusConfig.badgeTextColor};">
+            ${statusConfig.label}
+          </span>
         </div>
         <div class="event-item-date">${this.formatDate(event.date)}</div>
+        ${event.expectedPaymentDate ? `
+          <div class="text-muted" style="font-size: 0.9em; margin-top: var(--spacing-xs);">
+            💰 Pagamento previsto: ${this.formatDate(event.expectedPaymentDate)}
+          </div>
+        ` : ''}
       </div>
     `;
+  }
+
+  /**
+   * Retorna configuração visual do status
+   * @private
+   */
+  _getStatusConfig(status) {
+    const configs = {
+      'PLANNED': {
+        label: 'Planejado',
+        badgeColor: '#6b7280', // Cinza
+        badgeTextColor: '#fff'
+      },
+      'DONE': {
+        label: 'Realizado',
+        badgeColor: '#3b82f6', // Azul
+        badgeTextColor: '#fff'
+      },
+      'COMPLETED': {
+        label: 'Realizado',
+        badgeColor: '#3b82f6', // Azul (compatibilidade)
+        badgeTextColor: '#fff'
+      },
+      'IN_PROGRESS': {
+        label: 'Em Andamento',
+        badgeColor: '#3b82f6', // Azul (compatibilidade)
+        badgeTextColor: '#fff'
+      },
+      'REPORT_SENT': {
+        label: 'Relatório Enviado',
+        badgeColor: '#f97316', // Laranja
+        badgeTextColor: '#fff'
+      },
+      'PAID': {
+        label: 'Pago',
+        badgeColor: '#22c55e', // Verde
+        badgeTextColor: '#fff'
+      }
+    };
+
+    return configs[status] || configs['PLANNED'];
   }
 
   navigateToEvent(eventId) {

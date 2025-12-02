@@ -5,13 +5,14 @@
 import { ReportView } from './ReportView.js';
 
 class EventDetailView {
-  constructor(eventRepository, transactionRepository, settingsRepository, addTransactionUseCase, deleteTransactionUseCase = null, generateEventReportUseCase = null) {
+  constructor(eventRepository, transactionRepository, settingsRepository, addTransactionUseCase, deleteTransactionUseCase = null, generateEventReportUseCase = null, updateEventStatusUseCase = null) {
     this.eventRepository = eventRepository;
     this.transactionRepository = transactionRepository;
     this.settingsRepository = settingsRepository;
     this.addTransactionUseCase = addTransactionUseCase;
     this.deleteTransactionUseCase = deleteTransactionUseCase;
     this.generateEventReportUseCase = generateEventReportUseCase;
+    this.updateEventStatusUseCase = updateEventStatusUseCase;
     this.currentEventId = null;
   }
 
@@ -51,13 +52,28 @@ class EventDetailView {
       const totalFees = fees.reduce((sum, f) => sum + f.amount, 0);
       const totalIncomes = incomes.reduce((sum, i) => sum + i.amount, 0);
 
+      // Define cores e labels por status
+      const statusConfig = this._getStatusConfig(event.status);
+      const statusBorderColor = statusConfig.borderColor;
+      const statusBgColor = statusConfig.bgColor;
+
       container.innerHTML = `
-        <div class="card">
+        <div class="card" style="border-left: 4px solid ${statusBorderColor}; background-color: ${statusBgColor};">
           <div style="display: flex; justify-content: space-between; align-items: flex-start; margin-bottom: var(--spacing-md);">
             <div style="flex: 1;">
-              <h2>${this.escapeHtml(event.name)}</h2>
+              <div style="display: flex; align-items: center; gap: var(--spacing-md); margin-bottom: var(--spacing-sm);">
+                <h2 style="margin: 0;">${this.escapeHtml(event.name)}</h2>
+                <span class="badge" style="background-color: ${statusConfig.badgeColor}; color: ${statusConfig.badgeTextColor};">
+                  ${statusConfig.label}
+                </span>
+              </div>
               <p class="text-muted">${this.formatDate(event.date)}</p>
               ${event.description ? `<p>${this.escapeHtml(event.description)}</p>` : ''}
+              ${event.expectedPaymentDate ? `
+                <p style="margin-top: var(--spacing-sm);">
+                  <strong>💰 Pagamento previsto:</strong> ${this.formatDate(event.expectedPaymentDate)}
+                </p>
+              ` : ''}
             </div>
             ${this.generateEventReportUseCase ? `
             <button class="btn btn-success" id="btn-generate-report" style="margin-left: var(--spacing-md);">
@@ -65,6 +81,20 @@ class EventDetailView {
             </button>
             ` : ''}
           </div>
+          
+          ${this.updateEventStatusUseCase ? `
+          <div style="margin-top: var(--spacing-md); padding-top: var(--spacing-md); border-top: 1px solid var(--color-border);">
+            <label class="form-label" style="margin-bottom: var(--spacing-sm); display: block;">
+              <strong>Status do Evento:</strong>
+            </label>
+            <select class="form-input" id="event-status-select" style="max-width: 300px;">
+              <option value="PLANNED" ${event.status === 'PLANNED' ? 'selected' : ''}>Planejado</option>
+              <option value="DONE" ${event.status === 'DONE' || event.status === 'COMPLETED' ? 'selected' : ''}>Realizado</option>
+              <option value="REPORT_SENT" ${event.status === 'REPORT_SENT' ? 'selected' : ''}>Relatório/NF Enviada</option>
+              <option value="PAID" ${event.status === 'PAID' ? 'selected' : ''}>Finalizado/Pago</option>
+            </select>
+          </div>
+          ` : ''}
         </div>
 
         <div class="card">
@@ -159,6 +189,16 @@ class EventDetailView {
         if (btnGenerateReport) {
           btnGenerateReport.addEventListener('click', () => {
             this.generateReport();
+          });
+        }
+      }
+
+      // Event listener para mudança de status
+      if (this.updateEventStatusUseCase) {
+        const statusSelect = document.getElementById('event-status-select');
+        if (statusSelect) {
+          statusSelect.addEventListener('change', async (e) => {
+            await this.updateStatus(e.target.value);
           });
         }
       }
@@ -759,6 +799,85 @@ class EventDetailView {
     const div = document.createElement('div');
     div.textContent = text;
     return div.innerHTML;
+  }
+
+  /**
+   * Retorna configuração visual do status
+   * @private
+   */
+  _getStatusConfig(status) {
+    const configs = {
+      'PLANNED': {
+        label: 'Planejado',
+        borderColor: '#6b7280', // Cinza
+        bgColor: 'rgba(107, 114, 128, 0.05)',
+        badgeColor: '#6b7280',
+        badgeTextColor: '#fff'
+      },
+      'DONE': {
+        label: 'Realizado',
+        borderColor: '#3b82f6', // Azul
+        bgColor: 'rgba(59, 130, 246, 0.05)',
+        badgeColor: '#3b82f6',
+        badgeTextColor: '#fff'
+      },
+      'COMPLETED': {
+        label: 'Realizado',
+        borderColor: '#3b82f6', // Azul (compatibilidade)
+        bgColor: 'rgba(59, 130, 246, 0.05)',
+        badgeColor: '#3b82f6',
+        badgeTextColor: '#fff'
+      },
+      'REPORT_SENT': {
+        label: 'Relatório/NF Enviada',
+        borderColor: '#f97316', // Laranja
+        bgColor: 'rgba(249, 115, 22, 0.05)',
+        badgeColor: '#f97316',
+        badgeTextColor: '#fff'
+      },
+      'PAID': {
+        label: 'Finalizado/Pago',
+        borderColor: '#22c55e', // Verde
+        bgColor: 'rgba(34, 197, 94, 0.05)',
+        badgeColor: '#22c55e',
+        badgeTextColor: '#fff'
+      }
+    };
+
+    return configs[status] || configs['PLANNED'];
+  }
+
+  /**
+   * Atualiza o status do evento
+   */
+  async updateStatus(newStatus) {
+    if (!this.updateEventStatusUseCase) {
+      window.toast?.error('Funcionalidade de atualização de status não disponível');
+      return;
+    }
+
+    try {
+      const result = await this.updateEventStatusUseCase.execute(this.currentEventId, newStatus);
+
+      if (result.success) {
+        // Mensagem especial para REPORT_SENT
+        if (newStatus === 'REPORT_SENT' && result.expectedPaymentDate) {
+          const paymentDate = this.formatDate(result.expectedPaymentDate);
+          window.toast?.success(`Data de pagamento prevista atualizada para ${paymentDate}!`);
+        } else {
+          const statusLabel = this._getStatusConfig(newStatus).label;
+          window.toast?.success(`Status atualizado para: ${statusLabel}`);
+        }
+        
+        // Recarrega a view para refletir as mudanças
+        await this.render(this.currentEventId);
+      } else {
+        window.toast?.error(`Erro ao atualizar status: ${result.error}`);
+      }
+    } catch (error) {
+      console.error('Erro ao atualizar status:', error);
+      window.toast?.error(`Erro ao atualizar status: ${error.message}`);
+    }
   }
 
   /**
