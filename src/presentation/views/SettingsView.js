@@ -52,6 +52,13 @@ class SettingsView {
               <small class="text-muted">Número de dias após o evento para calcular data prevista de recebimento</small>
             </div>
 
+            <div class="form-group">
+              <label class="form-label">Teto de Hospedagem (R$)</label>
+              <input type="number" class="form-input" id="settings-max-hotel-rate" 
+                     step="0.01" min="0" value="${settings.maxHotelRate || 280.00}" required>
+              <small class="text-muted">Valor máximo permitido para despesas de hospedagem conforme contrato</small>
+            </div>
+
             <div class="modal-footer" style="margin-top: var(--spacing-xl);">
               <button type="submit" class="btn btn-primary btn-lg" style="width: 100%;">
                 Salvar Configurações
@@ -78,11 +85,13 @@ class SettingsView {
     const rateKm = parseFloat(document.getElementById('settings-rate-km').value);
     const rateTravelTime = parseFloat(document.getElementById('settings-rate-travel-time').value);
     const defaultReimbursementDays = parseInt(document.getElementById('settings-reimbursement-days').value);
+    const maxHotelRate = parseFloat(document.getElementById('settings-max-hotel-rate').value);
 
     const result = await this.updateSettingsUseCase.execute({
       rateKm,
       rateTravelTime,
-      defaultReimbursementDays
+      defaultReimbursementDays,
+      maxHotelRate
     });
 
     if (result.success) {

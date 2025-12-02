@@ -165,8 +165,8 @@ class GetEventSummary {
             amount: transaction.amount,
             category: transaction.metadata.category
           });
-        }
-      }
+    }
+  }
     });
 
     return {

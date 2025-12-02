@@ -205,14 +205,33 @@ class AddTransaction {
       console.error('Erro em AddTransaction.execute:', {
         message: error.message,
         stack: error.stack,
-        input: input
+        input: input,
+        errorType: typeof error,
+        errorName: error.name
       });
       
       // Mensagem de erro mais amigável
-      let errorMessage = error.message;
-      if (error.message.includes('Transaction')) {
+      let errorMessage = error.message || 'Erro desconhecido ao processar transação';
+      
+      // Tratamento específico para erros relacionados a Transaction
+      if (error.message && (
+        error.message.includes('Transaction') || 
+        error.message.includes('transaction') ||
+        error.name === 'ReferenceError' && error.message.includes('Transaction')
+      )) {
         errorMessage = 'Erro ao processar transação. Por favor, recarregue a página (F5) e tente novamente. Se o problema persistir, limpe o cache do navegador (Ctrl+Shift+Delete).';
+        
+        // Log adicional para debug
+        console.error('🔍 Erro relacionado a Transaction detectado:', {
+          message: error.message,
+          name: error.name,
+          stack: error.stack
+        });
       }
+      
+      // GARANTE que nunca vai gerar um alert nativo
+      // O erro já está sendo tratado e retornado como objeto de resultado
+      // O código que chama este método deve tratar o resultado, não lançar exceção
       
       return {
         success: false,

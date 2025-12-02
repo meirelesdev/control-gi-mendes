@@ -138,16 +138,16 @@ class EventDetailView {
           <div class="expense-item-value">${this.formatCurrency(expense.amount)}</div>
         </div>
         <div class="expense-item-actions">
-          ${!hasReceipt ? `
-            <div class="expense-item-receipt">
-              <span>⚠️</span>
-              <button class="btn btn-sm btn-success btn-mark-receipt" data-transaction-id="${expense.id}">
-                Marcar NF
-              </button>
-            </div>
-          ` : `
-            <span class="badge badge-success">NF OK</span>
-          `}
+        ${!hasReceipt ? `
+          <div class="expense-item-receipt">
+            <span>⚠️</span>
+            <button class="btn btn-sm btn-success btn-mark-receipt" data-transaction-id="${expense.id}">
+              Marcar NF
+            </button>
+          </div>
+        ` : `
+          <span class="badge badge-success">NF OK</span>
+        `}
           <button class="btn btn-sm btn-delete-transaction" 
                   data-transaction-id="${expense.id}"
                   title="Excluir despesa">
@@ -226,7 +226,7 @@ class EventDetailView {
       const result = await this.saveExpense();
       // Só remove o modal se saveExpense retornou sucesso (sem erro)
       if (result !== false) {
-        modal.remove();
+      modal.remove();
       }
     });
   }
@@ -281,7 +281,7 @@ class EventDetailView {
       const result = await this.saveKmTravel();
       // Só remove o modal se saveKmTravel retornou sucesso (sem erro)
       if (result !== false) {
-        modal.remove();
+      modal.remove();
       }
     });
   }
@@ -300,8 +300,8 @@ class EventDetailView {
         hasReceipt
       });
 
-      if (result.success) {
-        if (window.toast) {
+      if (result && result.success) {
+        if (window.toast && typeof window.toast.success === 'function') {
           window.toast.success('Despesa adicionada com sucesso!');
         } else {
           console.log('✅ Despesa adicionada com sucesso!');
@@ -309,23 +309,38 @@ class EventDetailView {
         await this.render(this.currentEventId);
         return true; // Retorna true para indicar sucesso
       } else {
-        const errorMsg = result.error || 'Erro desconhecido ao adicionar despesa';
+        const errorMsg = (result && result.error) || 'Erro desconhecido ao adicionar despesa';
         console.error('Erro ao adicionar despesa:', errorMsg);
-        if (window.toast) {
+        
+        // GARANTE que nunca vai gerar um alert nativo
+        if (window.toast && typeof window.toast.error === 'function') {
           window.toast.error(errorMsg);
         } else {
           console.error('Toast não disponível. Erro:', errorMsg);
+          // Aguarda um pouco e tenta novamente
+          setTimeout(() => {
+            if (window.toast && typeof window.toast.error === 'function') {
+              window.toast.error(errorMsg);
+            }
+          }, 500);
         }
         return false; // Retorna false para indicar erro
       }
     } catch (error) {
-      const errorMsg = `Erro ao adicionar despesa: ${error.message}`;
+      const errorMsg = `Erro ao adicionar despesa: ${error?.message || 'Erro desconhecido'}`;
       console.error('Erro em saveExpense:', error);
       
-      if (window.toast) {
+      // GARANTE que nunca vai gerar um alert nativo
+      if (window.toast && typeof window.toast.error === 'function') {
         window.toast.error(errorMsg);
       } else {
         console.error('Toast não disponível. Erro:', errorMsg);
+        // Aguarda um pouco e tenta novamente
+        setTimeout(() => {
+          if (window.toast && typeof window.toast.error === 'function') {
+            window.toast.error(errorMsg);
+          }
+        }, 500);
       }
       return false; // Retorna false para indicar erro
     }
@@ -352,8 +367,8 @@ class EventDetailView {
 
       const result = await this.addTransactionUseCase.execute(input);
 
-      if (result.success) {
-        if (window.toast) {
+      if (result && result.success) {
+        if (window.toast && typeof window.toast.success === 'function') {
           window.toast.success('Transação adicionada com sucesso!');
         } else {
           console.log('✅ Transação adicionada com sucesso!');
@@ -361,23 +376,38 @@ class EventDetailView {
         await this.render(this.currentEventId);
         return true; // Retorna true para indicar sucesso
       } else {
-        const errorMsg = result.error || 'Erro desconhecido ao adicionar transação';
+        const errorMsg = (result && result.error) || 'Erro desconhecido ao adicionar transação';
         console.error('Erro ao adicionar transação:', errorMsg);
-        if (window.toast) {
+        
+        // GARANTE que nunca vai gerar um alert nativo
+        if (window.toast && typeof window.toast.error === 'function') {
           window.toast.error(errorMsg);
         } else {
           console.error('Toast não disponível. Erro:', errorMsg);
+          // Aguarda um pouco e tenta novamente
+          setTimeout(() => {
+            if (window.toast && typeof window.toast.error === 'function') {
+              window.toast.error(errorMsg);
+            }
+          }, 500);
         }
         return false; // Retorna false para indicar erro
       }
     } catch (error) {
-      const errorMsg = `Erro ao adicionar transação: ${error.message}`;
+      const errorMsg = `Erro ao adicionar transação: ${error?.message || 'Erro desconhecido'}`;
       console.error('Erro em saveKmTravel:', error);
       
-      if (window.toast) {
+      // GARANTE que nunca vai gerar um alert nativo
+      if (window.toast && typeof window.toast.error === 'function') {
         window.toast.error(errorMsg);
       } else {
         console.error('Toast não disponível. Erro:', errorMsg);
+        // Aguarda um pouco e tenta novamente
+        setTimeout(() => {
+          if (window.toast && typeof window.toast.error === 'function') {
+            window.toast.error(errorMsg);
+          }
+        }, 500);
       }
       return false; // Retorna false para indicar erro
     }
@@ -385,10 +415,10 @@ class EventDetailView {
 
   async markReceiptAsIssued(transactionId) {
     try {
-      const transaction = await this.transactionRepository.findById(transactionId);
-      if (transaction) {
-        transaction.markReceiptAsIssued();
-        await this.transactionRepository.save(transaction);
+    const transaction = await this.transactionRepository.findById(transactionId);
+    if (transaction) {
+      transaction.markReceiptAsIssued();
+      await this.transactionRepository.save(transaction);
         window.toast.success('Nota fiscal marcada como emitida!');
         await this.render(this.currentEventId);
       } else {
@@ -417,7 +447,7 @@ class EventDetailView {
       if (result.success) {
         window.toast.success('Transação excluída com sucesso!');
         // Recarrega os dados da tela para refletir a remoção
-        await this.render(this.currentEventId);
+      await this.render(this.currentEventId);
       } else {
         window.toast.error(`Erro ao excluir transação: ${result.error}`);
       }

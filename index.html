@@ -44,35 +44,117 @@
 
     <!-- Handler Global de Erros (ANTES de tudo) -->
     <script>
+      // ============================================
+      // BLOQUEIO COMPLETO DE ALERTS NATIVOS
+      // ============================================
+      // Override do alert nativo ANTES de qualquer coisa
+      const originalAlert = window.alert;
+      window.alert = function(message) {
+        const errorMsg = String(message || 'Erro desconhecido');
+        console.warn('⚠️ alert() bloqueado:', errorMsg);
+        
+        // Tenta usar toast se disponível
+        if (window.toast && typeof window.toast.error === 'function') {
+          window.toast.error(errorMsg);
+        } else {
+          console.error('Erro (toast não disponível):', errorMsg);
+          // Se toast não estiver disponível, cria um toast manual simples
+          setTimeout(() => {
+            if (window.toast && typeof window.toast.error === 'function') {
+              window.toast.error(errorMsg);
+            }
+          }, 500);
+        }
+        
+        // NUNCA chama originalAlert - bloqueia completamente
+        return undefined;
+      };
+      
+      // ============================================
+      // HANDLER GLOBAL DE ERROS
+      // ============================================
       // Handler global de erros para evitar alerts nativos
       // Registrado ANTES de qualquer código para capturar todos os erros
       window.addEventListener('error', function(event) {
         event.preventDefault();
-        const errorMsg = event.error?.message || event.message || 'Erro desconhecido';
-        console.error('❌ Erro global capturado:', errorMsg, event.error);
+        event.stopPropagation();
+        event.stopImmediatePropagation();
+        
+        // Captura diferentes tipos de mensagens de erro
+        let errorMsg = 'Erro desconhecido';
+        if (event.error) {
+          if (event.error.message) {
+            errorMsg = event.error.message;
+          } else if (typeof event.error === 'string') {
+            errorMsg = event.error;
+          } else {
+            errorMsg = String(event.error);
+          }
+        } else if (event.message) {
+          errorMsg = event.message;
+        }
+        
+        console.error('❌ Erro global capturado:', errorMsg, {
+          error: event.error,
+          message: event.message,
+          filename: event.filename,
+          lineno: event.lineno,
+          colno: event.colno,
+          stack: event.error?.stack
+        });
         
         // NUNCA usar alert - sempre usar toast ou console
-        if (window.toast) {
+        if (window.toast && typeof window.toast.error === 'function') {
           window.toast.error('Erro: ' + errorMsg);
         } else {
           console.error('Erro (toast não disponível ainda):', errorMsg);
+          // Aguarda um pouco e tenta novamente
+          setTimeout(() => {
+            if (window.toast && typeof window.toast.error === 'function') {
+              window.toast.error('Erro: ' + errorMsg);
+            }
+          }, 500);
         }
         
-        return false; // Previne comportamento padrão (alert)
+        return false; // Previne comportamento padrão
       }, true); // true = captura na fase de captura (antes de outros handlers)
       
       // Handler para promessas rejeitadas não tratadas
       window.addEventListener('unhandledrejection', function(event) {
         event.preventDefault();
-        const errorMsg = event.reason?.message || event.reason || 'Erro em promessa não tratada';
+        
+        let errorMsg = 'Erro em promessa não tratada';
+        if (event.reason) {
+          if (event.reason.message) {
+            errorMsg = event.reason.message;
+          } else if (typeof event.reason === 'string') {
+            errorMsg = event.reason;
+          } else {
+            errorMsg = String(event.reason);
+          }
+        }
+        
         console.error('❌ Promessa rejeitada não tratada:', errorMsg, event.reason);
         
         // NUNCA usar alert - sempre usar toast ou console
-        if (window.toast) {
+        if (window.toast && typeof window.toast.error === 'function') {
           window.toast.error('Erro: ' + errorMsg);
         } else {
           console.error('Erro (toast não disponível ainda):', errorMsg);
+          // Aguarda um pouco e tenta novamente
+          setTimeout(() => {
+            if (window.toast && typeof window.toast.error === 'function') {
+              window.toast.error('Erro: ' + errorMsg);
+            }
+          }, 500);
         }
+      });
+      
+      // Proteção adicional: intercepta qualquer tentativa de usar alert
+      Object.defineProperty(window, 'alert', {
+        value: window.alert,
+        writable: false,
+        configurable: false
       });
     </script>
     

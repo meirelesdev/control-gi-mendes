@@ -21,6 +21,7 @@ class LocalStorageSettingsRepository extends SettingsRepository {
         rateKm: settings.rateKm,
         rateTravelTime: settings.rateTravelTime,
         defaultReimbursementDays: settings.defaultReimbursementDays,
+        maxHotelRate: settings.maxHotelRate,
         updatedAt: settings.updatedAt
       };
       window.localStorage.setItem(this.storageKey, JSON.stringify(data));

@@ -2,6 +2,8 @@
  * Caso de Uso: Atualizar Configurações
  * Atualiza os valores padrão do sistema (taxas e dias de reembolso)
  */
+import { Settings } from '../../domain/entities/Settings.js';
+
 class UpdateSettings {
   constructor(settingsRepository) {
     if (!settingsRepository) {
@@ -16,6 +18,7 @@ class UpdateSettings {
    * @param {number} [input.rateKm] - Nova taxa por KM
    * @param {number} [input.rateTravelTime] - Nova taxa por hora de viagem
    * @param {number} [input.defaultReimbursementDays] - Novos dias padrão para reembolso
+   * @param {number} [input.maxHotelRate] - Novo teto de hospedagem
    * @returns {Promise<Object>} - Resultado com configurações atualizadas ou erro
    */
   async execute(input) {
@@ -33,7 +36,8 @@ class UpdateSettings {
       settings.update(
         input.rateKm,
         input.rateTravelTime,
-        input.defaultReimbursementDays
+        input.defaultReimbursementDays,
+        input.maxHotelRate
       );
 
       // Salva as configurações atualizadas
@@ -63,7 +67,8 @@ class UpdateSettings {
     // Verifica se pelo menos um campo foi informado
     if (input.rateKm === undefined && 
         input.rateTravelTime === undefined && 
-        input.defaultReimbursementDays === undefined) {
+        input.defaultReimbursementDays === undefined &&
+        input.maxHotelRate === undefined) {
       throw new Error('Pelo menos um campo deve ser informado para atualização');
     }
 

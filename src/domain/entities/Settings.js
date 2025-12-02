@@ -3,14 +3,16 @@
  * Singleton que contém as configurações do sistema
  */
 class Settings {
-  constructor(rateKm = 0.90, rateTravelTime = 75.00, defaultReimbursementDays = 21) {
+  constructor(rateKm = 0.90, rateTravelTime = 75.00, defaultReimbursementDays = 21, maxHotelRate = 280.00) {
     this._validateRateKm(rateKm);
     this._validateRateTravelTime(rateTravelTime);
     this._validateDefaultReimbursementDays(defaultReimbursementDays);
+    this._validateMaxHotelRate(maxHotelRate);
 
     this.rateKm = rateKm;
     this.rateTravelTime = rateTravelTime;
     this.defaultReimbursementDays = defaultReimbursementDays;
+    this.maxHotelRate = maxHotelRate;
     this.updatedAt = new Date().toISOString();
   }
 
@@ -72,9 +74,28 @@ class Settings {
   }
 
   /**
+   * Valida o teto máximo para hospedagem
+   * @private
+   */
+  _validateMaxHotelRate(maxHotelRate) {
+    if (maxHotelRate === null || maxHotelRate === undefined) {
+      throw new Error('Teto de hospedagem é obrigatório');
+    }
+    if (typeof maxHotelRate !== 'number' || isNaN(maxHotelRate)) {
+      throw new Error('Teto de hospedagem deve ser um número');
+    }
+    if (maxHotelRate < 0) {
+      throw new Error('Teto de hospedagem não pode ser negativo');
+    }
+    if (maxHotelRate > 10000) {
+      throw new Error('Teto de hospedagem não pode ser superior a R$ 10.000,00');
+    }
+  }
+
+  /**
    * Atualiza as configurações
    */
-  update(rateKm, rateTravelTime, defaultReimbursementDays) {
+  update(rateKm, rateTravelTime, defaultReimbursementDays, maxHotelRate) {
     if (rateKm !== undefined && rateKm !== null) {
       this._validateRateKm(rateKm);
       this.rateKm = rateKm;
@@ -86,6 +107,10 @@ class Settings {
     if (defaultReimbursementDays !== undefined && defaultReimbursementDays !== null) {
       this._validateDefaultReimbursementDays(defaultReimbursementDays);
       this.defaultReimbursementDays = defaultReimbursementDays;
+    }
+    if (maxHotelRate !== undefined && maxHotelRate !== null) {
+      this._validateMaxHotelRate(maxHotelRate);
+      this.maxHotelRate = maxHotelRate;
     }
     this.updatedAt = new Date().toISOString();
   }
@@ -127,22 +152,29 @@ class Settings {
 
   /**
    * Cria uma instância padrão
+   * Valores conforme contrato de prestação de serviços:
+   * - rateKm: R$ 0,90 por KM
+   * - rateTravelTime: R$ 75,00 por hora (Hora Extra)
+   * - defaultReimbursementDays: 21 dias após NF
+   * - maxHotelRate: R$ 280,00 teto para hospedagem
    */
   static createDefault() {
-    return new Settings(0.90, 75.00, 21);
+    return new Settings(0.90, 75.00, 21, 280.00);
   }
 
   /**
    * Restaura uma instância a partir de dados serializados
+   * Se maxHotelRate não existir nos dados antigos, usa o valor padrão (280.00)
    */
   static restore(data) {
     if (!data) {
       return Settings.createDefault();
     }
     return new Settings(
-      data.rateKm,
-      data.rateTravelTime,
-      data.defaultReimbursementDays
+      data.rateKm !== undefined ? data.rateKm : 0.90,
+      data.rateTravelTime !== undefined ? data.rateTravelTime : 75.00,
+      data.defaultReimbursementDays !== undefined ? data.defaultReimbursementDays : 21,
+      data.maxHotelRate !== undefined ? data.maxHotelRate : 280.00 // Valor padrão conforme contrato
     );
   }
 }
