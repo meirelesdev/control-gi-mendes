@@ -5,7 +5,7 @@
 import { ReportView } from './ReportView.js';
 
 class EventDetailView {
-  constructor(eventRepository, transactionRepository, settingsRepository, addTransactionUseCase, deleteTransactionUseCase = null, generateEventReportUseCase = null, updateEventStatusUseCase = null, updateEventUseCase = null) {
+  constructor(eventRepository, transactionRepository, settingsRepository, addTransactionUseCase, deleteTransactionUseCase = null, generateEventReportUseCase = null, updateEventStatusUseCase = null, updateEventUseCase = null, updateTransactionUseCase = null) {
     this.eventRepository = eventRepository;
     this.transactionRepository = transactionRepository;
     this.settingsRepository = settingsRepository;
@@ -14,6 +14,7 @@ class EventDetailView {
     this.generateEventReportUseCase = generateEventReportUseCase;
     this.updateEventStatusUseCase = updateEventStatusUseCase;
     this.updateEventUseCase = updateEventUseCase;
+    this.updateTransactionUseCase = updateTransactionUseCase;
     this.currentEventId = null;
   }
 
@@ -244,6 +245,18 @@ class EventDetailView {
           await this.deleteTransaction(transactionId);
         });
       });
+
+      // Event listeners para editar transações
+      if (this.updateTransactionUseCase) {
+        container.querySelectorAll('.btn-edit-transaction').forEach(btn => {
+          btn.addEventListener('click', async (e) => {
+            const transactionId = e.target.dataset.transactionId;
+            const transactionType = e.target.dataset.transactionType;
+            const transactionCategory = e.target.dataset.transactionCategory;
+            await this.showEditTransactionModal(transactionId, transactionType, transactionCategory);
+          });
+        });
+      }
     } catch (error) {
       container.innerHTML = `
         <div class="card" style="border-left-color: var(--color-danger);">
@@ -273,6 +286,15 @@ class EventDetailView {
         ` : `
           <span class="badge badge-success">NF OK</span>
         `}
+          ${this.updateTransactionUseCase ? `
+            <button class="btn btn-sm btn-edit-transaction" 
+                    data-transaction-id="${expense.id}"
+                    data-transaction-type="expense"
+                    title="Editar despesa"
+                    style="background: transparent; color: var(--color-primary); padding: 4px 8px; border-radius: var(--radius-full); border: 1px solid var(--color-border); margin-right: var(--spacing-xs);">
+              ✏️
+            </button>
+          ` : ''}
           <button class="btn btn-sm btn-delete-transaction" 
                   data-transaction-id="${expense.id}"
                   title="Excluir despesa">
@@ -305,6 +327,16 @@ class EventDetailView {
           <div class="expense-item-value" style="color: var(--color-success);">${this.formatCurrency(income.amount)}</div>
         </div>
         <div class="expense-item-actions">
+          ${this.updateTransactionUseCase ? `
+            <button class="btn btn-sm btn-edit-transaction" 
+                    data-transaction-id="${income.id}"
+                    data-transaction-type="income"
+                    data-transaction-category="${category}"
+                    title="Editar receita"
+                    style="background: transparent; color: var(--color-primary); padding: 4px 8px; border-radius: var(--radius-full); border: 1px solid var(--color-border); margin-right: var(--spacing-xs);">
+              ✏️
+            </button>
+          ` : ''}
           <button class="btn btn-sm btn-delete-transaction" 
                   data-transaction-id="${income.id}"
                   title="Excluir receita">
@@ -334,6 +366,16 @@ class EventDetailView {
           <div class="expense-item-value" style="color: var(--color-success); font-weight: bold;">${this.formatCurrency(fee.amount)}</div>
         </div>
         <div class="expense-item-actions">
+          ${this.updateTransactionUseCase ? `
+            <button class="btn btn-sm btn-edit-transaction" 
+                    data-transaction-id="${fee.id}"
+                    data-transaction-type="fee"
+                    data-transaction-category="${category}"
+                    title="Editar honorário"
+                    style="background: transparent; color: var(--color-primary); padding: 4px 8px; border-radius: var(--radius-full); border: 1px solid var(--color-border); margin-right: var(--spacing-xs);">
+              ✏️
+            </button>
+          ` : ''}
           <button class="btn btn-sm btn-delete-transaction" 
                   data-transaction-id="${fee.id}"
                   title="Excluir honorário">
@@ -882,6 +924,388 @@ class EventDetailView {
       }
     } catch (error) {
       console.error('Erro ao salvar edição do evento:', error);
+      if (window.toast) {
+        window.toast.error('Erro ao salvar alterações: ' + (error.message || 'Erro desconhecido'));
+      }
+      return false;
+    }
+  }
+
+  /**
+   * Exibe modal para editar transação
+   */
+  async showEditTransactionModal(transactionId, transactionType, transactionCategory = null) {
+    try {
+      const transaction = await this.transactionRepository.findById(transactionId);
+      if (!transaction) {
+        if (window.toast) {
+          window.toast.error('Transação não encontrada');
+        }
+        return;
+      }
+
+      let modalContent = '';
+
+      if (transactionType === 'expense' || transaction.type === 'EXPENSE') {
+        // Modal para editar despesa
+        modalContent = `
+          <form id="form-edit-expense">
+            <div class="form-group">
+              <label class="form-label">Descrição *</label>
+              <input type="text" class="form-input" id="edit-expense-description" 
+                     value="${this.escapeHtml(transaction.description)}" required 
+                     placeholder="Ex: Compra de ingredientes">
+            </div>
+            <div class="form-group">
+              <label class="form-label">Valor (R$) *</label>
+              <input type="number" class="form-input" id="edit-expense-amount" 
+                     value="${transaction.amount}" step="0.01" min="0.01" required>
+            </div>
+            <div class="form-group">
+              <label style="display: flex; align-items: center; gap: var(--spacing-sm);">
+                <input type="checkbox" id="edit-expense-has-receipt" ${transaction.metadata.hasReceipt ? 'checked' : ''}>
+                <span>Nota fiscal já emitida/arquivada</span>
+              </label>
+            </div>
+            <div class="modal-footer">
+              <button type="button" class="btn btn-secondary" onclick="this.closest('.modal-backdrop').remove()">
+                Cancelar
+              </button>
+              <button type="submit" class="btn btn-primary">Salvar Alterações</button>
+            </div>
+          </form>
+        `;
+      } else if (transactionType === 'income' || transaction.type === 'INCOME') {
+        // Modal para editar receita (KM/Viagem)
+        const isKm = transactionCategory === 'km' || transaction.metadata.category === 'km';
+        const isTravelTime = transactionCategory === 'tempo_viagem' || transaction.metadata.category === 'tempo_viagem';
+        
+        if (isKm) {
+          // Editar KM Rodado
+          const distance = transaction.metadata.distance || (transaction.amount / (await this.settingsRepository.find())?.rateKm || 0.90);
+          modalContent = `
+            <form id="form-edit-km">
+              <div class="form-group">
+                <label class="form-label">Descrição *</label>
+                <input type="text" class="form-input" id="edit-km-description" 
+                       value="${this.escapeHtml(transaction.description)}" required>
+              </div>
+              <div class="form-group">
+                <label class="form-label">Distância (KM) *</label>
+                <input type="number" class="form-input" id="edit-km-distance" 
+                       value="${distance.toFixed(1)}" step="0.1" min="0.1" required>
+              </div>
+              <div class="modal-footer">
+                <button type="button" class="btn btn-secondary" onclick="this.closest('.modal-backdrop').remove()">
+                  Cancelar
+                </button>
+                <button type="submit" class="btn btn-primary">Salvar Alterações</button>
+              </div>
+            </form>
+          `;
+        } else if (isTravelTime) {
+          // Editar Tempo de Viagem
+          const hours = transaction.metadata.hours || (transaction.amount / (await this.settingsRepository.find())?.rateTravelTime || 75.00);
+          modalContent = `
+            <form id="form-edit-travel-time">
+              <div class="form-group">
+                <label class="form-label">Descrição *</label>
+                <input type="text" class="form-input" id="edit-travel-description" 
+                       value="${this.escapeHtml(transaction.description)}" required>
+              </div>
+              <div class="form-group">
+                <label class="form-label">Horas de Viagem *</label>
+                <input type="number" class="form-input" id="edit-travel-hours" 
+                       value="${hours.toFixed(2)}" step="0.25" min="0.25" required>
+              </div>
+              <div class="modal-footer">
+                <button type="button" class="btn btn-secondary" onclick="this.closest('.modal-backdrop').remove()">
+                  Cancelar
+                </button>
+                <button type="submit" class="btn btn-primary">Salvar Alterações</button>
+              </div>
+            </form>
+          `;
+        } else {
+          // Receita genérica (editar descrição e valor)
+          modalContent = `
+            <form id="form-edit-income">
+              <div class="form-group">
+                <label class="form-label">Descrição *</label>
+                <input type="text" class="form-input" id="edit-income-description" 
+                       value="${this.escapeHtml(transaction.description)}" required>
+              </div>
+              <div class="form-group">
+                <label class="form-label">Valor (R$) *</label>
+                <input type="number" class="form-input" id="edit-income-amount" 
+                       value="${transaction.amount}" step="0.01" min="0.01" required>
+              </div>
+              <div class="modal-footer">
+                <button type="button" class="btn btn-secondary" onclick="this.closest('.modal-backdrop').remove()">
+                  Cancelar
+                </button>
+                <button type="submit" class="btn btn-primary">Salvar Alterações</button>
+              </div>
+            </form>
+          `;
+        }
+      } else if (transactionType === 'fee' || (transaction.type === 'INCOME' && transaction.metadata.category === 'diaria' || transaction.metadata.category === 'hora_extra')) {
+        // Modal para editar honorário
+        const isDiaria = transactionCategory === 'diaria' || transaction.metadata.category === 'diaria';
+        const isHoraExtra = transactionCategory === 'hora_extra' || transaction.metadata.category === 'hora_extra';
+        
+        if (isHoraExtra) {
+          // Editar Hora Extra
+          const hours = transaction.metadata.hours || (transaction.amount / (await this.settingsRepository.find())?.overtimeRate || 75.00);
+          modalContent = `
+            <form id="form-edit-hour-extra">
+              <div class="form-group">
+                <label class="form-label">Descrição *</label>
+                <input type="text" class="form-input" id="edit-hour-extra-description" 
+                       value="${this.escapeHtml(transaction.description)}" required>
+              </div>
+              <div class="form-group">
+                <label class="form-label">Horas *</label>
+                <input type="number" class="form-input" id="edit-hour-extra-hours" 
+                       value="${hours.toFixed(2)}" step="0.25" min="0.25" required>
+              </div>
+              <div class="modal-footer">
+                <button type="button" class="btn btn-secondary" onclick="this.closest('.modal-backdrop').remove()">
+                  Cancelar
+                </button>
+                <button type="submit" class="btn btn-primary">Salvar Alterações</button>
+              </div>
+            </form>
+          `;
+        } else {
+          // Editar Diária (valor fixo, só descrição)
+          modalContent = `
+            <form id="form-edit-daily">
+              <div class="form-group">
+                <label class="form-label">Descrição *</label>
+                <input type="text" class="form-input" id="edit-daily-description" 
+                       value="${this.escapeHtml(transaction.description)}" required>
+              </div>
+              <div class="form-group">
+                <label class="form-label">Valor (R$) *</label>
+                <input type="number" class="form-input" id="edit-daily-amount" 
+                       value="${transaction.amount}" step="0.01" min="0.01" required>
+              </div>
+              <div class="modal-footer">
+                <button type="button" class="btn btn-secondary" onclick="this.closest('.modal-backdrop').remove()">
+                  Cancelar
+                </button>
+                <button type="submit" class="btn btn-primary">Salvar Alterações</button>
+              </div>
+            </form>
+          `;
+        }
+      }
+
+      const modal = this.createModal('Editar Transação', modalContent);
+      document.body.appendChild(modal);
+      modal.classList.add('active');
+
+      // Event listener para salvar
+      const formId = modal.querySelector('form').id;
+      modal.querySelector(`#${formId}`).addEventListener('submit', async (e) => {
+        e.preventDefault();
+        const result = await this.saveTransactionEdit(transactionId, transactionType, transactionCategory);
+        if (result !== false) {
+          modal.remove();
+        }
+      });
+    } catch (error) {
+      console.error('Erro ao abrir modal de edição:', error);
+      if (window.toast) {
+        window.toast.error('Erro ao carregar dados da transação: ' + (error.message || 'Erro desconhecido'));
+      }
+    }
+  }
+
+  /**
+   * Salva as alterações da transação
+   */
+  async saveTransactionEdit(transactionId, transactionType, transactionCategory = null) {
+    try {
+      if (!this.updateTransactionUseCase) {
+        if (window.toast) {
+          window.toast.error('Use case de edição não disponível');
+        }
+        return false;
+      }
+
+      const transaction = await this.transactionRepository.findById(transactionId);
+      if (!transaction) {
+        if (window.toast) {
+          window.toast.error('Transação não encontrada');
+        }
+        return false;
+      }
+
+      let updateData = {};
+
+      if (transactionType === 'expense' || transaction.type === 'EXPENSE') {
+        // Editar despesa
+        const description = document.getElementById('edit-expense-description').value.trim();
+        const amount = parseFloat(document.getElementById('edit-expense-amount').value);
+        const hasReceipt = document.getElementById('edit-expense-has-receipt').checked;
+
+        if (!description || !amount || amount <= 0) {
+          if (window.toast) {
+            window.toast.error('Descrição e valor são obrigatórios');
+          }
+          return false;
+        }
+
+        updateData = {
+          description,
+          amount,
+          metadata: {
+            ...transaction.metadata,
+            hasReceipt
+          }
+        };
+      } else if (transactionType === 'income' || transaction.type === 'INCOME') {
+        const isKm = transactionCategory === 'km' || transaction.metadata.category === 'km';
+        const isTravelTime = transactionCategory === 'tempo_viagem' || transaction.metadata.category === 'tempo_viagem';
+
+        if (isKm) {
+          // Editar KM Rodado
+          const description = document.getElementById('edit-km-description').value.trim();
+          const distance = parseFloat(document.getElementById('edit-km-distance').value);
+          const settings = await this.settingsRepository.find();
+          const rateKm = settings?.rateKm || 0.90;
+          const amount = distance * rateKm;
+
+          if (!description || !distance || distance <= 0) {
+            if (window.toast) {
+              window.toast.error('Descrição e distância são obrigatórios');
+            }
+            return false;
+          }
+
+          updateData = {
+            description,
+            amount,
+            metadata: {
+              ...transaction.metadata,
+              category: 'km',
+              distance,
+              isReimbursement: true
+            }
+          };
+        } else if (isTravelTime) {
+          // Editar Tempo de Viagem
+          const description = document.getElementById('edit-travel-description').value.trim();
+          const hours = parseFloat(document.getElementById('edit-travel-hours').value);
+          const settings = await this.settingsRepository.find();
+          const rateTravelTime = settings?.rateTravelTime || 75.00;
+          const amount = hours * rateTravelTime;
+
+          if (!description || !hours || hours <= 0) {
+            if (window.toast) {
+              window.toast.error('Descrição e horas são obrigatórios');
+            }
+            return false;
+          }
+
+          updateData = {
+            description,
+            amount,
+            metadata: {
+              ...transaction.metadata,
+              category: 'tempo_viagem',
+              hours,
+              isReimbursement: true
+            }
+          };
+        } else {
+          // Receita genérica
+          const description = document.getElementById('edit-income-description').value.trim();
+          const amount = parseFloat(document.getElementById('edit-income-amount').value);
+
+          if (!description || !amount || amount <= 0) {
+            if (window.toast) {
+              window.toast.error('Descrição e valor são obrigatórios');
+            }
+            return false;
+          }
+
+          updateData = {
+            description,
+            amount
+          };
+        }
+      } else if (transactionType === 'fee' || transaction.metadata.category === 'diaria' || transaction.metadata.category === 'hora_extra') {
+        const isHoraExtra = transactionCategory === 'hora_extra' || transaction.metadata.category === 'hora_extra';
+
+        if (isHoraExtra) {
+          // Editar Hora Extra
+          const description = document.getElementById('edit-hour-extra-description').value.trim();
+          const hours = parseFloat(document.getElementById('edit-hour-extra-hours').value);
+          const settings = await this.settingsRepository.find();
+          const overtimeRate = settings?.overtimeRate || 75.00;
+          const amount = hours * overtimeRate;
+
+          if (!description || !hours || hours <= 0) {
+            if (window.toast) {
+              window.toast.error('Descrição e horas são obrigatórios');
+            }
+            return false;
+          }
+
+          updateData = {
+            description,
+            amount,
+            metadata: {
+              ...transaction.metadata,
+              category: 'hora_extra',
+              hours,
+              isReimbursement: false
+            }
+          };
+        } else {
+          // Editar Diária
+          const description = document.getElementById('edit-daily-description').value.trim();
+          const amount = parseFloat(document.getElementById('edit-daily-amount').value);
+
+          if (!description || !amount || amount <= 0) {
+            if (window.toast) {
+              window.toast.error('Descrição e valor são obrigatórios');
+            }
+            return false;
+          }
+
+          updateData = {
+            description,
+            amount,
+            metadata: {
+              ...transaction.metadata,
+              category: 'diaria',
+              isReimbursement: false
+            }
+          };
+        }
+      }
+
+      const result = await this.updateTransactionUseCase.execute(transactionId, updateData);
+
+      if (result.success) {
+        if (window.toast) {
+          window.toast.success('Transação atualizada com sucesso!');
+        }
+        // Re-renderiza a view para mostrar as alterações
+        await this.render(this.currentEventId);
+        return true;
+      } else {
+        if (window.toast) {
+          window.toast.error(result.error || 'Erro ao atualizar transação');
+        }
+        return false;
+      }
+    } catch (error) {
+      console.error('Erro ao salvar edição da transação:', error);
       if (window.toast) {
         window.toast.error('Erro ao salvar alterações: ' + (error.message || 'Erro desconhecido'));
       }

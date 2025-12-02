@@ -218,6 +218,26 @@ class Transaction {
   }
 
   /**
+   * Atualiza os detalhes da transação (descrição, valor e metadados opcionais)
+   * @param {Object} details - Detalhes a serem atualizados
+   * @param {string} [details.description] - Nova descrição
+   * @param {number} [details.amount] - Novo valor
+   * @param {Object} [details.metadata] - Novos metadados (parcial, será mesclado com os existentes)
+   */
+  updateDetails({ description, amount, metadata }) {
+    if (description !== undefined) {
+      this.updateDescription(description);
+    }
+    if (amount !== undefined) {
+      this.updateAmount(amount);
+    }
+    if (metadata !== undefined) {
+      this.updateMetadata(metadata);
+    }
+    // updatedAt já é atualizado pelos métodos individuais
+  }
+
+  /**
    * Cria uma transação do tipo EXPENSE
    */
   static createExpense(eventId, description, amount, hasReceipt = false) {
