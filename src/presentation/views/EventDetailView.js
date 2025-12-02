@@ -33,10 +33,22 @@ class EventDetailView {
       const transactions = await this.transactionRepository.findByEventId(eventId);
       const expenses = transactions.filter(t => t.type === 'EXPENSE');
       const expensesWithoutReceipt = expenses.filter(e => !e.metadata.hasReceipt);
+      
+      // Separa receitas: reembolsos (KM/Viagem) vs honorários (Diária/Hora Extra)
       const incomes = transactions.filter(t => t.type === 'INCOME');
+      // Reembolsos: KM e Tempo de Viagem
+      const reimbursements = incomes.filter(i => 
+        i.metadata.category === 'km' || i.metadata.category === 'tempo_viagem'
+      );
+      // Honorários: Diária e Hora Extra
+      const fees = incomes.filter(i => 
+        i.metadata.category === 'diaria' || i.metadata.category === 'hora_extra'
+      );
       
       // Calcula totais
       const totalExpenses = expenses.reduce((sum, e) => sum + e.amount, 0);
+      const totalReimbursements = reimbursements.reduce((sum, r) => sum + r.amount, 0);
+      const totalFees = fees.reduce((sum, f) => sum + f.amount, 0);
       const totalIncomes = incomes.reduce((sum, i) => sum + i.amount, 0);
 
       container.innerHTML = `
@@ -60,6 +72,9 @@ class EventDetailView {
           <div style="display: flex; flex-direction: column; gap: var(--spacing-md);">
             <button class="btn btn-primary btn-lg" id="btn-add-expense">
               ➕ Adicionar Despesa Rápida
+            </button>
+            <button class="btn btn-success btn-lg" id="btn-add-fee">
+              💰 Adicionar Honorário
             </button>
             <button class="btn btn-secondary btn-lg" id="btn-add-km-travel">
               🚗 Adicionar KM / Viagem
@@ -90,18 +105,36 @@ class EventDetailView {
 
         <div class="card">
           <div class="card-header">
-            <h3 class="card-title">KM / Viagens</h3>
-            ${incomes.length > 0 ? `
-              <span class="badge badge-success">Total: ${this.formatCurrency(totalIncomes)}</span>
+            <h3 class="card-title">💰 Honorários (Lucro)</h3>
+            ${fees.length > 0 ? `
+              <span class="badge badge-success">Total: ${this.formatCurrency(totalFees)}</span>
             ` : ''}
           </div>
-          ${incomes.length === 0 ? `
+          ${fees.length === 0 ? `
+            <div class="empty-state">
+              <p class="text-muted">Nenhum honorário cadastrado ainda.</p>
+            </div>
+          ` : `
+            <div class="expense-list">
+              ${fees.map(fee => this.renderFeeItem(fee)).join('')}
+            </div>
+          `}
+        </div>
+
+        <div class="card">
+          <div class="card-header">
+            <h3 class="card-title">🚗 KM / Viagens (Reembolso)</h3>
+            ${reimbursements.length > 0 ? `
+              <span class="badge badge-info">Total: ${this.formatCurrency(totalReimbursements)}</span>
+            ` : ''}
+          </div>
+          ${reimbursements.length === 0 ? `
             <div class="empty-state">
               <p class="text-muted">Nenhuma KM/Viagem cadastrada ainda.</p>
             </div>
           ` : `
             <div class="expense-list">
-              ${incomes.map(income => this.renderIncomeItem(income)).join('')}
+              ${reimbursements.map(reimbursement => this.renderIncomeItem(reimbursement)).join('')}
             </div>
           `}
         </div>
@@ -110,6 +143,10 @@ class EventDetailView {
       // Event listeners
       document.getElementById('btn-add-expense').addEventListener('click', () => {
         this.showAddExpenseModal();
+      });
+
+      document.getElementById('btn-add-fee').addEventListener('click', () => {
+        this.showAddFeeModal();
       });
 
       document.getElementById('btn-add-km-travel').addEventListener('click', () => {
@@ -154,10 +191,10 @@ class EventDetailView {
     const hasReceipt = expense.metadata.hasReceipt;
     
     return `
-      <div class="expense-item ${hasReceipt ? '' : 'no-receipt'}">
+      <div class="expense-item ${hasReceipt ? '' : 'no-receipt'}" style="border-left-color: var(--color-danger);">
         <div class="expense-item-info">
-          <div class="expense-item-description">${this.escapeHtml(expense.description)}</div>
-          <div class="expense-item-value">${this.formatCurrency(expense.amount)}</div>
+          <div class="expense-item-description">🔴 ${this.escapeHtml(expense.description)}</div>
+          <div class="expense-item-value" style="color: var(--color-danger);">${this.formatCurrency(expense.amount)}</div>
         </div>
         <div class="expense-item-actions">
         ${!hasReceipt ? `
@@ -212,6 +249,35 @@ class EventDetailView {
     `;
   }
 
+  renderFeeItem(fee) {
+    const category = fee.metadata.category || '';
+    const categoryLabels = {
+      'diaria': 'Diária',
+      'hora_extra': 'Hora Extra'
+    };
+    const categoryLabel = categoryLabels[category] || 'Honorário';
+    
+    return `
+      <div class="expense-item" style="border-left-color: var(--color-success); background-color: rgba(34, 197, 94, 0.05);">
+        <div class="expense-item-info">
+          <div class="expense-item-description">
+            🟢 ${this.escapeHtml(fee.description)}
+            <span class="badge badge-success" style="margin-left: var(--spacing-sm);">${categoryLabel}</span>
+            <span class="badge badge-success" style="margin-left: var(--spacing-xs);">Lucro</span>
+          </div>
+          <div class="expense-item-value" style="color: var(--color-success); font-weight: bold;">${this.formatCurrency(fee.amount)}</div>
+        </div>
+        <div class="expense-item-actions">
+          <button class="btn btn-sm btn-delete-transaction" 
+                  data-transaction-id="${fee.id}"
+                  title="Excluir honorário">
+            🗑️
+          </button>
+        </div>
+      </div>
+    `;
+  }
+
   showAddExpenseModal() {
     const modal = this.createModal('Adicionar Despesa Rápida', `
       <form id="form-add-expense">
@@ -251,6 +317,185 @@ class EventDetailView {
       modal.remove();
       }
     });
+  }
+
+  showAddFeeModal() {
+    const modal = this.createModal('Adicionar Honorário', `
+      <form id="form-add-fee">
+        <div class="form-group">
+          <label class="form-label">Tipo de Honorário</label>
+          <div style="display: flex; flex-direction: column; gap: var(--spacing-sm); margin-top: var(--spacing-xs);">
+            <label style="display: flex; align-items: center; gap: var(--spacing-sm); cursor: pointer; padding: var(--spacing-sm); border: 1px solid var(--color-border); border-radius: var(--radius-md);">
+              <input type="radio" name="fee-type" value="diaria" id="fee-type-diaria" checked style="cursor: pointer;">
+              <div style="flex: 1;">
+                <strong>Diária Adicional</strong>
+                <div class="text-muted" style="font-size: 0.9em;" id="diaria-value">Valor: R$ 300,00</div>
+              </div>
+            </label>
+            <label style="display: flex; align-items: center; gap: var(--spacing-sm); cursor: pointer; padding: var(--spacing-sm); border: 1px solid var(--color-border); border-radius: var(--radius-md);">
+              <input type="radio" name="fee-type" value="hora_extra" id="fee-type-hora" style="cursor: pointer;">
+              <div style="flex: 1;">
+                <strong>Hora Extra</strong>
+                <div class="text-muted" style="font-size: 0.9em;" id="hora-extra-info">Taxa: R$ 75,00 por hora</div>
+              </div>
+            </label>
+          </div>
+        </div>
+        <div class="form-group" id="hours-group" style="display: none;">
+          <label class="form-label">Quantidade de Horas</label>
+          <input type="number" class="form-input" id="fee-hours" 
+                 step="0.5" min="0.5" placeholder="0" value="1">
+          <small class="text-muted" id="hours-total" style="display: block; margin-top: var(--spacing-xs);">Total: R$ 0,00</small>
+        </div>
+        <div class="form-group">
+          <label class="form-label">Descrição</label>
+          <input type="text" class="form-input" id="fee-description" 
+                 placeholder="Ex: Diária técnica padrão" required>
+        </div>
+        <div class="modal-footer">
+          <button type="button" class="btn btn-secondary" onclick="this.closest('.modal-backdrop').remove()">
+            Cancelar
+          </button>
+          <button type="submit" class="btn btn-success">Salvar</button>
+        </div>
+      </form>
+    `);
+
+    document.body.appendChild(modal);
+    modal.classList.add('active');
+
+    // Carrega valores das configurações
+    this._loadFeeSettings(modal);
+
+    // Mostra/esconde campos baseado no tipo
+    const feeTypeInputs = modal.querySelectorAll('input[name="fee-type"]');
+    feeTypeInputs.forEach(input => {
+      input.addEventListener('change', () => {
+        const type = input.value;
+        const hoursGroup = modal.querySelector('#hours-group');
+        if (type === 'hora_extra') {
+          hoursGroup.style.display = 'block';
+          modal.querySelector('#fee-hours').required = true;
+          this._updateHoursTotal(modal);
+        } else {
+          hoursGroup.style.display = 'none';
+          modal.querySelector('#fee-hours').required = false;
+        }
+      });
+    });
+
+    // Atualiza total quando horas mudam
+    const hoursInput = modal.querySelector('#fee-hours');
+    if (hoursInput) {
+      hoursInput.addEventListener('input', () => {
+        this._updateHoursTotal(modal);
+      });
+    }
+
+    document.getElementById('form-add-fee').addEventListener('submit', async (e) => {
+      e.preventDefault();
+      const result = await this.saveFee(modal);
+      if (result !== false) {
+        modal.remove();
+      }
+    });
+  }
+
+  async _loadFeeSettings(modal) {
+    try {
+      const settings = await this.settingsRepository.find();
+      if (settings) {
+        const diariaValue = modal.querySelector('#diaria-value');
+        const horaExtraInfo = modal.querySelector('#hora-extra-info');
+        if (diariaValue) {
+          diariaValue.textContent = `Valor: ${this.formatCurrency(settings.standardDailyRate || 300.00)}`;
+        }
+        if (horaExtraInfo) {
+          horaExtraInfo.textContent = `Taxa: ${this.formatCurrency(settings.overtimeRate || 75.00)} por hora`;
+        }
+        // Armazena valores no modal para uso posterior
+        modal.dataset.dailyRate = settings.standardDailyRate || 300.00;
+        modal.dataset.overtimeRate = settings.overtimeRate || 75.00;
+      }
+    } catch (error) {
+      console.warn('Erro ao carregar configurações:', error);
+    }
+  }
+
+  _updateHoursTotal(modal) {
+    const hoursInput = modal.querySelector('#fee-hours');
+    const hoursTotal = modal.querySelector('#hours-total');
+    const overtimeRate = parseFloat(modal.dataset.overtimeRate || 75.00);
+    
+    if (hoursInput && hoursTotal) {
+      const hours = parseFloat(hoursInput.value) || 0;
+      const total = hours * overtimeRate;
+      hoursTotal.textContent = `Total: ${this.formatCurrency(total)}`;
+    }
+  }
+
+  async saveFee(modal) {
+    try {
+      const feeType = modal.querySelector('input[name="fee-type"]:checked').value;
+      const description = modal.querySelector('#fee-description').value.trim();
+      
+      if (!description) {
+        window.toast?.error('Descrição é obrigatória');
+        return false;
+      }
+
+      let amount;
+      let category;
+
+      if (feeType === 'diaria') {
+        const dailyRate = parseFloat(modal.dataset.dailyRate || 300.00);
+        amount = dailyRate;
+        category = 'diaria';
+      } else if (feeType === 'hora_extra') {
+        const hours = parseFloat(modal.querySelector('#fee-hours').value);
+        if (!hours || hours <= 0) {
+          window.toast?.error('Quantidade de horas deve ser maior que zero');
+          return false;
+        }
+        const overtimeRate = parseFloat(modal.dataset.overtimeRate || 75.00);
+        amount = hours * overtimeRate;
+        category = 'hora_extra';
+      } else {
+        window.toast?.error('Tipo de honorário inválido');
+        return false;
+      }
+
+      const result = await this.addTransactionUseCase.execute({
+        eventId: this.currentEventId,
+        type: 'INCOME',
+        description,
+        amount,
+        category,
+        isReimbursement: false
+      });
+
+      if (result && result.success) {
+        if (window.toast && typeof window.toast.success === 'function') {
+          window.toast.success('Honorário adicionado com sucesso!');
+        }
+        await this.render(this.currentEventId);
+        return true;
+      } else {
+        const errorMsg = (result && result.error) || 'Erro desconhecido ao adicionar honorário';
+        console.error('Erro ao adicionar honorário:', errorMsg);
+        if (window.toast && typeof window.toast.error === 'function') {
+          window.toast.error(errorMsg);
+        }
+        return false;
+      }
+    } catch (error) {
+      const errorMsg = `Erro ao adicionar honorário: ${error?.message || 'Erro desconhecido'}`;
+      console.error('Erro em saveFee:', error);
+      if (window.toast && typeof window.toast.error === 'function') {
+        window.toast.error(errorMsg);
+      }
+      return false;
+    }
   }
 
   showAddKmTravelModal() {

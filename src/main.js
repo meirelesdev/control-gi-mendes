@@ -61,15 +61,17 @@ const settingsRepository = new LocalStorageSettingsRepository();
 // 3. INSTÂNCIA DOS USE CASES
 // ============================================
 
-// Use Case: Criar Evento
-const createEvent = new CreateEvent(eventRepository);
-
-// Use Case: Adicionar Transação
+// Use Case: Adicionar Transação (precisa ser criado antes para ser usado no CreateEvent)
 const addTransaction = new AddTransaction(
   transactionRepository,
   eventRepository,
   settingsRepository
 );
+
+// Use Case: Criar Evento (recebe addTransaction e settingsRepository para criar diária automática)
+const createEvent = new CreateEvent(eventRepository, addTransaction, settingsRepository);
+
+// addTransaction já foi criado acima para ser usado no CreateEvent
 
 // Use Case: Excluir Transação
 const deleteTransaction = new DeleteTransaction(transactionRepository);

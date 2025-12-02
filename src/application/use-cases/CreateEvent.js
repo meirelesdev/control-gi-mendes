@@ -1,15 +1,18 @@
 /**
  * Caso de Uso: Criar Evento
  * Cria um novo evento no sistema
+ * Pode criar automaticamente uma transação de diária padrão
  */
 import { Event } from '../../domain/entities/Event.js';
 
 class CreateEvent {
-  constructor(eventRepository) {
+  constructor(eventRepository, addTransactionUseCase = null, settingsRepository = null) {
     if (!eventRepository) {
       throw new Error('EventRepository é obrigatório');
     }
     this.eventRepository = eventRepository;
+    this.addTransactionUseCase = addTransactionUseCase;
+    this.settingsRepository = settingsRepository;
   }
 
   /**
@@ -19,6 +22,7 @@ class CreateEvent {
    * @param {string} input.date - Data do evento (formato ISO ou YYYY-MM-DD)
    * @param {string} [input.description] - Descrição opcional do evento
    * @param {string} [input.status] - Status inicial (padrão: 'PLANNED')
+   * @param {boolean} [input.autoCreateDaily] - Se true, cria automaticamente uma diária padrão
    * @returns {Promise<Object>} - Resultado com evento criado ou erro
    */
   async execute(input) {
@@ -40,6 +44,26 @@ class CreateEvent {
 
       // Salva no repositório
       const savedEvent = await this.eventRepository.save(event);
+
+      // Se solicitado, cria automaticamente a diária padrão
+      if (input.autoCreateDaily && this.addTransactionUseCase && this.settingsRepository) {
+        try {
+          const settings = await this.settingsRepository.find();
+          const dailyRate = settings?.standardDailyRate || 300.00;
+          
+          await this.addTransactionUseCase.execute({
+            eventId: savedEvent.id,
+            type: 'INCOME',
+            description: 'Diária Técnica Padrão',
+            amount: dailyRate,
+            category: 'diaria',
+            isReimbursement: false
+          });
+        } catch (dailyError) {
+          // Log do erro mas não falha a criação do evento
+          console.warn('Erro ao criar diária padrão automaticamente:', dailyError);
+        }
+      }
 
       return {
         success: true,

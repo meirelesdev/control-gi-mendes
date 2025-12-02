@@ -19,6 +19,8 @@ class UpdateSettings {
    * @param {number} [input.rateTravelTime] - Nova taxa por hora de viagem
    * @param {number} [input.defaultReimbursementDays] - Novos dias padrão para reembolso
    * @param {number} [input.maxHotelRate] - Novo teto de hospedagem
+   * @param {number} [input.standardDailyRate] - Nova diária técnica padrão
+   * @param {number} [input.overtimeRate] - Nova taxa de hora extra
    * @returns {Promise<Object>} - Resultado com configurações atualizadas ou erro
    */
   async execute(input) {
@@ -37,7 +39,9 @@ class UpdateSettings {
         input.rateKm,
         input.rateTravelTime,
         input.defaultReimbursementDays,
-        input.maxHotelRate
+        input.maxHotelRate,
+        input.standardDailyRate,
+        input.overtimeRate
       );
 
       // Salva as configurações atualizadas
@@ -68,7 +72,9 @@ class UpdateSettings {
     if (input.rateKm === undefined && 
         input.rateTravelTime === undefined && 
         input.defaultReimbursementDays === undefined &&
-        input.maxHotelRate === undefined) {
+        input.maxHotelRate === undefined &&
+        input.standardDailyRate === undefined &&
+        input.overtimeRate === undefined) {
       throw new Error('Pelo menos um campo deve ser informado para atualização');
     }
 

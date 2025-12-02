@@ -190,6 +190,15 @@ class DashboardView {
               <textarea class="form-input" id="event-description" rows="3" 
                         placeholder="Detalhes sobre o evento..."></textarea>
             </div>
+            <div class="form-group">
+              <label style="display: flex; align-items: center; gap: var(--spacing-sm); cursor: pointer;">
+                <input type="checkbox" id="auto-create-daily" checked style="cursor: pointer;">
+                <span>Lançar Diária Padrão Automaticamente (R$ 300,00)</span>
+              </label>
+              <small class="text-muted" style="display: block; margin-top: var(--spacing-xs); margin-left: 24px;">
+                Cria automaticamente uma receita de "Diária Técnica Padrão" ao criar o evento
+              </small>
+            </div>
             <div class="modal-footer">
               <button type="button" class="btn btn-secondary" id="btn-cancel-create">Cancelar</button>
               <button type="submit" class="btn btn-primary">Criar Evento</button>
@@ -257,6 +266,7 @@ class DashboardView {
     const name = document.getElementById('event-name').value.trim();
     const date = document.getElementById('event-date').value;
     const description = document.getElementById('event-description').value.trim();
+    const autoCreateDaily = document.getElementById('auto-create-daily').checked;
 
     if (!name || !date) {
       window.toast.warning('Por favor, preencha todos os campos obrigatórios.');
@@ -267,15 +277,22 @@ class DashboardView {
       const result = await this.createEventUseCase.execute({
         name,
         date,
-        description: description || null
+        description: description || null,
+        autoCreateDaily
       });
 
       if (result.success) {
         // Fecha o modal
         document.body.removeChild(modal);
         window.toast.success('Evento criado com sucesso!');
-        // Recarrega o dashboard
-        await this.render();
+        
+        // Navega para os detalhes do evento criado
+        if (result.data && result.data.id) {
+          this.navigateToEvent(result.data.id);
+        } else {
+          // Fallback: recarrega o dashboard
+          await this.render();
+        }
       } else {
         window.toast.error(`Erro ao criar evento: ${result.error}`);
       }

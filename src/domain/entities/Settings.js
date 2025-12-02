@@ -3,16 +3,20 @@
  * Singleton que contém as configurações do sistema
  */
 class Settings {
-  constructor(rateKm = 0.90, rateTravelTime = 75.00, defaultReimbursementDays = 21, maxHotelRate = 280.00) {
+  constructor(rateKm = 0.90, rateTravelTime = 75.00, defaultReimbursementDays = 21, maxHotelRate = 280.00, standardDailyRate = 300.00, overtimeRate = 75.00) {
     this._validateRateKm(rateKm);
     this._validateRateTravelTime(rateTravelTime);
     this._validateDefaultReimbursementDays(defaultReimbursementDays);
     this._validateMaxHotelRate(maxHotelRate);
+    this._validateStandardDailyRate(standardDailyRate);
+    this._validateOvertimeRate(overtimeRate);
 
     this.rateKm = rateKm;
     this.rateTravelTime = rateTravelTime;
     this.defaultReimbursementDays = defaultReimbursementDays;
     this.maxHotelRate = maxHotelRate;
+    this.standardDailyRate = standardDailyRate;
+    this.overtimeRate = overtimeRate;
     this.updatedAt = new Date().toISOString();
   }
 
@@ -93,9 +97,47 @@ class Settings {
   }
 
   /**
+   * Valida o valor padrão da diária técnica
+   * @private
+   */
+  _validateStandardDailyRate(standardDailyRate) {
+    if (standardDailyRate === null || standardDailyRate === undefined) {
+      throw new Error('Valor padrão da diária é obrigatório');
+    }
+    if (typeof standardDailyRate !== 'number' || isNaN(standardDailyRate)) {
+      throw new Error('Valor padrão da diária deve ser um número');
+    }
+    if (standardDailyRate < 0) {
+      throw new Error('Valor padrão da diária não pode ser negativo');
+    }
+    if (standardDailyRate > 10000) {
+      throw new Error('Valor padrão da diária não pode ser superior a R$ 10.000,00');
+    }
+  }
+
+  /**
+   * Valida o valor da hora extra
+   * @private
+   */
+  _validateOvertimeRate(overtimeRate) {
+    if (overtimeRate === null || overtimeRate === undefined) {
+      throw new Error('Valor da hora extra é obrigatório');
+    }
+    if (typeof overtimeRate !== 'number' || isNaN(overtimeRate)) {
+      throw new Error('Valor da hora extra deve ser um número');
+    }
+    if (overtimeRate < 0) {
+      throw new Error('Valor da hora extra não pode ser negativo');
+    }
+    if (overtimeRate > 10000) {
+      throw new Error('Valor da hora extra não pode ser superior a R$ 10.000,00');
+    }
+  }
+
+  /**
    * Atualiza as configurações
    */
-  update(rateKm, rateTravelTime, defaultReimbursementDays, maxHotelRate) {
+  update(rateKm, rateTravelTime, defaultReimbursementDays, maxHotelRate, standardDailyRate, overtimeRate) {
     if (rateKm !== undefined && rateKm !== null) {
       this._validateRateKm(rateKm);
       this.rateKm = rateKm;
@@ -111,6 +153,14 @@ class Settings {
     if (maxHotelRate !== undefined && maxHotelRate !== null) {
       this._validateMaxHotelRate(maxHotelRate);
       this.maxHotelRate = maxHotelRate;
+    }
+    if (standardDailyRate !== undefined && standardDailyRate !== null) {
+      this._validateStandardDailyRate(standardDailyRate);
+      this.standardDailyRate = standardDailyRate;
+    }
+    if (overtimeRate !== undefined && overtimeRate !== null) {
+      this._validateOvertimeRate(overtimeRate);
+      this.overtimeRate = overtimeRate;
     }
     this.updatedAt = new Date().toISOString();
   }
@@ -154,17 +204,19 @@ class Settings {
    * Cria uma instância padrão
    * Valores conforme contrato de prestação de serviços:
    * - rateKm: R$ 0,90 por KM
-   * - rateTravelTime: R$ 75,00 por hora (Hora Extra)
+   * - rateTravelTime: R$ 75,00 por hora (Tempo de Viagem)
    * - defaultReimbursementDays: 21 dias após NF
    * - maxHotelRate: R$ 280,00 teto para hospedagem
+   * - standardDailyRate: R$ 300,00 diária técnica padrão
+   * - overtimeRate: R$ 75,00 por hora extra
    */
   static createDefault() {
-    return new Settings(0.90, 75.00, 21, 280.00);
+    return new Settings(0.90, 75.00, 21, 280.00, 300.00, 75.00);
   }
 
   /**
    * Restaura uma instância a partir de dados serializados
-   * Se maxHotelRate não existir nos dados antigos, usa o valor padrão (280.00)
+   * Usa valores padrão para campos que não existirem nos dados antigos
    */
   static restore(data) {
     if (!data) {
@@ -174,7 +226,9 @@ class Settings {
       data.rateKm !== undefined ? data.rateKm : 0.90,
       data.rateTravelTime !== undefined ? data.rateTravelTime : 75.00,
       data.defaultReimbursementDays !== undefined ? data.defaultReimbursementDays : 21,
-      data.maxHotelRate !== undefined ? data.maxHotelRate : 280.00 // Valor padrão conforme contrato
+      data.maxHotelRate !== undefined ? data.maxHotelRate : 280.00,
+      data.standardDailyRate !== undefined ? data.standardDailyRate : 300.00,
+      data.overtimeRate !== undefined ? data.overtimeRate : 75.00
     );
   }
 }

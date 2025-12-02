@@ -59,6 +59,20 @@ class SettingsView {
               <small class="text-muted">Valor máximo permitido para despesas de hospedagem conforme contrato</small>
             </div>
 
+            <div class="form-group">
+              <label class="form-label">Diária Técnica Padrão (R$)</label>
+              <input type="number" class="form-input" id="settings-standard-daily-rate" 
+                     step="0.01" min="0" value="${settings.standardDailyRate || 300.00}" required>
+              <small class="text-muted">Valor padrão da diária técnica lançada automaticamente ao criar evento</small>
+            </div>
+
+            <div class="form-group">
+              <label class="form-label">Taxa de Hora Extra (R$)</label>
+              <input type="number" class="form-input" id="settings-overtime-rate" 
+                     step="0.01" min="0" value="${settings.overtimeRate || 75.00}" required>
+              <small class="text-muted">Valor por hora extra trabalhada</small>
+            </div>
+
             <div class="modal-footer" style="margin-top: var(--spacing-xl);">
               <button type="submit" class="btn btn-primary btn-lg" style="width: 100%;">
                 Salvar Configurações
@@ -86,12 +100,16 @@ class SettingsView {
     const rateTravelTime = parseFloat(document.getElementById('settings-rate-travel-time').value);
     const defaultReimbursementDays = parseInt(document.getElementById('settings-reimbursement-days').value);
     const maxHotelRate = parseFloat(document.getElementById('settings-max-hotel-rate').value);
+    const standardDailyRate = parseFloat(document.getElementById('settings-standard-daily-rate').value);
+    const overtimeRate = parseFloat(document.getElementById('settings-overtime-rate').value);
 
     const result = await this.updateSettingsUseCase.execute({
       rateKm,
       rateTravelTime,
       defaultReimbursementDays,
-      maxHotelRate
+      maxHotelRate,
+      standardDailyRate,
+      overtimeRate
     });
 
     if (result.success) {
