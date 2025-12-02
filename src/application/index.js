@@ -14,4 +14,5 @@ export { GenerateEventReport } from './use-cases/GenerateEventReport.js';
 export { UpdateEventStatus } from './use-cases/UpdateEventStatus.js';
 export { UpdateEvent } from './use-cases/UpdateEvent.js';
 export { UpdateTransaction } from './use-cases/UpdateTransaction.js';
+export { DeleteEvent } from './use-cases/DeleteEvent.js';
 

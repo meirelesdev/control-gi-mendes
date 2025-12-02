@@ -104,7 +104,8 @@ class App {
       generateEventReport,
       updateEventStatus,
       updateEvent,
-      updateTransaction
+      updateTransaction,
+      deleteEvent
     } = this.dependencies;
 
     if (this.currentView === 'dashboard') {
@@ -129,7 +130,8 @@ class App {
         generateEventReport,
         updateEventStatus,
         updateEvent,
-        updateTransaction
+        updateTransaction,
+        deleteEvent
       );
       const content = document.getElementById('event-detail-content');
       if (content) {

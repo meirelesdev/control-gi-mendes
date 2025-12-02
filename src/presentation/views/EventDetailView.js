@@ -5,7 +5,7 @@
 import { ReportView } from './ReportView.js';
 
 class EventDetailView {
-  constructor(eventRepository, transactionRepository, settingsRepository, addTransactionUseCase, deleteTransactionUseCase = null, generateEventReportUseCase = null, updateEventStatusUseCase = null, updateEventUseCase = null, updateTransactionUseCase = null) {
+  constructor(eventRepository, transactionRepository, settingsRepository, addTransactionUseCase, deleteTransactionUseCase = null, generateEventReportUseCase = null, updateEventStatusUseCase = null, updateEventUseCase = null, updateTransactionUseCase = null, deleteEventUseCase = null) {
     this.eventRepository = eventRepository;
     this.transactionRepository = transactionRepository;
     this.settingsRepository = settingsRepository;
@@ -15,6 +15,7 @@ class EventDetailView {
     this.updateEventStatusUseCase = updateEventStatusUseCase;
     this.updateEventUseCase = updateEventUseCase;
     this.updateTransactionUseCase = updateTransactionUseCase;
+    this.deleteEventUseCase = deleteEventUseCase;
     this.currentEventId = null;
   }
 
@@ -76,22 +77,29 @@ class EventDetailView {
           <div style="display: flex; justify-content: space-between; align-items: flex-start; margin-bottom: var(--spacing-md);">
             <div style="flex: 1;">
               <div style="display: flex; align-items: center; gap: var(--spacing-md); margin-bottom: var(--spacing-sm); flex-wrap: wrap;">
-                <h2 style="margin: 0; flex: 1; min-width: 200px;">${this.escapeHtml(event.name)}</h2>
-                <div style="display: flex; align-items: center; gap: var(--spacing-sm);">
+                <h2 style="margin: 0; flex: 1; min-width: 0;">${this.escapeHtml(event.name)}</h2>
+                <div style="display: flex; align-items: center; gap: var(--spacing-xs); flex-shrink: 0;">
                   ${event.isEditable && this.updateEventUseCase ? `
                     <button class="btn btn-sm" id="btn-edit-event" 
-                            style="background: transparent; color: ${statusBgColor === 'var(--color-surface)' ? 'var(--color-primary)' : 'white'}; padding: 8px 12px; border-radius: var(--radius-full); border: 1px solid ${statusBgColor === 'var(--color-surface)' ? 'var(--color-border)' : 'rgba(255,255,255,0.3)'};"
+                            style="background: transparent; color: ${statusBgColor === 'var(--color-surface)' ? 'var(--color-primary)' : 'white'}; padding: 6px 10px; border-radius: var(--radius-full); border: 1px solid ${statusBgColor === 'var(--color-surface)' ? 'var(--color-border)' : 'rgba(255,255,255,0.3)'}; font-size: 18px; line-height: 1;"
                             title="Editar Evento">
                       ✏️
                     </button>
                   ` : !event.isEditable ? `
                     <button class="btn btn-sm" disabled
-                            style="background: transparent; color: var(--color-text-secondary); padding: 8px 12px; border-radius: var(--radius-full); border: 1px solid var(--color-border); opacity: 0.6; cursor: not-allowed;"
+                            style="background: transparent; color: var(--color-text-secondary); padding: 6px 10px; border-radius: var(--radius-full); border: 1px solid var(--color-border); opacity: 0.6; cursor: not-allowed; font-size: 18px; line-height: 1;"
                             title="Evento não pode ser editado (Relatório enviado ou Pago)">
                       🔒
                     </button>
                   ` : ''}
-                  <span class="badge" style="background-color: ${statusConfig.badgeColor}; color: ${statusConfig.badgeTextColor};">
+                  ${this.deleteEventUseCase ? `
+                    <button class="btn btn-sm" id="btn-delete-event" 
+                            style="background: transparent; color: ${statusBgColor === 'var(--color-surface)' ? 'var(--color-danger)' : 'white'}; padding: 6px 10px; border-radius: var(--radius-full); border: 1px solid ${statusBgColor === 'var(--color-surface)' ? 'var(--color-border)' : 'rgba(255,255,255,0.3)'}; font-size: 18px; line-height: 1;"
+                            title="Excluir Evento">
+                      🗑️
+                    </button>
+                  ` : ''}
+                  <span class="badge" style="background-color: ${statusConfig.badgeColor}; color: ${statusConfig.badgeTextColor}; font-size: 11px; padding: 4px 8px;">
                     ${statusConfig.label}
                   </span>
                 </div>
@@ -104,11 +112,15 @@ class EventDetailView {
                 </p>
               ` : ''}
             </div>
-            ${this.generateEventReportUseCase ? `
-            <button class="btn btn-success" id="btn-generate-report" style="margin-left: var(--spacing-md);">
-              📄 Gerar Relatório
-            </button>
-            ` : ''}
+            <div style="display: flex; gap: var(--spacing-xs); flex-shrink: 0; margin-left: var(--spacing-sm);">
+              ${this.generateEventReportUseCase ? `
+              <button class="btn btn-sm btn-success" id="btn-generate-report" 
+                      style="padding: 8px 12px; border-radius: var(--radius-full); font-size: 14px; white-space: nowrap;"
+                      title="Gerar Relatório">
+                📄 Relatório
+              </button>
+              ` : ''}
+            </div>
           </div>
           
           ${this.updateEventStatusUseCase ? `
@@ -180,15 +192,24 @@ class EventDetailView {
 
         <div class="card">
           <h3 style="margin-bottom: var(--spacing-md);">Ações Rápidas</h3>
-          <div style="display: flex; flex-direction: column; gap: var(--spacing-md);">
-            <button class="btn btn-primary btn-lg" id="btn-add-expense">
-              ➕ Adicionar Despesa Rápida
+          <div style="display: grid; grid-template-columns: repeat(3, 1fr); gap: var(--spacing-sm);">
+            <button class="btn btn-primary" id="btn-add-expense" 
+                    style="padding: var(--spacing-md); border-radius: var(--radius-lg); font-size: 24px; line-height: 1; display: flex; flex-direction: column; align-items: center; gap: 4px;"
+                    title="Adicionar Despesa">
+              <span>➕</span>
+              <span style="font-size: 11px; font-weight: var(--font-weight-medium);">Despesa</span>
             </button>
-            <button class="btn btn-success btn-lg" id="btn-add-fee">
-              💰 Adicionar Honorário
+            <button class="btn btn-success" id="btn-add-fee" 
+                    style="padding: var(--spacing-md); border-radius: var(--radius-lg); font-size: 24px; line-height: 1; display: flex; flex-direction: column; align-items: center; gap: 4px;"
+                    title="Adicionar Honorário">
+              <span>💰</span>
+              <span style="font-size: 11px; font-weight: var(--font-weight-medium);">Honorário</span>
             </button>
-            <button class="btn btn-secondary btn-lg" id="btn-add-km-travel">
-              🚗 Adicionar KM / Viagem
+            <button class="btn btn-secondary" id="btn-add-km-travel" 
+                    style="padding: var(--spacing-md); border-radius: var(--radius-lg); font-size: 24px; line-height: 1; display: flex; flex-direction: column; align-items: center; gap: 4px;"
+                    title="Adicionar KM/Viagem">
+              <span>🚗</span>
+              <span style="font-size: 11px; font-weight: var(--font-weight-medium);">KM/Viagem</span>
             </button>
           </div>
         </div>
@@ -290,6 +311,16 @@ class EventDetailView {
         if (btnEditEvent) {
           btnEditEvent.addEventListener('click', () => {
             this.showEditEventModal(event);
+          });
+        }
+      }
+
+      // Event listener para excluir evento
+      if (this.deleteEventUseCase) {
+        const btnDeleteEvent = document.getElementById('btn-delete-event');
+        if (btnDeleteEvent) {
+          btnDeleteEvent.addEventListener('click', async () => {
+            await this.deleteEvent();
           });
         }
       }
@@ -480,13 +511,15 @@ class EventDetailView {
 
     document.body.appendChild(modal);
     modal.classList.add('active');
+    this._addModalOpenClass();
 
     document.getElementById('form-add-expense').addEventListener('submit', async (e) => {
       e.preventDefault();
       const result = await this.saveExpense();
       // Só remove o modal se saveExpense retornou sucesso (sem erro)
       if (result !== false) {
-      modal.remove();
+        this._removeModalOpenClass();
+        modal.remove();
       }
     });
   }
@@ -568,6 +601,7 @@ class EventDetailView {
       e.preventDefault();
       const result = await this.saveFee(modal);
       if (result !== false) {
+        this._removeModalOpenClass();
         modal.remove();
       }
     });
@@ -707,6 +741,7 @@ class EventDetailView {
 
     document.body.appendChild(modal);
     modal.classList.add('active');
+    this._addModalOpenClass();
 
     // Mostra/esconde campos baseado no tipo
     document.getElementById('km-travel-type').addEventListener('change', (e) => {
@@ -720,7 +755,8 @@ class EventDetailView {
       const result = await this.saveKmTravel();
       // Só remove o modal se saveKmTravel retornou sucesso (sem erro)
       if (result !== false) {
-      modal.remove();
+        this._removeModalOpenClass();
+        modal.remove();
       }
     });
   }
@@ -874,8 +910,15 @@ class EventDetailView {
       return;
     }
 
-    // Confirmação antes de excluir
-    const confirmed = window.confirm('Tem certeza que deseja excluir esta transação?');
+    // Confirmação antes de excluir usando modal amigável
+    const confirmed = await this.showConfirmModal(
+      'Excluir Transação',
+      'Tem certeza que deseja excluir esta transação? Esta ação não pode ser desfeita.',
+      'Excluir',
+      'Cancelar',
+      '🗑️'
+    );
+    
     if (!confirmed) {
       return;
     }
@@ -927,18 +970,20 @@ class EventDetailView {
           <button type="button" class="btn btn-secondary" onclick="this.closest('.modal-backdrop').remove()">
             Cancelar
           </button>
-          <button type="submit" class="btn btn-primary">Salvar Alterações</button>
+          <button type="submit" class="btn btn-primary">Salvar</button>
         </div>
       </form>
     `);
 
     document.body.appendChild(modal);
     modal.classList.add('active');
+    this._addModalOpenClass();
 
     document.getElementById('form-edit-event').addEventListener('submit', async (e) => {
       e.preventDefault();
       const result = await this.saveEventEdit();
       if (result !== false) {
+        this._removeModalOpenClass();
         modal.remove();
       }
     });
@@ -1035,7 +1080,7 @@ class EventDetailView {
               <button type="button" class="btn btn-secondary" onclick="this.closest('.modal-backdrop').remove()">
                 Cancelar
               </button>
-              <button type="submit" class="btn btn-primary">Salvar Alterações</button>
+              <button type="submit" class="btn btn-primary">Salvar</button>
             </div>
           </form>
         `;
@@ -1063,7 +1108,7 @@ class EventDetailView {
                 <button type="button" class="btn btn-secondary" onclick="this.closest('.modal-backdrop').remove()">
                   Cancelar
                 </button>
-                <button type="submit" class="btn btn-primary">Salvar Alterações</button>
+                <button type="submit" class="btn btn-primary">Salvar</button>
               </div>
             </form>
           `;
@@ -1086,7 +1131,7 @@ class EventDetailView {
                 <button type="button" class="btn btn-secondary" onclick="this.closest('.modal-backdrop').remove()">
                   Cancelar
                 </button>
-                <button type="submit" class="btn btn-primary">Salvar Alterações</button>
+                <button type="submit" class="btn btn-primary">Salvar</button>
               </div>
             </form>
           `;
@@ -1108,7 +1153,7 @@ class EventDetailView {
                 <button type="button" class="btn btn-secondary" onclick="this.closest('.modal-backdrop').remove()">
                   Cancelar
                 </button>
-                <button type="submit" class="btn btn-primary">Salvar Alterações</button>
+                <button type="submit" class="btn btn-primary">Salvar</button>
               </div>
             </form>
           `;
@@ -1137,7 +1182,7 @@ class EventDetailView {
                 <button type="button" class="btn btn-secondary" onclick="this.closest('.modal-backdrop').remove()">
                   Cancelar
                 </button>
-                <button type="submit" class="btn btn-primary">Salvar Alterações</button>
+                <button type="submit" class="btn btn-primary">Salvar</button>
               </div>
             </form>
           `;
@@ -1159,7 +1204,7 @@ class EventDetailView {
                 <button type="button" class="btn btn-secondary" onclick="this.closest('.modal-backdrop').remove()">
                   Cancelar
                 </button>
-                <button type="submit" class="btn btn-primary">Salvar Alterações</button>
+                <button type="submit" class="btn btn-primary">Salvar</button>
               </div>
             </form>
           `;
@@ -1169,6 +1214,7 @@ class EventDetailView {
       const modal = this.createModal('Editar Transação', modalContent);
       document.body.appendChild(modal);
       modal.classList.add('active');
+      this._addModalOpenClass();
 
       // Event listener para salvar
       const formId = modal.querySelector('form').id;
@@ -1176,6 +1222,7 @@ class EventDetailView {
         e.preventDefault();
         const result = await this.saveTransactionEdit(transactionId, transactionType, transactionCategory);
         if (result !== false) {
+          this._removeModalOpenClass();
           modal.remove();
         }
       });
@@ -1377,6 +1424,117 @@ class EventDetailView {
     }
   }
 
+  /**
+   * Exibe um modal de confirmação amigável
+   * @param {string} title - Título do modal
+   * @param {string} message - Mensagem de confirmação
+   * @param {string} [confirmText='Confirmar'] - Texto do botão de confirmação
+   * @param {string} [cancelText='Cancelar'] - Texto do botão de cancelamento
+   * @param {string} [icon='⚠️'] - Ícone do modal
+   * @returns {Promise<boolean>} - true se confirmado, false se cancelado
+   */
+  showConfirmModal(title, message, confirmText = 'Confirmar', cancelText = 'Cancelar', icon = '⚠️') {
+    return new Promise((resolve) => {
+      const modal = document.createElement('div');
+      modal.className = 'modal-backdrop active';
+      modal.innerHTML = `
+        <div class="modal" style="max-width: 400px; border-radius: var(--radius-xl);">
+          <div class="modal-header" style="text-align: center; padding: var(--spacing-xl) var(--spacing-lg) var(--spacing-md); border-bottom: none;">
+            <div style="font-size: 56px; margin-bottom: var(--spacing-md); line-height: 1;">${icon}</div>
+            <h3 class="modal-title" style="margin: 0; font-size: var(--font-size-xl); color: var(--color-text); font-weight: var(--font-weight-bold);">
+              ${title}
+            </h3>
+          </div>
+          <div class="modal-body" style="text-align: center; padding: var(--spacing-lg) var(--spacing-xl);">
+            <p style="color: var(--color-text-secondary); line-height: 1.6; margin: 0; font-size: var(--font-size-base);">
+              ${message}
+            </p>
+          </div>
+          <div class="modal-footer" style="display: flex; gap: var(--spacing-sm); margin-top: var(--spacing-md); padding: var(--spacing-lg) var(--spacing-xl); padding-top: 0;">
+            <button type="button" class="btn btn-secondary" id="confirm-cancel" style="flex: 1; border-radius: var(--radius-full); padding: var(--spacing-md) var(--spacing-lg); font-weight: var(--font-weight-semibold);">
+              ${cancelText}
+            </button>
+            <button type="button" class="btn" id="confirm-ok" style="flex: 1; border-radius: var(--radius-full); padding: var(--spacing-md) var(--spacing-lg); font-weight: var(--font-weight-semibold); background: var(--color-danger); color: white; box-shadow: 0 4px 12px rgba(239, 83, 80, 0.3);">
+              ${confirmText}
+            </button>
+          </div>
+        </div>
+      `;
+
+      document.body.appendChild(modal);
+      this._addModalOpenClass();
+
+      // Event listeners
+      const handleCancel = () => {
+        this._removeModalOpenClass();
+        if (document.body.contains(modal)) {
+          document.body.removeChild(modal);
+        }
+        resolve(false);
+      };
+
+      const handleConfirm = () => {
+        this._removeModalOpenClass();
+        if (document.body.contains(modal)) {
+          document.body.removeChild(modal);
+        }
+        resolve(true);
+      };
+
+      modal.querySelector('#confirm-cancel').addEventListener('click', handleCancel);
+      modal.querySelector('#confirm-ok').addEventListener('click', handleConfirm);
+
+      // Fecha ao clicar no backdrop
+      modal.addEventListener('click', (e) => {
+        if (e.target === modal) {
+          handleCancel();
+        }
+      });
+      
+      // Garante remoção da classe ao remover o modal de qualquer forma
+      const observer = new MutationObserver(() => {
+        if (!document.body.contains(modal)) {
+          this._removeModalOpenClass();
+          observer.disconnect();
+        }
+      });
+      observer.observe(document.body, { childList: true });
+
+      // Previne fechamento ao clicar dentro do modal
+      const modalContent = modal.querySelector('.modal');
+      if (modalContent) {
+        modalContent.addEventListener('click', (e) => {
+          e.stopPropagation();
+        });
+      }
+
+      // Fecha com ESC
+      const handleEsc = (e) => {
+        if (e.key === 'Escape') {
+          handleCancel();
+          document.removeEventListener('keydown', handleEsc);
+        }
+      };
+      document.addEventListener('keydown', handleEsc);
+    });
+  }
+
+  /**
+   * Adiciona classe para bloquear scroll do body quando modal está aberto
+   */
+  _addModalOpenClass() {
+    document.body.classList.add('modal-open');
+    document.documentElement.classList.add('modal-open');
+  }
+
+  /**
+   * Remove classe para permitir scroll do body quando modal é fechado
+   */
+  _removeModalOpenClass() {
+    document.body.classList.remove('modal-open');
+    document.documentElement.classList.remove('modal-open');
+  }
+
   createModal(title, content) {
     const backdrop = document.createElement('div');
     backdrop.className = 'modal-backdrop';
@@ -1384,11 +1542,45 @@ class EventDetailView {
       <div class="modal">
         <div class="modal-header">
           <h3 class="modal-title">${title}</h3>
-          <button class="modal-close" onclick="this.closest('.modal-backdrop').remove()">×</button>
+          <button class="modal-close">×</button>
         </div>
         ${content}
       </div>
     `;
+    
+    // Adiciona listener para fechar modal
+    const closeBtn = backdrop.querySelector('.modal-close');
+    if (closeBtn) {
+      closeBtn.addEventListener('click', () => {
+        this._removeModalOpenClass();
+        if (document.body.contains(backdrop)) {
+          backdrop.remove();
+        }
+      });
+    }
+    
+    // Adiciona listeners para todos os botões de cancelar com onclick
+    const cancelButtons = backdrop.querySelectorAll('button[onclick*="closest"]');
+    cancelButtons.forEach(btn => {
+      const originalOnclick = btn.getAttribute('onclick');
+      btn.removeAttribute('onclick');
+      btn.addEventListener('click', () => {
+        this._removeModalOpenClass();
+        if (originalOnclick) {
+          // Executa o código original se necessário
+          const modalBackdrop = btn.closest('.modal-backdrop');
+          if (modalBackdrop) {
+            modalBackdrop.remove();
+          }
+        }
+      });
+    });
+    
+    // Adiciona classe quando modal é adicionado ao DOM
+    setTimeout(() => {
+      this._addModalOpenClass();
+    }, 0);
+    
     return backdrop;
   }
 
@@ -1510,10 +1702,10 @@ class EventDetailView {
     try {
       // Mostra feedback de carregamento
       const btn = document.getElementById('btn-generate-report');
-      const originalText = btn?.textContent || '📄 Gerar Relatório';
+      const originalText = btn?.textContent || '📄 Relatório';
       if (btn) {
         btn.disabled = true;
-        btn.textContent = '⏳ Gerando...';
+        btn.textContent = '⏳...';
       }
 
       // Gera o relatório
@@ -1542,7 +1734,56 @@ class EventDetailView {
       const btn = document.getElementById('btn-generate-report');
       if (btn) {
         btn.disabled = false;
-        btn.textContent = '📄 Gerar Relatório';
+        btn.textContent = '📄 Relatório';
+      }
+    }
+  }
+
+  /**
+   * Exclui o evento atual
+   */
+  async deleteEvent() {
+    if (!this.deleteEventUseCase) {
+      if (window.toast) {
+        window.toast.error('Funcionalidade de exclusão não disponível');
+      }
+      return;
+    }
+
+    // Confirmação antes de excluir usando modal amigável
+    const confirmed = await this.showConfirmModal(
+      'Excluir Evento',
+      'Tem certeza que deseja excluir este evento? Esta ação não pode ser desfeita e excluirá todas as transações associadas.',
+      'Excluir',
+      'Cancelar',
+      '🗑️'
+    );
+    
+    if (!confirmed) {
+      return;
+    }
+
+    try {
+      const result = await this.deleteEventUseCase.execute(this.currentEventId);
+      
+      if (result.success) {
+        if (window.toast) {
+          window.toast.success('Evento excluído com sucesso!');
+        }
+        
+        // Navega de volta para o dashboard
+        window.dispatchEvent(new CustomEvent('navigate', { 
+          detail: { view: 'dashboard' } 
+        }));
+      } else {
+        if (window.toast) {
+          window.toast.error(`Erro ao excluir evento: ${result.error || 'Erro desconhecido'}`);
+        }
+      }
+    } catch (error) {
+      console.error('Erro ao excluir evento:', error);
+      if (window.toast) {
+        window.toast.error(`Erro ao excluir evento: ${error.message || 'Erro desconhecido'}`);
       }
     }
   }

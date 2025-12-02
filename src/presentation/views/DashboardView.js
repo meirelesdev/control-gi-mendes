@@ -9,6 +9,7 @@ class DashboardView {
     this.settingsRepository = settingsRepository;
     this.createEventUseCase = createEventUseCase;
     this.currentFilter = 'all'; // 'all', 'pending', 'paid'
+    this._handleCreateNewEvent = null; // Referência para o handler do evento
   }
 
   async render() {
@@ -69,13 +70,8 @@ class DashboardView {
           <div class="card-subtitle">${activeEvents.length} evento(s) ativo(s)</div>
         </div>
 
-        <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: var(--spacing-md);">
+        <div style="margin-bottom: var(--spacing-md);">
           <h2 style="margin: 0;">Eventos Ativos</h2>
-          ${this.createEventUseCase ? `
-            <button class="btn btn-primary" id="btn-create-event">
-              ➕ Novo Evento
-            </button>
-          ` : ''}
         </div>
 
         <div class="card" style="margin-bottom: var(--spacing-md);">
@@ -99,11 +95,9 @@ class DashboardView {
           <div class="empty-state">
             <div class="empty-state-icon">📅</div>
             <p>Nenhum evento ativo no momento.</p>
-            ${this.createEventUseCase ? `
-              <button class="btn btn-primary" style="margin-top: var(--spacing-md);" id="btn-create-event-empty">
-                ➕ Criar Primeiro Evento
-              </button>
-            ` : ''}
+            <p class="text-muted" style="font-size: var(--font-size-sm); margin-top: var(--spacing-sm);">
+              Use o botão ➕ abaixo para criar seu primeiro evento
+            </p>
           </div>
         ` : `
           <div class="event-list">
@@ -130,46 +124,25 @@ class DashboardView {
         });
       });
 
-      // Event listener para criar evento
+      // Event listener para criar evento (apenas via FAB)
       if (this.createEventUseCase) {
-        // Usa event delegation para garantir que funciona mesmo se o botão for adicionado depois
-        container.addEventListener('click', (e) => {
-          if (e.target.id === 'btn-create-event' || e.target.id === 'btn-create-event-empty' || 
-              e.target.closest('#btn-create-event') || e.target.closest('#btn-create-event-empty')) {
-            e.preventDefault();
-            e.stopPropagation();
-            this.showCreateEventModal();
-          }
-        });
-
-        // Também adiciona listeners diretos como fallback
-        const btnCreate = container.querySelector('#btn-create-event');
-        const btnCreateEmpty = container.querySelector('#btn-create-event-empty');
-        
-        if (btnCreate) {
-          btnCreate.addEventListener('click', (e) => {
-            e.preventDefault();
-            e.stopPropagation();
-            this.showCreateEventModal();
-          });
-        }
-        
-        if (btnCreateEmpty) {
-          btnCreateEmpty.addEventListener('click', (e) => {
-            e.preventDefault();
-            e.stopPropagation();
-            this.showCreateEventModal();
-          });
-        }
-
         // Listener global para o FAB (botão flutuante)
-        window.addEventListener('create-new-event', () => {
+        // Remove listener anterior se existir para evitar duplicação
+        window.removeEventListener('create-new-event', this._handleCreateNewEvent);
+        this._handleCreateNewEvent = () => {
+          // Verifica se já existe um modal aberto
+          const existingModal = document.querySelector('.modal-backdrop.active');
+          if (existingModal) {
+            return; // Não abre novo modal se já existe um
+          }
+          
           // Só abre o modal se estiver na view do dashboard
           const container = document.getElementById('dashboard-content');
           if (container && container.classList.contains('active')) {
             this.showCreateEventModal();
           }
-        });
+        };
+        window.addEventListener('create-new-event', this._handleCreateNewEvent);
       }
     } catch (error) {
       container.innerHTML = `
@@ -272,8 +245,15 @@ class DashboardView {
   }
 
   showCreateEventModal() {
+    // Verifica se já existe um modal aberto
+    const existingModal = document.querySelector('.modal-backdrop.active');
+    if (existingModal) {
+      return; // Não cria novo modal se já existe um
+    }
+
     const modal = document.createElement('div');
     modal.className = 'modal-backdrop active';
+    modal.setAttribute('data-modal-type', 'create-event');
     modal.innerHTML = `
       <div class="modal" style="max-width: 500px;">
         <div class="modal-header">
@@ -325,8 +305,14 @@ class DashboardView {
         dateInput.value = today;
       }
 
+      // Adiciona classe para bloquear scroll do body
+      document.body.classList.add('modal-open');
+      document.documentElement.classList.add('modal-open');
+
       // Event listeners
       const closeModal = () => {
+        document.body.classList.remove('modal-open');
+        document.documentElement.classList.remove('modal-open');
         if (document.body.contains(modal)) {
           document.body.removeChild(modal);
         }
@@ -360,22 +346,78 @@ class DashboardView {
       }
 
       if (form) {
+        let isSubmitting = false;
+        
         form.addEventListener('submit', async (e) => {
           e.preventDefault();
-          await this.createEvent(modal);
+          e.stopPropagation();
+          
+          // Previne múltiplos submits
+          if (isSubmitting) {
+            return;
+          }
+          isSubmitting = true;
+          
+          // Desabilita o botão de submit durante o processamento
+          const submitBtn = form.querySelector('button[type="submit"]');
+          if (submitBtn) {
+            submitBtn.disabled = true;
+            submitBtn.textContent = 'Criando...';
+          }
+          
+          try {
+            await this.createEvent(modal);
+          } catch (error) {
+            console.error('Erro ao criar evento:', error);
+            window.toast.error('Erro ao criar evento. Tente novamente.');
+          } finally {
+            isSubmitting = false;
+            if (submitBtn && document.body.contains(modal)) {
+              submitBtn.disabled = false;
+              submitBtn.textContent = 'Criar Evento';
+            }
+          }
         });
       }
     }, 0);
   }
 
   async createEvent(modal) {
-    const name = document.getElementById('event-name').value.trim();
-    const date = document.getElementById('event-date').value;
-    const description = document.getElementById('event-description').value.trim();
-    const autoCreateDaily = document.getElementById('auto-create-daily').checked;
+    // Busca os elementos dentro do modal para evitar conflitos
+    const nameInput = modal.querySelector('#event-name');
+    const dateInput = modal.querySelector('#event-date');
+    const descriptionInput = modal.querySelector('#event-description');
+    const autoCreateDailyInput = modal.querySelector('#auto-create-daily');
 
-    if (!name || !date) {
-      window.toast.warning('Por favor, preencha todos os campos obrigatórios.');
+    if (!nameInput || !dateInput) {
+      console.error('Campos do formulário não encontrados');
+      window.toast.error('Erro ao processar formulário. Tente novamente.');
+      return;
+    }
+
+    const name = nameInput.value.trim();
+    const date = dateInput.value.trim();
+    const description = descriptionInput ? descriptionInput.value.trim() : '';
+    const autoCreateDaily = autoCreateDailyInput ? autoCreateDailyInput.checked : false;
+
+    // Validação mais robusta
+    if (!name || name.length < 3) {
+      window.toast.warning('O nome do evento deve ter pelo menos 3 caracteres.');
+      nameInput.focus();
+      return;
+    }
+
+    if (!date) {
+      window.toast.warning('Por favor, selecione uma data para o evento.');
+      dateInput.focus();
+      return;
+    }
+
+    // Valida formato da data (YYYY-MM-DD)
+    const dateRegex = /^\d{4}-\d{2}-\d{2}$/;
+    if (!dateRegex.test(date)) {
+      window.toast.warning('Data inválida. Por favor, selecione uma data válida.');
+      dateInput.focus();
       return;
     }
 
@@ -388,19 +430,27 @@ class DashboardView {
       });
 
       if (result.success) {
-        // Fecha o modal
-        document.body.removeChild(modal);
+        // Remove classe e fecha o modal antes de navegar
+        document.body.classList.remove('modal-open');
+        document.documentElement.classList.remove('modal-open');
+        if (document.body.contains(modal)) {
+          document.body.removeChild(modal);
+        }
+        
         window.toast.success('Evento criado com sucesso!');
         
         // Navega para os detalhes do evento criado
         if (result.data && result.data.id) {
-          this.navigateToEvent(result.data.id);
+          // Pequeno delay para garantir que o modal foi fechado
+          setTimeout(() => {
+            this.navigateToEvent(result.data.id);
+          }, 100);
         } else {
           // Fallback: recarrega o dashboard
           await this.render();
         }
       } else {
-        window.toast.error(`Erro ao criar evento: ${result.error}`);
+        window.toast.error(`Erro ao criar evento: ${result.error || 'Erro desconhecido'}`);
       }
     } catch (error) {
       window.toast.error(`Erro ao criar evento: ${error.message}`);

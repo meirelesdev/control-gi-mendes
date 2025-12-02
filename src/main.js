@@ -42,6 +42,7 @@ import { GenerateEventReport } from './application/use-cases/GenerateEventReport
 import { UpdateEventStatus } from './application/use-cases/UpdateEventStatus.js';
 import { UpdateEvent } from './application/use-cases/UpdateEvent.js';
 import { UpdateTransaction } from './application/use-cases/UpdateTransaction.js';
+import { DeleteEvent } from './application/use-cases/DeleteEvent.js';
 
 // Presentation Layer
 import { App } from './presentation/App.js';
@@ -111,6 +112,9 @@ const updateTransaction = new UpdateTransaction(
   settingsRepository
 );
 
+// Use Case: Excluir Evento
+const deleteEvent = new DeleteEvent(eventRepository, transactionRepository);
+
 // ============================================
 // 4. INICIALIZAÇÃO DA UI
 // ============================================
@@ -134,7 +138,8 @@ document.addEventListener('DOMContentLoaded', () => {
       generateEventReport,
       updateEventStatus,
       updateEvent,
-      updateTransaction
+      updateTransaction,
+      deleteEvent
     };
 
     // Inicializar a aplicação
