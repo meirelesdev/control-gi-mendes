@@ -2,13 +2,16 @@
  * View: Detalhe do Evento
  * Exibe detalhes do evento, botões de ação e lista de despesas
  */
+import { ReportView } from './ReportView.js';
+
 class EventDetailView {
-  constructor(eventRepository, transactionRepository, settingsRepository, addTransactionUseCase, deleteTransactionUseCase = null) {
+  constructor(eventRepository, transactionRepository, settingsRepository, addTransactionUseCase, deleteTransactionUseCase = null, generateEventReportUseCase = null) {
     this.eventRepository = eventRepository;
     this.transactionRepository = transactionRepository;
     this.settingsRepository = settingsRepository;
     this.addTransactionUseCase = addTransactionUseCase;
     this.deleteTransactionUseCase = deleteTransactionUseCase;
+    this.generateEventReportUseCase = generateEventReportUseCase;
     this.currentEventId = null;
   }
 
@@ -38,9 +41,18 @@ class EventDetailView {
 
       container.innerHTML = `
         <div class="card">
-          <h2>${this.escapeHtml(event.name)}</h2>
-          <p class="text-muted">${this.formatDate(event.date)}</p>
-          ${event.description ? `<p>${this.escapeHtml(event.description)}</p>` : ''}
+          <div style="display: flex; justify-content: space-between; align-items: flex-start; margin-bottom: var(--spacing-md);">
+            <div style="flex: 1;">
+              <h2>${this.escapeHtml(event.name)}</h2>
+              <p class="text-muted">${this.formatDate(event.date)}</p>
+              ${event.description ? `<p>${this.escapeHtml(event.description)}</p>` : ''}
+            </div>
+            ${this.generateEventReportUseCase ? `
+            <button class="btn btn-success" id="btn-generate-report" style="margin-left: var(--spacing-md);">
+              📄 Gerar Relatório
+            </button>
+            ` : ''}
+          </div>
         </div>
 
         <div class="card">
@@ -103,6 +115,16 @@ class EventDetailView {
       document.getElementById('btn-add-km-travel').addEventListener('click', () => {
         this.showAddKmTravelModal();
       });
+
+      // Event listener para gerar relatório
+      if (this.generateEventReportUseCase) {
+        const btnGenerateReport = document.getElementById('btn-generate-report');
+        if (btnGenerateReport) {
+          btnGenerateReport.addEventListener('click', () => {
+            this.generateReport();
+          });
+        }
+      }
 
       // Event listeners para marcar nota fiscal
       container.querySelectorAll('.btn-mark-receipt').forEach(btn => {
@@ -492,6 +514,60 @@ class EventDetailView {
     const div = document.createElement('div');
     div.textContent = text;
     return div.innerHTML;
+  }
+
+  /**
+   * Gera e exibe o relatório de fechamento do evento
+   */
+  async generateReport() {
+    if (!this.generateEventReportUseCase) {
+      window.toast?.error('Funcionalidade de relatório não disponível');
+      return;
+    }
+
+    if (!this.currentEventId) {
+      window.toast?.error('Evento não encontrado');
+      return;
+    }
+
+    try {
+      // Mostra feedback de carregamento
+      const btn = document.getElementById('btn-generate-report');
+      const originalText = btn?.textContent || '📄 Gerar Relatório';
+      if (btn) {
+        btn.disabled = true;
+        btn.textContent = '⏳ Gerando...';
+      }
+
+      // Gera o relatório
+      const result = await this.generateEventReportUseCase.execute(this.currentEventId);
+
+      if (result.success) {
+        // Renderiza o relatório
+        const reportView = new ReportView();
+        reportView.render(result);
+        
+        window.toast?.success('Relatório gerado com sucesso!');
+      } else {
+        window.toast?.error(`Erro ao gerar relatório: ${result.error}`);
+      }
+
+      // Restaura o botão
+      if (btn) {
+        btn.disabled = false;
+        btn.textContent = originalText;
+      }
+    } catch (error) {
+      console.error('Erro ao gerar relatório:', error);
+      window.toast?.error(`Erro ao gerar relatório: ${error.message}`);
+      
+      // Restaura o botão em caso de erro
+      const btn = document.getElementById('btn-generate-report');
+      if (btn) {
+        btn.disabled = false;
+        btn.textContent = '📄 Gerar Relatório';
+      }
+    }
   }
 }
 

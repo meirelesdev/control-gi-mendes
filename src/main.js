@@ -38,6 +38,7 @@ import { AddTransaction } from './application/use-cases/AddTransaction.js';
 import { DeleteTransaction } from './application/use-cases/DeleteTransaction.js';
 import { GetEventSummary } from './application/use-cases/GetEventSummary.js';
 import { UpdateSettings } from './application/use-cases/UpdateSettings.js';
+import { GenerateEventReport } from './application/use-cases/GenerateEventReport.js';
 
 // Presentation Layer
 import { App } from './presentation/App.js';
@@ -83,6 +84,12 @@ const getEventSummary = new GetEventSummary(
 // Use Case: Atualizar Configurações
 const updateSettings = new UpdateSettings(settingsRepository);
 
+// Use Case: Gerar Relatório de Fechamento
+const generateEventReport = new GenerateEventReport(
+  eventRepository,
+  transactionRepository
+);
+
 // ============================================
 // 4. INICIALIZAÇÃO DA UI
 // ============================================
@@ -102,7 +109,8 @@ document.addEventListener('DOMContentLoaded', () => {
       addTransaction,
       deleteTransaction,
       getEventSummary,
-      updateSettings
+      updateSettings,
+      generateEventReport
     };
 
     // Inicializar a aplicação
