@@ -17,17 +17,33 @@ class App {
   init() {
     this.setupNavigation();
     this.setupEventListeners();
+    // Garante que o FAB está visível inicialmente (dashboard)
+    const fab = document.getElementById('fab-new-event');
+    if (fab) {
+      fab.classList.remove('hidden');
+    }
     this.render();
   }
 
   setupNavigation() {
-    // Event listeners para abas
-    document.querySelectorAll('.tab-button').forEach(btn => {
+    // Event listeners para bottom navigation
+    document.querySelectorAll('.bottom-nav-item').forEach(btn => {
       btn.addEventListener('click', () => {
         const view = btn.dataset.view;
-        this.navigateTo(view);
+        if (view) {
+          this.navigateTo(view);
+        }
       });
     });
+
+    // Event listener para FAB (Novo Evento)
+    const fabNewEvent = document.getElementById('fab-new-event');
+    if (fabNewEvent) {
+      fabNewEvent.addEventListener('click', () => {
+        // Dispara evento customizado para criar novo evento
+        window.dispatchEvent(new CustomEvent('create-new-event'));
+      });
+    }
 
     // Event listener para navegação customizada (ex: ir para detalhe do evento)
     window.addEventListener('navigate', (e) => {
@@ -49,8 +65,8 @@ class App {
   }
 
   navigateTo(view) {
-    // Atualiza abas
-    document.querySelectorAll('.tab-button').forEach(btn => {
+    // Atualiza bottom navigation
+    document.querySelectorAll('.bottom-nav-item').forEach(btn => {
       btn.classList.remove('active');
       if (btn.dataset.view === view) {
         btn.classList.add('active');
@@ -61,6 +77,16 @@ class App {
     document.querySelectorAll('.tab-content').forEach(content => {
       content.classList.remove('active');
     });
+
+    // Controla visibilidade do FAB (só aparece no dashboard)
+    const fab = document.getElementById('fab-new-event');
+    if (fab) {
+      if (view === 'dashboard') {
+        fab.classList.remove('hidden');
+      } else {
+        fab.classList.add('hidden');
+      }
+    }
 
     // Mostra conteúdo selecionado
     this.currentView = view;

@@ -161,6 +161,15 @@ class DashboardView {
             this.showCreateEventModal();
           });
         }
+
+        // Listener global para o FAB (botão flutuante)
+        window.addEventListener('create-new-event', () => {
+          // Só abre o modal se estiver na view do dashboard
+          const container = document.getElementById('dashboard-content');
+          if (container && container.classList.contains('active')) {
+            this.showCreateEventModal();
+          }
+        });
       }
     } catch (error) {
       container.innerHTML = `

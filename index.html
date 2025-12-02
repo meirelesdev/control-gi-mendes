@@ -4,7 +4,7 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <meta name="description" content="Gi Finanças - Gestão Financeira de Eventos Culinários">
-    <meta name="theme-color" content="#667eea">
+    <meta name="theme-color" content="#E91E63">
     <meta name="apple-mobile-web-app-capable" content="yes">
     <meta name="mobile-web-app-capable" content="yes">
     <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
@@ -27,19 +27,28 @@
     <div class="app-container">
         <header class="app-header">
             <h1>Gi Finanças</h1>
-            <p class="subtitle">Gestão Financeira de Eventos</p>
         </header>
-
-        <nav class="tab-navigation">
-            <button class="tab-button active" data-view="dashboard">Dashboard</button>
-            <button class="tab-button" data-view="settings">Configurações</button>
-        </nav>
 
         <main class="app-main">
             <div id="dashboard-content" class="tab-content active"></div>
             <div id="event-detail-content" class="tab-content"></div>
             <div id="settings-content" class="tab-content"></div>
         </main>
+
+        <!-- Bottom Navigation Bar -->
+        <nav class="bottom-nav">
+            <button class="bottom-nav-item active" data-view="dashboard" aria-label="Início">
+                <span class="bottom-nav-item-icon">🏠</span>
+                <span class="bottom-nav-item-label">Início</span>
+            </button>
+            <button class="fab" id="fab-new-event" aria-label="Novo Evento">
+                ➕
+            </button>
+            <button class="bottom-nav-item" data-view="settings" aria-label="Ajustes">
+                <span class="bottom-nav-item-icon">⚙️</span>
+                <span class="bottom-nav-item-label">Ajustes</span>
+            </button>
+        </nav>
     </div>
 
     <!-- Handler Global de Erros (ANTES de tudo) -->

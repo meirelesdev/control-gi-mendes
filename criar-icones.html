@@ -8,7 +8,7 @@
         * { margin: 0; padding: 0; box-sizing: border-box; }
         body {
             font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Arial, sans-serif;
-            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            background: linear-gradient(135deg, #E91E63 0%, #26A69A 100%);
             min-height: 100vh;
             display: flex;
             align-items: center;
@@ -24,7 +24,7 @@
             width: 100%;
         }
         h1 {
-            color: #667eea;
+            color: #E91E63;
             margin-bottom: 10px;
             font-size: 28px;
         }
@@ -50,34 +50,34 @@
             font-size: 18px;
         }
         button {
-            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            background: linear-gradient(135deg, #E91E63 0%, #26A69A 100%);
             color: white;
             border: none;
             padding: 15px 30px;
-            border-radius: 10px;
+            border-radius: 50px;
             cursor: pointer;
             font-size: 16px;
             font-weight: 600;
             margin: 10px 5px;
             transition: transform 0.2s, box-shadow 0.2s;
-            box-shadow: 0 4px 15px rgba(102, 126, 234, 0.4);
+            box-shadow: 0 4px 15px rgba(233, 30, 99, 0.4);
         }
         button:hover {
             transform: translateY(-2px);
-            box-shadow: 0 6px 20px rgba(102, 126, 234, 0.5);
+            box-shadow: 0 6px 20px rgba(233, 30, 99, 0.5);
         }
         button:active {
             transform: translateY(0);
         }
         .instructions {
-            background: #f0f4ff;
+            background: #FCE4EC;
             padding: 20px;
-            border-radius: 10px;
+            border-radius: 16px;
             margin: 20px 0;
-            border-left: 4px solid #667eea;
+            border-left: 4px solid #E91E63;
         }
         .instructions h3 {
-            color: #667eea;
+            color: #E91E63;
             margin-bottom: 10px;
             font-size: 16px;
         }
@@ -87,11 +87,12 @@
             line-height: 1.8;
         }
         .instructions code {
-            background: #e0e7ff;
+            background: #FCE4EC;
             padding: 2px 6px;
             border-radius: 4px;
             font-size: 13px;
-            color: #667eea;
+            color: #E91E63;
+            font-weight: 600;
         }
         .success {
             background: #d4edda;
@@ -164,8 +165,8 @@
             const ctx512 = canvas512.getContext('2d');
             
             const gradient512 = ctx512.createLinearGradient(0, 0, 512, 512);
-            gradient512.addColorStop(0, '#667eea');
-            gradient512.addColorStop(1, '#764ba2');
+            gradient512.addColorStop(0, '#E91E63'); // Rosa Pink
+            gradient512.addColorStop(1, '#26A69A'); // Verde Água
             ctx512.fillStyle = gradient512;
             ctx512.fillRect(0, 0, 512, 512);
             

@@ -24,6 +24,9 @@ body {
   background-color: var(--color-background);
   min-height: 100vh;
   overflow-x: hidden;
+  /* Previne scroll horizontal e ajusta para mobile */
+  -webkit-overflow-scrolling: touch;
+  overscroll-behavior-y: contain;
 }
 
 /* Tipografia */
