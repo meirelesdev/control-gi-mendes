@@ -48,11 +48,23 @@ class EventDetailView {
         i.metadata.category === 'diaria' || i.metadata.category === 'hora_extra'
       );
       
+      // Separa KM do restante dos reembolsos para cálculo de investimento inicial
+      const kmTransactions = reimbursements.filter(r => r.metadata.category === 'km');
+      const travelTimeTransactions = reimbursements.filter(r => r.metadata.category === 'tempo_viagem');
+      
       // Calcula totais
       const totalExpenses = expenses.reduce((sum, e) => sum + e.amount, 0);
+      const totalKmCost = kmTransactions.reduce((sum, k) => sum + k.amount, 0); // Gasolina paga hoje
+      const totalTravelTimeCost = travelTimeTransactions.reduce((sum, t) => sum + t.amount, 0);
       const totalReimbursements = reimbursements.reduce((sum, r) => sum + r.amount, 0);
       const totalFees = fees.reduce((sum, f) => sum + f.amount, 0);
       const totalIncomes = incomes.reduce((sum, i) => sum + i.amount, 0);
+      
+      // Calcula os novos totalizadores financeiros
+      const upfrontCost = totalExpenses + totalKmCost; // Investimento inicial (despesas + gasolina)
+      const reimbursementValue = totalExpenses + totalKmCost + totalTravelTimeCost; // Valor de reembolso
+      const netProfit = totalFees; // Lucro líquido (apenas honorários)
+      const totalToReceive = reimbursementValue + netProfit; // Total a receber
 
       // Define cores e labels por status
       const statusConfig = this._getStatusConfig(event.status);
@@ -112,6 +124,58 @@ class EventDetailView {
             </select>
           </div>
           ` : ''}
+        </div>
+
+        <!-- Card de Resumo Financeiro Detalhado -->
+        <div class="card" style="background: linear-gradient(135deg, #F4F7F6 0%, #FFFFFF 100%); border: 2px solid var(--color-border-light);">
+          <h3 style="margin-bottom: var(--spacing-lg); color: var(--color-text); font-size: var(--font-size-lg);">
+            💰 Resumo Financeiro
+          </h3>
+          
+          <!-- Linha 1: Investimento Realizado (Vermelho/Laranja) -->
+          <div style="display: flex; justify-content: space-between; align-items: center; padding: var(--spacing-md); background: linear-gradient(135deg, #FFEBEE 0%, #FFF3E0 100%); border-radius: var(--radius-md); margin-bottom: var(--spacing-md); border-left: 4px solid #EF5350;">
+            <div>
+              <div style="font-size: var(--font-size-sm); color: #C62828; font-weight: var(--font-weight-semibold); margin-bottom: var(--spacing-xs);">
+                💸 Investimento Realizado
+              </div>
+              <div style="font-size: var(--font-size-xs); color: #757575;">
+                Valor que você pagou do próprio bolso (Insumos + Gasolina)
+              </div>
+            </div>
+            <div style="font-size: var(--font-size-xl); font-weight: var(--font-weight-bold); color: #C62828;">
+              ${this.formatCurrency(upfrontCost)}
+            </div>
+          </div>
+
+          <!-- Linha 2: Total a Receber (Azul) -->
+          <div style="display: flex; justify-content: space-between; align-items: center; padding: var(--spacing-md); background: linear-gradient(135deg, #E3F2FD 0%, #E1F5FE 100%); border-radius: var(--radius-md); margin-bottom: var(--spacing-md); border-left: 4px solid #2196F3;">
+            <div>
+              <div style="font-size: var(--font-size-sm); color: #1565C0; font-weight: var(--font-weight-semibold); margin-bottom: var(--spacing-xs);">
+                📥 Total a Receber
+              </div>
+              <div style="font-size: var(--font-size-xs); color: #757575;">
+                Reembolso + Lucro
+              </div>
+            </div>
+            <div style="font-size: var(--font-size-xl); font-weight: var(--font-weight-bold); color: #1565C0;">
+              ${this.formatCurrency(totalToReceive)}
+            </div>
+          </div>
+
+          <!-- Destaque Principal: Lucro Líquido (Verde) -->
+          <div style="display: flex; justify-content: space-between; align-items: center; padding: var(--spacing-lg); background: linear-gradient(135deg, #E0F2F1 0%, #C8E6C9 100%); border-radius: var(--radius-lg); border: 2px solid #26A69A; box-shadow: 0 4px 12px rgba(38, 166, 154, 0.2);">
+            <div>
+              <div style="font-size: var(--font-size-base); color: #00897B; font-weight: var(--font-weight-bold); margin-bottom: var(--spacing-xs);">
+                ✨ Seu Lucro Líquido
+              </div>
+              <div style="font-size: var(--font-size-xs); color: #00695C;">
+                Apenas Diárias + Horas Extras (dinheiro realmente ganho)
+              </div>
+            </div>
+            <div style="font-size: var(--font-size-2xl); font-weight: var(--font-weight-bold); color: #00897B;">
+              ${this.formatCurrency(netProfit)}
+            </div>
+          </div>
         </div>
 
         <div class="card">

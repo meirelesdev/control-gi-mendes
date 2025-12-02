@@ -50,6 +50,16 @@ class GetEventSummary {
       // Calcula data prevista de recebimento
       const expectedReceiptDate = settings.calculateExpectedReimbursementDate(event.date);
 
+      // Calcula os novos totalizadores financeiros
+      // 1. Investimento Inicial (Saiu do Bolso): EXPENSE + KM (gasolina paga hoje)
+      const upfrontCost = totals.totalExpenses + totals.totalKmCost;
+      
+      // 2. Valor de Reembolso: EXPENSE + KM + Tempo de Viagem (tudo que volta)
+      const reimbursementValue = totals.totalExpenses + totals.totalKmCost + totals.totalTravelTimeCost;
+      
+      // 3. Lucro Líquido Real: Apenas Diárias + Horas Extras (único dinheiro realmente ganho)
+      const netProfit = totals.totalFees;
+
       // Monta o resumo
       const summary = {
         event: {
@@ -59,18 +69,18 @@ class GetEventSummary {
           status: event.status
         },
         totals: {
-          // Total Gasto (Saída do bolso) - todas as despesas
+          // Investimento Inicial (o que ela pagou do próprio bolso)
+          upfrontCost: upfrontCost,
+          // Valor de Reembolso (o que vai voltar: despesas + KM + tempo viagem)
+          reimbursementValue: reimbursementValue,
+          // Lucro Líquido Real (apenas honorários - único dinheiro realmente ganho)
+          netProfit: netProfit,
+          // Total a Receber (Reembolso + Lucro)
+          totalToReceive: reimbursementValue + netProfit,
+          // Mantém campos antigos para compatibilidade
           totalSpent: totals.totalExpenses,
-          // Total a Receber (Soma de gastos + honorários)
-          // Isso inclui: despesas (que serão reembolsadas) + honorários
-          totalToReceive: totals.totalExpenses + totals.totalFees,
-          // Lucro Líquido Previsto (Apenas honorários)
-          netProfit: totals.totalFees,
-          // Total de reembolsos (despesas + receitas marcadas como reembolso)
           totalReimbursements: totals.totalExpenses + totals.totalReimbursements,
-          // Total de honorários
           totalFees: totals.totalFees,
-          // Saldo líquido (receitas - despesas)
           netBalance: totals.totalIncome - totals.totalExpenses
         },
         breakdown: {
@@ -112,6 +122,8 @@ class GetEventSummary {
     let totalIncome = 0;
     let totalReimbursements = 0; // Receitas marcadas como reembolso
     let totalFees = 0; // Receitas marcadas como honorário
+    let totalKmCost = 0; // Custo de KM (gasolina paga hoje)
+    let totalTravelTimeCost = 0; // Custo de tempo de viagem
     let expensesWithReceipt = 0;
     let expensesWithoutReceipt = 0;
     let expenseCount = 0;
@@ -149,7 +161,17 @@ class GetEventSummary {
           isReimbursement: transaction.metadata.isReimbursement
         });
 
-        if (transaction.metadata.isReimbursement) {
+        const category = transaction.metadata.category;
+        
+        // Separa KM e Tempo de Viagem para cálculo de custo inicial
+        if (category === 'km') {
+          totalKmCost += transaction.amount; // Gasolina paga hoje
+        } else if (category === 'tempo_viagem') {
+          totalTravelTimeCost += transaction.amount; // Tempo de viagem (reembolso)
+        }
+
+        if (transaction.metadata.isReimbursement !== false) {
+          // Considera KM e tempo_viagem como reembolso
           totalReimbursements += transaction.amount;
           reimbursements.push({
             id: transaction.id,
@@ -158,6 +180,7 @@ class GetEventSummary {
             category: transaction.metadata.category
           });
         } else {
+          // Honorários (diaria, hora_extra)
           totalFees += transaction.amount;
           fees.push({
             id: transaction.id,
@@ -165,8 +188,8 @@ class GetEventSummary {
             amount: transaction.amount,
             category: transaction.metadata.category
           });
-    }
-  }
+        }
+      }
     });
 
     return {
@@ -174,6 +197,8 @@ class GetEventSummary {
       totalIncome,
       totalReimbursements,
       totalFees,
+      totalKmCost, // Custo de KM (gasolina)
+      totalTravelTimeCost, // Custo de tempo de viagem
       expensesWithReceipt,
       expensesWithoutReceipt,
       expenseCount,
