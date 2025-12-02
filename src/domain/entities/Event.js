@@ -239,6 +239,52 @@ class Event {
   }
 
   /**
+   * Verifica se o evento pode ser editado
+   * Regra de negócio: Eventos com status REPORT_SENT ou PAID não podem ser editados
+   * para garantir integridade dos dados financeiros (relatórios já gerados ou pagamentos recebidos)
+   * @returns {boolean} - true se o evento pode ser editado, false caso contrário
+   */
+  get isEditable() {
+    return this.status !== Event.STATUS_REPORT_SENT && 
+           this.status !== Event.STATUS_PAID &&
+           this.status !== 'REPORT_SENT' &&
+           this.status !== 'PAID';
+  }
+
+  /**
+   * Atualiza os detalhes do evento (nome, data, descrição)
+   * Valida se o evento é editável antes de permitir a atualização
+   * @param {Object} details - Detalhes a serem atualizados
+   * @param {string} [details.name] - Novo nome do evento
+   * @param {string|Date} [details.date] - Nova data do evento
+   * @param {string} [details.description] - Nova descrição do evento
+   * @throws {Error} - Se o evento não for editável ou se os dados forem inválidos
+   */
+  updateDetails({ name, date, description }) {
+    // Valida se o evento pode ser editado
+    if (!this.isEditable) {
+      throw new Error(
+        `Evento não pode ser editado. Status atual: ${this.status}. ` +
+        `Apenas eventos com status "Planejado" ou "Realizado" podem ser editados.`
+      );
+    }
+
+    // Atualiza apenas os campos informados
+    if (name !== undefined) {
+      this.updateName(name);
+    }
+    if (date !== undefined) {
+      this.updateDate(date);
+    }
+    if (description !== undefined) {
+      this.updateDescription(description);
+    }
+
+    // Atualiza timestamp de modificação
+    this.updatedAt = new Date().toISOString();
+  }
+
+  /**
    * Cria um novo evento
    */
   static create(name, date, description = '') {

@@ -5,7 +5,7 @@
 import { ReportView } from './ReportView.js';
 
 class EventDetailView {
-  constructor(eventRepository, transactionRepository, settingsRepository, addTransactionUseCase, deleteTransactionUseCase = null, generateEventReportUseCase = null, updateEventStatusUseCase = null) {
+  constructor(eventRepository, transactionRepository, settingsRepository, addTransactionUseCase, deleteTransactionUseCase = null, generateEventReportUseCase = null, updateEventStatusUseCase = null, updateEventUseCase = null) {
     this.eventRepository = eventRepository;
     this.transactionRepository = transactionRepository;
     this.settingsRepository = settingsRepository;
@@ -13,6 +13,7 @@ class EventDetailView {
     this.deleteTransactionUseCase = deleteTransactionUseCase;
     this.generateEventReportUseCase = generateEventReportUseCase;
     this.updateEventStatusUseCase = updateEventStatusUseCase;
+    this.updateEventUseCase = updateEventUseCase;
     this.currentEventId = null;
   }
 
@@ -61,11 +62,26 @@ class EventDetailView {
         <div class="card" style="border-left: 4px solid ${statusBorderColor}; background-color: ${statusBgColor};">
           <div style="display: flex; justify-content: space-between; align-items: flex-start; margin-bottom: var(--spacing-md);">
             <div style="flex: 1;">
-              <div style="display: flex; align-items: center; gap: var(--spacing-md); margin-bottom: var(--spacing-sm);">
-                <h2 style="margin: 0;">${this.escapeHtml(event.name)}</h2>
-                <span class="badge" style="background-color: ${statusConfig.badgeColor}; color: ${statusConfig.badgeTextColor};">
-                  ${statusConfig.label}
-                </span>
+              <div style="display: flex; align-items: center; gap: var(--spacing-md); margin-bottom: var(--spacing-sm); flex-wrap: wrap;">
+                <h2 style="margin: 0; flex: 1; min-width: 200px;">${this.escapeHtml(event.name)}</h2>
+                <div style="display: flex; align-items: center; gap: var(--spacing-sm);">
+                  ${event.isEditable && this.updateEventUseCase ? `
+                    <button class="btn btn-sm" id="btn-edit-event" 
+                            style="background: transparent; color: ${statusBgColor === 'var(--color-surface)' ? 'var(--color-primary)' : 'white'}; padding: 8px 12px; border-radius: var(--radius-full); border: 1px solid ${statusBgColor === 'var(--color-surface)' ? 'var(--color-border)' : 'rgba(255,255,255,0.3)'};"
+                            title="Editar Evento">
+                      ✏️
+                    </button>
+                  ` : !event.isEditable ? `
+                    <button class="btn btn-sm" disabled
+                            style="background: transparent; color: var(--color-text-secondary); padding: 8px 12px; border-radius: var(--radius-full); border: 1px solid var(--color-border); opacity: 0.6; cursor: not-allowed;"
+                            title="Evento não pode ser editado (Relatório enviado ou Pago)">
+                      🔒
+                    </button>
+                  ` : ''}
+                  <span class="badge" style="background-color: ${statusConfig.badgeColor}; color: ${statusConfig.badgeTextColor};">
+                    ${statusConfig.label}
+                  </span>
+                </div>
               </div>
               <p class="text-muted">${this.formatDate(event.date)}</p>
               ${event.description ? `<p>${this.escapeHtml(event.description)}</p>` : ''}
@@ -199,6 +215,16 @@ class EventDetailView {
         if (statusSelect) {
           statusSelect.addEventListener('change', async (e) => {
             await this.updateStatus(e.target.value);
+          });
+        }
+      }
+
+      // Event listener para editar evento
+      if (this.updateEventUseCase && event.isEditable) {
+        const btnEditEvent = document.getElementById('btn-edit-event');
+        if (btnEditEvent) {
+          btnEditEvent.addEventListener('click', () => {
+            this.showEditEventModal(event);
           });
         }
       }
@@ -761,6 +787,105 @@ class EventDetailView {
     } catch (error) {
       console.error('Erro ao excluir transação:', error);
       window.toast.error(`Erro ao excluir transação: ${error.message}`);
+    }
+  }
+
+  /**
+   * Exibe modal para editar evento
+   */
+  async showEditEventModal(event) {
+    // Formata a data para o input type="date" (YYYY-MM-DD)
+    const eventDate = event.date instanceof Date 
+      ? event.date.toISOString().split('T')[0]
+      : event.date.split('T')[0];
+
+    const modal = this.createModal('Editar Evento', `
+      <form id="form-edit-event">
+        <div class="form-group">
+          <label class="form-label">Nome do Evento *</label>
+          <input type="text" class="form-input" id="edit-event-name" 
+                 value="${this.escapeHtml(event.name)}" required 
+                 placeholder="Ex: Evento Corporativo - Empresa XYZ">
+        </div>
+        <div class="form-group">
+          <label class="form-label">Data do Evento *</label>
+          <input type="date" class="form-input" id="edit-event-date" 
+                 value="${eventDate}" required>
+        </div>
+        <div class="form-group">
+          <label class="form-label">Descrição (opcional)</label>
+          <textarea class="form-input" id="edit-event-description" rows="3" 
+                    placeholder="Detalhes sobre o evento...">${this.escapeHtml(event.description || '')}</textarea>
+        </div>
+        <div class="modal-footer">
+          <button type="button" class="btn btn-secondary" onclick="this.closest('.modal-backdrop').remove()">
+            Cancelar
+          </button>
+          <button type="submit" class="btn btn-primary">Salvar Alterações</button>
+        </div>
+      </form>
+    `);
+
+    document.body.appendChild(modal);
+    modal.classList.add('active');
+
+    document.getElementById('form-edit-event').addEventListener('submit', async (e) => {
+      e.preventDefault();
+      const result = await this.saveEventEdit();
+      if (result !== false) {
+        modal.remove();
+      }
+    });
+  }
+
+  /**
+   * Salva as alterações do evento
+   */
+  async saveEventEdit() {
+    try {
+      if (!this.updateEventUseCase) {
+        if (window.toast) {
+          window.toast.error('Use case de edição não disponível');
+        }
+        return false;
+      }
+
+      const name = document.getElementById('edit-event-name').value.trim();
+      const date = document.getElementById('edit-event-date').value;
+      const description = document.getElementById('edit-event-description').value.trim();
+
+      if (!name || !date) {
+        if (window.toast) {
+          window.toast.error('Nome e data são obrigatórios');
+        }
+        return false;
+      }
+
+      const result = await this.updateEventUseCase.execute(this.currentEventId, {
+        name,
+        date,
+        description: description || ''
+      });
+
+      if (result.success) {
+        if (window.toast) {
+          window.toast.success('Evento atualizado com sucesso!');
+        }
+        // Re-renderiza a view para mostrar as alterações
+        await this.render(this.currentEventId);
+        return true;
+      } else {
+        if (window.toast) {
+          window.toast.error(result.error || 'Erro ao atualizar evento');
+        }
+        return false;
+      }
+    } catch (error) {
+      console.error('Erro ao salvar edição do evento:', error);
+      if (window.toast) {
+        window.toast.error('Erro ao salvar alterações: ' + (error.message || 'Erro desconhecido'));
+      }
+      return false;
     }
   }
 

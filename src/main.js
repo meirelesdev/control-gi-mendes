@@ -40,6 +40,7 @@ import { GetEventSummary } from './application/use-cases/GetEventSummary.js';
 import { UpdateSettings } from './application/use-cases/UpdateSettings.js';
 import { GenerateEventReport } from './application/use-cases/GenerateEventReport.js';
 import { UpdateEventStatus } from './application/use-cases/UpdateEventStatus.js';
+import { UpdateEvent } from './application/use-cases/UpdateEvent.js';
 
 // Presentation Layer
 import { App } from './presentation/App.js';
@@ -99,6 +100,9 @@ const updateEventStatus = new UpdateEventStatus(
   settingsRepository
 );
 
+// Use Case: Atualizar Evento (editar detalhes)
+const updateEvent = new UpdateEvent(eventRepository);
+
 // ============================================
 // 4. INICIALIZAÇÃO DA UI
 // ============================================
@@ -120,7 +124,8 @@ document.addEventListener('DOMContentLoaded', () => {
       getEventSummary,
       updateSettings,
       generateEventReport,
-      updateEventStatus
+      updateEventStatus,
+      updateEvent
     };
 
     // Inicializar a aplicação
