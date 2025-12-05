@@ -35,6 +35,14 @@ class DeleteEvent {
         };
       }
 
+      // Regra de negócio: Evento só pode ser excluído quando está em status PLANNED
+      if (event.status !== 'PLANNED') {
+        return {
+          success: false,
+          error: `Evento não pode ser excluído. Apenas eventos com status "Planejando" podem ser excluídos. Status atual: ${this._getStatusLabel(event.status)}`
+        };
+      }
+
       // Busca todas as transações do evento para excluí-las também
       const transactions = await this.transactionRepository.findByEventId(eventId);
       
@@ -61,6 +69,21 @@ class DeleteEvent {
         error: error.message
       };
     }
+  }
+
+  /**
+   * Retorna o label do status para mensagens de erro
+   * @private
+   */
+  _getStatusLabel(status) {
+    const labels = {
+      'PLANNED': 'Planejando',
+      'DONE': 'Realizado',
+      'COMPLETED': 'Realizado',
+      'REPORT_SENT': 'Relatório Enviado',
+      'PAID': 'Finalizado/Pago'
+    };
+    return labels[status] || status;
   }
 }
 

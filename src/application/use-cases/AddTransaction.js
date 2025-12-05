@@ -50,6 +50,14 @@ class AddTransaction {
         throw new Error('Evento não encontrado');
       }
 
+      // Regra de negócio: Não pode adicionar transações em eventos finalizados/pagos
+      if (event.status === 'PAID') {
+        throw new Error(
+          'Não é possível adicionar transações em eventos finalizados/pagos. ' +
+          'Eventos com status "Finalizado/Pago" não podem ser alterados.'
+        );
+      }
+
       // Importa Transaction dinamicamente para garantir que está disponível
       // Usa cache global para evitar recarregamentos desnecessários
       let TransactionClass;

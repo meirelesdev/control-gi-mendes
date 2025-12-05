@@ -74,53 +74,66 @@ class EventDetailView {
 
       container.innerHTML = `
         <div class="card" style="border-left: 4px solid ${statusBorderColor}; background-color: ${statusBgColor};">
-          <div style="display: flex; justify-content: space-between; align-items: flex-start; margin-bottom: var(--spacing-md);">
-            <div style="flex: 1;">
-              <div style="display: flex; align-items: center; gap: var(--spacing-md); margin-bottom: var(--spacing-sm); flex-wrap: wrap;">
-                <h2 style="margin: 0; flex: 1; min-width: 0;">${this.escapeHtml(event.name)}</h2>
-                <div style="display: flex; align-items: center; gap: var(--spacing-xs); flex-shrink: 0;">
-                  ${event.isEditable && this.updateEventUseCase ? `
-                    <button class="btn btn-sm" id="btn-edit-event" 
-                            style="background: transparent; color: ${statusBgColor === 'var(--color-surface)' ? 'var(--color-primary)' : 'white'}; padding: 6px 10px; border-radius: var(--radius-full); border: 1px solid ${statusBgColor === 'var(--color-surface)' ? 'var(--color-border)' : 'rgba(255,255,255,0.3)'}; font-size: 18px; line-height: 1;"
-                            title="Editar Evento">
-                      ✏️
-                    </button>
-                  ` : !event.isEditable ? `
-                    <button class="btn btn-sm" disabled
-                            style="background: transparent; color: var(--color-text-secondary); padding: 6px 10px; border-radius: var(--radius-full); border: 1px solid var(--color-border); opacity: 0.6; cursor: not-allowed; font-size: 18px; line-height: 1;"
-                            title="Evento não pode ser editado (Relatório enviado ou Pago)">
-                      🔒
-                    </button>
-                  ` : ''}
-                  ${this.deleteEventUseCase ? `
-                    <button class="btn btn-sm" id="btn-delete-event" 
-                            style="background: transparent; color: ${statusBgColor === 'var(--color-surface)' ? 'var(--color-danger)' : 'white'}; padding: 6px 10px; border-radius: var(--radius-full); border: 1px solid ${statusBgColor === 'var(--color-surface)' ? 'var(--color-border)' : 'rgba(255,255,255,0.3)'}; font-size: 18px; line-height: 1;"
-                            title="Excluir Evento">
-                      🗑️
-                    </button>
-                  ` : ''}
-                  <span class="badge" style="background-color: ${statusConfig.badgeColor}; color: ${statusConfig.badgeTextColor}; font-size: 11px; padding: 4px 8px;">
-                    ${statusConfig.label}
-                  </span>
-                </div>
+          <!-- Título do Evento -->
+          <div style="margin-bottom: var(--spacing-md);">
+            <h2 style="margin: 0 0 var(--spacing-sm) 0; word-wrap: break-word; hyphens: auto;">${this.escapeHtml(event.name)}</h2>
+          </div>
+          
+          <!-- Barra de Ações - Responsiva -->
+          <div style="display: flex; flex-wrap: wrap; gap: var(--spacing-md); align-items: center; justify-content: space-between; margin-bottom: var(--spacing-md);">
+            <!-- Grupo Esquerdo: Botões de Ação + Badge -->
+            <div style="display: flex; flex-wrap: wrap; align-items: center; gap: var(--spacing-sm); flex: 1; min-width: 0;">
+              <!-- Grupo de Botões de Ação (Editar/Deletar) -->
+              <div style="display: flex; align-items: center; gap: var(--spacing-sm); flex-shrink: 0;">
+                ${event.isEditable && this.updateEventUseCase ? `
+                  <button class="btn btn-sm" id="btn-edit-event" 
+                          style="background: transparent; color: ${statusBgColor === 'var(--color-surface)' ? 'var(--color-primary)' : 'white'}; padding: 6px 10px; border-radius: var(--radius-full); border: 1px solid ${statusBgColor === 'var(--color-surface)' ? 'var(--color-border)' : 'rgba(255,255,255,0.3)'}; font-size: 18px; line-height: 1; min-width: 36px; flex-shrink: 0;"
+                          title="Editar Evento">
+                    ✏️
+                  </button>
+                ` : !event.isEditable ? `
+                  <button class="btn btn-sm" disabled
+                          style="background: transparent; color: var(--color-text-secondary); padding: 6px 10px; border-radius: var(--radius-full); border: 1px solid var(--color-border); opacity: 0.6; cursor: not-allowed; font-size: 18px; line-height: 1; min-width: 36px; flex-shrink: 0;"
+                          title="Evento não pode ser editado (Finalizado/Pago)">
+                    🔒
+                  </button>
+                ` : ''}
+                ${this.deleteEventUseCase && event.status === 'PLANNED' ? `
+                  <button class="btn btn-sm" id="btn-delete-event" 
+                          style="background: transparent; color: ${statusBgColor === 'var(--color-surface)' ? 'var(--color-danger)' : 'white'}; padding: 6px 10px; border-radius: var(--radius-full); border: 1px solid ${statusBgColor === 'var(--color-surface)' ? 'var(--color-border)' : 'rgba(255,255,255,0.3)'}; font-size: 18px; line-height: 1; min-width: 36px; flex-shrink: 0;"
+                          title="Excluir Evento">
+                    🗑️
+                  </button>
+                ` : ''}
               </div>
-              <p class="text-muted">${this.formatDate(event.date)}</p>
-              ${event.description ? `<p>${this.escapeHtml(event.description)}</p>` : ''}
-              ${event.expectedPaymentDate ? `
-                <p style="margin-top: var(--spacing-sm);">
-                  <strong>💰 Pagamento previsto:</strong> ${this.formatDate(event.expectedPaymentDate)}
-                </p>
-              ` : ''}
+              
+              <!-- Badge de Status -->
+              <span class="badge" style="background-color: ${statusConfig.badgeColor}; color: ${statusConfig.badgeTextColor}; font-size: 11px; padding: 4px 12px; white-space: nowrap; flex-shrink: 0;">
+                ${statusConfig.label}
+              </span>
             </div>
-            <div style="display: flex; gap: var(--spacing-xs); flex-shrink: 0; margin-left: var(--spacing-sm);">
-              ${this.generateEventReportUseCase ? `
-              <button class="btn btn-sm btn-success" id="btn-generate-report" 
-                      style="padding: 8px 12px; border-radius: var(--radius-full); font-size: 14px; white-space: nowrap;"
-                      title="Gerar Relatório">
-                📄 Relatório
-              </button>
-              ` : ''}
-            </div>
+            
+            <!-- Grupo Direito: Botão Relatório -->
+            ${this.generateEventReportUseCase ? `
+              <div style="flex-shrink: 0;">
+                <button class="btn btn-sm btn-success" id="btn-generate-report" 
+                        style="padding: 8px 12px; border-radius: var(--radius-full); font-size: 14px; white-space: nowrap;"
+                        title="Gerar Relatório">
+                  📄 Relatório
+                </button>
+              </div>
+            ` : ''}
+          </div>
+          
+          <!-- Informações do Evento -->
+          <div style="margin-bottom: var(--spacing-md);">
+            <p class="text-muted" style="margin: 0 0 var(--spacing-sm) 0;">${this.formatDate(event.date)}</p>
+            ${event.description ? `<p style="margin: 0 0 var(--spacing-sm) 0; word-wrap: break-word;">${this.escapeHtml(event.description)}</p>` : ''}
+            ${event.expectedPaymentDate ? `
+              <p style="margin: var(--spacing-sm) 0 0 0;">
+                <strong>💰 Pagamento previsto:</strong> ${this.formatDate(event.expectedPaymentDate)}
+              </p>
+            ` : ''}
           </div>
           
           ${this.updateEventStatusUseCase ? `
@@ -128,12 +141,17 @@ class EventDetailView {
             <label class="form-label" style="margin-bottom: var(--spacing-sm); display: block;">
               <strong>Status do Evento:</strong>
             </label>
-            <select class="form-input" id="event-status-select" style="max-width: 300px;">
-              <option value="PLANNED" ${event.status === 'PLANNED' ? 'selected' : ''}>Planejado</option>
-              <option value="DONE" ${event.status === 'DONE' || event.status === 'COMPLETED' ? 'selected' : ''}>Realizado</option>
-              <option value="REPORT_SENT" ${event.status === 'REPORT_SENT' ? 'selected' : ''}>Relatório/NF Enviada</option>
+            <select class="form-input" id="event-status-select" style="max-width: 300px;" ${event.status === 'PAID' ? 'disabled' : ''}>
+              <option value="PLANNED" ${event.status === 'PLANNED' ? 'selected' : ''} ${event.status !== 'PLANNED' && (event.status === 'DONE' || event.status === 'COMPLETED' || event.status === 'REPORT_SENT' || event.status === 'PAID') ? 'disabled' : ''}>Planejando</option>
+              <option value="DONE" ${event.status === 'DONE' || event.status === 'COMPLETED' ? 'selected' : ''} ${event.status === 'PAID' ? 'disabled' : ''}>Realizado</option>
+              <option value="REPORT_SENT" ${event.status === 'REPORT_SENT' ? 'selected' : ''} ${event.status === 'PAID' ? 'disabled' : ''}>Relatório Enviado</option>
               <option value="PAID" ${event.status === 'PAID' ? 'selected' : ''}>Finalizado/Pago</option>
             </select>
+            ${event.status === 'PAID' ? `
+              <p style="margin-top: var(--spacing-sm); font-size: var(--font-size-sm); color: var(--color-text-secondary);">
+                ⚠️ Evento finalizado não pode ter seu status alterado.
+              </p>
+            ` : ''}
           </div>
           ` : ''}
         </div>
@@ -190,6 +208,7 @@ class EventDetailView {
           </div>
         </div>
 
+        ${event.status !== 'PAID' ? `
         <div class="card">
           <h3 style="margin-bottom: var(--spacing-md);">Ações Rápidas</h3>
           <div style="display: grid; grid-template-columns: repeat(3, 1fr); gap: var(--spacing-sm);">
@@ -213,6 +232,7 @@ class EventDetailView {
             </button>
           </div>
         </div>
+        ` : ''}
 
         <div class="card">
           <div class="card-header">
@@ -230,7 +250,7 @@ class EventDetailView {
             </div>
           ` : `
             <div class="expense-list">
-              ${expenses.map(expense => this.renderExpenseItem(expense)).join('')}
+              ${expenses.map(expense => this.renderExpenseItem(expense, event.status)).join('')}
             </div>
           `}
         </div>
@@ -248,7 +268,7 @@ class EventDetailView {
             </div>
           ` : `
             <div class="expense-list">
-              ${fees.map(fee => this.renderFeeItem(fee)).join('')}
+              ${fees.map(fee => this.renderFeeItem(fee, event.status)).join('')}
             </div>
           `}
         </div>
@@ -266,24 +286,35 @@ class EventDetailView {
             </div>
           ` : `
             <div class="expense-list">
-              ${reimbursements.map(reimbursement => this.renderIncomeItem(reimbursement)).join('')}
+              ${reimbursements.map(reimbursement => this.renderIncomeItem(reimbursement, event.status)).join('')}
             </div>
           `}
         </div>
       `;
 
-      // Event listeners
-      document.getElementById('btn-add-expense').addEventListener('click', () => {
-        this.showAddExpenseModal();
-      });
+      // Event listeners (apenas se o evento não estiver finalizado)
+      if (event.status !== 'PAID') {
+        const btnAddExpense = document.getElementById('btn-add-expense');
+        if (btnAddExpense) {
+          btnAddExpense.addEventListener('click', () => {
+            this.showAddExpenseModal();
+          });
+        }
 
-      document.getElementById('btn-add-fee').addEventListener('click', () => {
-        this.showAddFeeModal();
-      });
+        const btnAddFee = document.getElementById('btn-add-fee');
+        if (btnAddFee) {
+          btnAddFee.addEventListener('click', () => {
+            this.showAddFeeModal();
+          });
+        }
 
-      document.getElementById('btn-add-km-travel').addEventListener('click', () => {
-        this.showAddKmTravelModal();
-      });
+        const btnAddKmTravel = document.getElementById('btn-add-km-travel');
+        if (btnAddKmTravel) {
+          btnAddKmTravel.addEventListener('click', () => {
+            this.showAddKmTravelModal();
+          });
+        }
+      }
 
       // Event listener para gerar relatório
       if (this.generateEventReportUseCase) {
@@ -299,8 +330,66 @@ class EventDetailView {
       if (this.updateEventStatusUseCase) {
         const statusSelect = document.getElementById('event-status-select');
         if (statusSelect) {
+          // Salva o status atual para prevenir mudanças inválidas
+          const currentStatus = event.status;
+          
+          // Previne qualquer tentativa de mudança se o select estiver desabilitado
+          if (statusSelect.disabled) {
+            // Adiciona um listener que sempre restaura o valor se alguém tentar mudar
+            statusSelect.addEventListener('change', (e) => {
+              e.preventDefault();
+              e.target.value = currentStatus;
+            });
+            return; // Não adiciona mais listeners se estiver desabilitado
+          }
+          
           statusSelect.addEventListener('change', async (e) => {
-            await this.updateStatus(e.target.value);
+            const newStatus = e.target.value;
+            const selectedOption = e.target.options[e.target.selectedIndex];
+            
+            // Previne seleção de opções desabilitadas
+            if (selectedOption && selectedOption.disabled) {
+              // Restaura o valor anterior
+              e.target.value = currentStatus;
+              window.toast?.error('Esta transição de status não é permitida.');
+              return;
+            }
+            
+            // Valida se a mudança é permitida antes de processar
+            if (newStatus === currentStatus) {
+              return; // Não faz nada se não mudou
+            }
+            
+            await this.updateStatus(newStatus);
+          });
+          
+          // Previne mudança via teclado em opções desabilitadas
+          statusSelect.addEventListener('keydown', (e) => {
+            if (e.key === 'ArrowDown' || e.key === 'ArrowUp') {
+              const currentIndex = e.target.selectedIndex;
+              const options = Array.from(e.target.options);
+              let nextIndex = e.key === 'ArrowDown' ? currentIndex + 1 : currentIndex - 1;
+              
+              // Pula opções desabilitadas
+              while (nextIndex >= 0 && nextIndex < options.length) {
+                if (!options[nextIndex].disabled) {
+                  break; // Encontrou uma opção válida
+                }
+                nextIndex = e.key === 'ArrowDown' ? nextIndex + 1 : nextIndex - 1;
+              }
+              
+              if (nextIndex < 0 || nextIndex >= options.length || options[nextIndex].disabled) {
+                e.preventDefault();
+              }
+            }
+          });
+          
+          // Previne mudança via mouse em opções desabilitadas
+          statusSelect.addEventListener('mousedown', (e) => {
+            if (statusSelect.disabled) {
+              e.preventDefault();
+              return;
+            }
           });
         }
       }
@@ -361,7 +450,7 @@ class EventDetailView {
     }
   }
 
-  renderExpenseItem(expense) {
+  renderExpenseItem(expense, eventStatus) {
     const hasReceipt = expense.metadata.hasReceipt;
     
     return `
@@ -371,17 +460,17 @@ class EventDetailView {
           <div class="expense-item-value" style="color: var(--color-danger);">${this.formatCurrency(expense.amount)}</div>
         </div>
         <div class="expense-item-actions">
-        ${!hasReceipt ? `
+        ${!hasReceipt && eventStatus !== 'PAID' ? `
           <div class="expense-item-receipt">
             <span>⚠️</span>
             <button class="btn btn-sm btn-success btn-mark-receipt" data-transaction-id="${expense.id}">
               Marcar NF
             </button>
           </div>
-        ` : `
+        ` : hasReceipt ? `
           <span class="badge badge-success">NF OK</span>
-        `}
-          ${this.updateTransactionUseCase ? `
+        ` : ''}
+          ${this.updateTransactionUseCase && eventStatus !== 'PAID' ? `
             <button class="btn btn-sm btn-edit-transaction" 
                     data-transaction-id="${expense.id}"
                     data-transaction-type="expense"
@@ -390,17 +479,19 @@ class EventDetailView {
               ✏️
             </button>
           ` : ''}
+          ${eventStatus !== 'PAID' ? `
           <button class="btn btn-sm btn-delete-transaction" 
                   data-transaction-id="${expense.id}"
                   title="Excluir despesa">
             🗑️
           </button>
+          ` : ''}
         </div>
       </div>
     `;
   }
 
-  renderIncomeItem(income) {
+  renderIncomeItem(income, eventStatus) {
     const category = income.metadata.category || '';
     const categoryLabels = {
       'km': 'KM Rodado',
@@ -422,7 +513,7 @@ class EventDetailView {
           <div class="expense-item-value" style="color: var(--color-success);">${this.formatCurrency(income.amount)}</div>
         </div>
         <div class="expense-item-actions">
-          ${this.updateTransactionUseCase ? `
+          ${this.updateTransactionUseCase && eventStatus !== 'PAID' ? `
             <button class="btn btn-sm btn-edit-transaction" 
                     data-transaction-id="${income.id}"
                     data-transaction-type="income"
@@ -432,17 +523,19 @@ class EventDetailView {
               ✏️
             </button>
           ` : ''}
+          ${eventStatus !== 'PAID' ? `
           <button class="btn btn-sm btn-delete-transaction" 
                   data-transaction-id="${income.id}"
                   title="Excluir receita">
             🗑️
           </button>
+          ` : ''}
         </div>
       </div>
     `;
   }
 
-  renderFeeItem(fee) {
+  renderFeeItem(fee, eventStatus) {
     const category = fee.metadata.category || '';
     const categoryLabels = {
       'diaria': 'Diária',
@@ -461,7 +554,7 @@ class EventDetailView {
           <div class="expense-item-value" style="color: var(--color-success); font-weight: bold;">${this.formatCurrency(fee.amount)}</div>
         </div>
         <div class="expense-item-actions">
-          ${this.updateTransactionUseCase ? `
+          ${this.updateTransactionUseCase && eventStatus !== 'PAID' ? `
             <button class="btn btn-sm btn-edit-transaction" 
                     data-transaction-id="${fee.id}"
                     data-transaction-type="fee"
@@ -471,17 +564,28 @@ class EventDetailView {
               ✏️
             </button>
           ` : ''}
+          ${eventStatus !== 'PAID' ? `
           <button class="btn btn-sm btn-delete-transaction" 
                   data-transaction-id="${fee.id}"
                   title="Excluir honorário">
             🗑️
           </button>
+          ` : ''}
         </div>
       </div>
     `;
   }
 
-  showAddExpenseModal() {
+  async showAddExpenseModal() {
+    // Valida se o evento não está finalizado
+    if (this.currentEventId) {
+      const event = await this.eventRepository.findById(this.currentEventId);
+      if (event && event.status === 'PAID') {
+        window.toast?.error('Não é possível adicionar transações em eventos finalizados/pagos.');
+        return;
+      }
+    }
+
     const modal = this.createModal('Adicionar Despesa Rápida', `
       <form id="form-add-expense">
         <div class="form-group">
@@ -524,7 +628,16 @@ class EventDetailView {
     });
   }
 
-  showAddFeeModal() {
+  async showAddFeeModal() {
+    // Valida se o evento não está finalizado
+    if (this.currentEventId) {
+      const event = await this.eventRepository.findById(this.currentEventId);
+      if (event && event.status === 'PAID') {
+        window.toast?.error('Não é possível adicionar transações em eventos finalizados/pagos.');
+        return;
+      }
+    }
+
     const modal = this.createModal('Adicionar Honorário', `
       <form id="form-add-fee">
         <div class="form-group">
@@ -890,10 +1003,19 @@ class EventDetailView {
 
   async markReceiptAsIssued(transactionId) {
     try {
-    const transaction = await this.transactionRepository.findById(transactionId);
-    if (transaction) {
-      transaction.markReceiptAsIssued();
-      await this.transactionRepository.save(transaction);
+      // Valida se o evento não está finalizado
+      if (this.currentEventId) {
+        const event = await this.eventRepository.findById(this.currentEventId);
+        if (event && event.status === 'PAID') {
+          window.toast?.error('Não é possível alterar transações de eventos finalizados/pagos.');
+          return;
+        }
+      }
+
+      const transaction = await this.transactionRepository.findById(transactionId);
+      if (transaction) {
+        transaction.markReceiptAsIssued();
+        await this.transactionRepository.save(transaction);
         window.toast.success('Nota fiscal marcada como emitida!');
         await this.render(this.currentEventId);
       } else {
@@ -908,6 +1030,15 @@ class EventDetailView {
     if (!this.deleteTransactionUseCase) {
       window.toast.error('Funcionalidade de exclusão não disponível');
       return;
+    }
+
+    // Valida se o evento não está finalizado
+    if (this.currentEventId) {
+      const event = await this.eventRepository.findById(this.currentEventId);
+      if (event && event.status === 'PAID') {
+        window.toast?.error('Não é possível excluir transações de eventos finalizados/pagos.');
+        return;
+      }
     }
 
     // Confirmação antes de excluir usando modal amigável
@@ -1044,6 +1175,14 @@ class EventDetailView {
    * Exibe modal para editar transação
    */
   async showEditTransactionModal(transactionId, transactionType, transactionCategory = null) {
+    // Valida se o evento não está finalizado
+    if (this.currentEventId) {
+      const event = await this.eventRepository.findById(this.currentEventId);
+      if (event && event.status === 'PAID') {
+        window.toast?.error('Não é possível editar transações de eventos finalizados/pagos.');
+        return;
+      }
+    }
     try {
       const transaction = await this.transactionRepository.findById(transactionId);
       if (!transaction) {
@@ -1613,7 +1752,7 @@ class EventDetailView {
   _getStatusConfig(status) {
     const configs = {
       'PLANNED': {
-        label: 'Planejado',
+        label: 'Planejando',
         borderColor: '#6b7280', // Cinza
         bgColor: 'rgba(107, 114, 128, 0.05)',
         badgeColor: '#6b7280',
@@ -1634,7 +1773,7 @@ class EventDetailView {
         badgeTextColor: '#fff'
       },
       'REPORT_SENT': {
-        label: 'Relatório/NF Enviada',
+        label: 'Relatório Enviado',
         borderColor: '#f97316', // Laranja
         bgColor: 'rgba(249, 115, 22, 0.05)',
         badgeColor: '#f97316',
@@ -1662,6 +1801,29 @@ class EventDetailView {
     }
 
     try {
+      // Busca o evento atual para validar antes de tentar atualizar
+      const event = await this.eventRepository.findById(this.currentEventId);
+      if (!event) {
+        window.toast?.error('Evento não encontrado');
+        return;
+      }
+
+      // Validação no frontend: não permite voltar de PAID
+      if (event.status === 'PAID') {
+        window.toast?.error('Evento finalizado/pago não pode ter seu status alterado.');
+        // Recarrega para restaurar o select
+        await this.render(this.currentEventId);
+        return;
+      }
+
+      // Validação no frontend: não permite voltar para PLANNED se já passou
+      if (newStatus === 'PLANNED' && event.status !== 'PLANNED') {
+        window.toast?.error('Não é possível voltar o status para "Planejando" após o evento ter sido realizado.');
+        // Recarrega para restaurar o select
+        await this.render(this.currentEventId);
+        return;
+      }
+
       const result = await this.updateEventStatusUseCase.execute(this.currentEventId, newStatus);
 
       if (result.success) {
@@ -1678,10 +1840,14 @@ class EventDetailView {
         await this.render(this.currentEventId);
       } else {
         window.toast?.error(`Erro ao atualizar status: ${result.error}`);
+        // Recarrega para restaurar o select em caso de erro
+        await this.render(this.currentEventId);
       }
     } catch (error) {
       console.error('Erro ao atualizar status:', error);
       window.toast?.error(`Erro ao atualizar status: ${error.message}`);
+      // Recarrega para restaurar o select em caso de erro
+      await this.render(this.currentEventId);
     }
   }
 
@@ -1771,10 +1937,16 @@ class EventDetailView {
           window.toast.success('Evento excluído com sucesso!');
         }
         
-        // Navega de volta para o dashboard
-        window.dispatchEvent(new CustomEvent('navigate', { 
-          detail: { view: 'dashboard' } 
-        }));
+        // Limpa o ID do evento atual
+        this.currentEventId = null;
+        
+        // Pequeno delay para garantir que o toast seja exibido antes da navegação
+        setTimeout(() => {
+          // Navega de volta para o dashboard
+          window.dispatchEvent(new CustomEvent('navigate', { 
+            detail: { view: 'dashboard' } 
+          }));
+        }, 300);
       } else {
         if (window.toast) {
           window.toast.error(`Erro ao excluir evento: ${result.error || 'Erro desconhecido'}`);

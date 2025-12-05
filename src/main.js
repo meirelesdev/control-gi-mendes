@@ -78,7 +78,7 @@ const createEvent = new CreateEvent(eventRepository, addTransaction, settingsRep
 // addTransaction já foi criado acima para ser usado no CreateEvent
 
 // Use Case: Excluir Transação
-const deleteTransaction = new DeleteTransaction(transactionRepository);
+const deleteTransaction = new DeleteTransaction(transactionRepository, eventRepository);
 
 // Use Case: Obter Resumo do Evento
 const getEventSummary = new GetEventSummary(
@@ -99,7 +99,8 @@ const generateEventReport = new GenerateEventReport(
 // Use Case: Atualizar Status do Evento
 const updateEventStatus = new UpdateEventStatus(
   eventRepository,
-  settingsRepository
+  settingsRepository,
+  transactionRepository
 );
 
 // Use Case: Atualizar Evento (editar detalhes)

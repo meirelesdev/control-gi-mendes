@@ -37,6 +37,17 @@ class UpdateTransaction {
         };
       }
 
+      // Regra de negócio: Não pode editar transações de eventos finalizados/pagos
+      if (this.eventRepository) {
+        const event = await this.eventRepository.findById(transaction.eventId);
+        if (event && event.status === 'PAID') {
+          throw new Error(
+            'Não é possível editar transações de eventos finalizados/pagos. ' +
+            'Eventos com status "Finalizado/Pago" não podem ser alterados.'
+          );
+        }
+      }
+
       // Atualiza os detalhes da transação
       transaction.updateDetails(input);
 

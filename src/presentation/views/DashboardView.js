@@ -181,7 +181,7 @@ class DashboardView {
   _getStatusConfig(status) {
     const configs = {
       'PLANNED': {
-        label: 'Planejado',
+        label: 'Planejando',
         badgeColor: '#6b7280', // Cinza
         badgeTextColor: '#fff'
       },

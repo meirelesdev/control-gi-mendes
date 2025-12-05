@@ -145,7 +145,7 @@ class Event {
   }
 
   /**
-   * Marca o evento como "Relatório/NF Enviada"
+   * Marca o evento como "Relatório Enviado"
    * Calcula automaticamente a data prevista de pagamento baseada nos dias padrão de reembolso
    * @param {Date|string} reportSentDate - Data em que o relatório foi enviado (padrão: hoje)
    * @param {number} reimbursementDays - Número de dias para reembolso (padrão: 21)
@@ -240,14 +240,13 @@ class Event {
 
   /**
    * Verifica se o evento pode ser editado
-   * Regra de negócio: Eventos com status REPORT_SENT ou PAID não podem ser editados
-   * para garantir integridade dos dados financeiros (relatórios já gerados ou pagamentos recebidos)
+   * Regra de negócio: Eventos com status PAID não podem ser editados
+   * para garantir integridade dos dados financeiros (pagamentos recebidos)
+   * Eventos com status REPORT_SENT ainda podem ser editados antes de serem finalizados
    * @returns {boolean} - true se o evento pode ser editado, false caso contrário
    */
   get isEditable() {
-    return this.status !== Event.STATUS_REPORT_SENT && 
-           this.status !== Event.STATUS_PAID &&
-           this.status !== 'REPORT_SENT' &&
+    return this.status !== Event.STATUS_PAID &&
            this.status !== 'PAID';
   }
 
@@ -265,7 +264,7 @@ class Event {
     if (!this.isEditable) {
       throw new Error(
         `Evento não pode ser editado. Status atual: ${this.status}. ` +
-        `Apenas eventos com status "Planejado" ou "Realizado" podem ser editados.`
+        `Eventos com status "Finalizado/Pago" não podem ser editados.`
       );
     }
 

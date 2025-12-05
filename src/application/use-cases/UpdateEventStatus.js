@@ -3,7 +3,7 @@
  * Atualiza o status do evento e calcula data prevista de pagamento quando necessário
  */
 class UpdateEventStatus {
-  constructor(eventRepository, settingsRepository) {
+  constructor(eventRepository, settingsRepository, transactionRepository = null) {
     if (!eventRepository) {
       throw new Error('EventRepository é obrigatório');
     }
@@ -13,6 +13,7 @@ class UpdateEventStatus {
     
     this.eventRepository = eventRepository;
     this.settingsRepository = settingsRepository;
+    this.transactionRepository = transactionRepository;
   }
 
   /**
@@ -38,6 +39,48 @@ class UpdateEventStatus {
       const event = await this.eventRepository.findById(eventId);
       if (!event) {
         throw new Error('Evento não encontrado');
+      }
+
+      // Regra de negócio: Evento com status PAID não pode ter seu status alterado
+      if (event.status === 'PAID') {
+        throw new Error(
+          'Evento finalizado/pago não pode ter seu status alterado. ' +
+          'Uma vez que o evento foi marcado como "Finalizado/Pago", não é possível alterar seu status.'
+        );
+      }
+
+      // Regra de negócio: Não pode voltar de DONE (ou superior) para PLANNED
+      if (newStatus === 'PLANNED' && event.status !== 'PLANNED') {
+        const currentStatusLabel = this._getStatusLabel(event.status);
+        throw new Error(
+          `Não é possível voltar o status para "Planejando". ` +
+          `Uma vez que o evento foi marcado como "${currentStatusLabel}", não é possível retornar ao status anterior.`
+        );
+      }
+
+      // Regra de negócio: Não pode voltar de PAID para qualquer status anterior
+      // (já validado acima, mas mantendo para clareza)
+      // Regra de negócio: Não pode voltar de REPORT_SENT para DONE ou PLANNED
+      if (event.status === 'REPORT_SENT' && (newStatus === 'DONE' || newStatus === 'PLANNED')) {
+        throw new Error(
+          'Não é possível voltar o status após "Relatório Enviado". ' +
+          'Apenas avanços para "Finalizado/Pago" são permitidos.'
+        );
+      }
+
+      // Regra de negócio: Não pode mudar de PLANNED para DONE sem ter pelo menos uma transação
+      if (event.status === 'PLANNED' && newStatus === 'DONE') {
+        if (!this.transactionRepository) {
+          throw new Error('TransactionRepository não disponível para validação');
+        }
+        
+        const transactions = await this.transactionRepository.findByEventId(eventId);
+        if (!transactions || transactions.length === 0) {
+          throw new Error(
+            'Não é possível marcar o evento como "Realizado" sem ter pelo menos uma transação cadastrada. ' +
+            'Adicione despesas, honorários ou KM/Viagem antes de alterar o status.'
+          );
+        }
       }
 
       // Se o novo status for REPORT_SENT, calcula a data prevista de pagamento
@@ -71,6 +114,21 @@ class UpdateEventStatus {
         error: error.message
       };
     }
+  }
+
+  /**
+   * Retorna o label do status para mensagens de erro
+   * @private
+   */
+  _getStatusLabel(status) {
+    const labels = {
+      'PLANNED': 'Planejando',
+      'DONE': 'Realizado',
+      'COMPLETED': 'Realizado',
+      'REPORT_SENT': 'Relatório Enviado',
+      'PAID': 'Finalizado/Pago'
+    };
+    return labels[status] || status;
   }
 }
 

@@ -3,11 +3,12 @@
  * Remove uma transação do sistema
  */
 class DeleteTransaction {
-  constructor(transactionRepository) {
+  constructor(transactionRepository, eventRepository = null) {
     if (!transactionRepository) {
       throw new Error('TransactionRepository é obrigatório');
     }
     this.transactionRepository = transactionRepository;
+    this.eventRepository = eventRepository;
   }
 
   /**
@@ -26,6 +27,17 @@ class DeleteTransaction {
       const transaction = await this.transactionRepository.findById(transactionId);
       if (!transaction) {
         throw new Error('Transação não encontrada');
+      }
+
+      // Regra de negócio: Não pode excluir transações de eventos finalizados/pagos
+      if (this.eventRepository) {
+        const event = await this.eventRepository.findById(transaction.eventId);
+        if (event && event.status === 'PAID') {
+          throw new Error(
+            'Não é possível excluir transações de eventos finalizados/pagos. ' +
+            'Eventos com status "Finalizado/Pago" não podem ser alterados.'
+          );
+        }
       }
 
       // Remove a transação

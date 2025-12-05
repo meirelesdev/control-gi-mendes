@@ -45,12 +45,15 @@ class App {
       });
     }
 
-    // Event listener para navegação customizada (ex: ir para detalhe do evento)
+    // Event listener para navegação customizada (ex: ir para detalhe do evento ou voltar ao dashboard)
     window.addEventListener('navigate', (e) => {
       const { view, eventId } = e.detail;
       if (view === 'event-detail' && eventId) {
         this.currentEventId = eventId;
         this.navigateTo('event-detail');
+      } else if (view === 'dashboard') {
+        this.currentEventId = null; // Limpa o ID do evento ao voltar ao dashboard
+        this.navigateTo('dashboard');
       }
     });
   }
