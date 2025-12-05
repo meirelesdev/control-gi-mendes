@@ -237,12 +237,21 @@ class EventDetailView {
         <div class="card">
           <div class="card-header">
             <h3 class="card-title">Despesas</h3>
-            ${expensesWithoutReceipt.length > 0 ? `
-              <span class="badge badge-warning">${expensesWithoutReceipt.length} sem NF</span>
-            ` : ''}
-            ${expenses.length > 0 ? `
-              <span class="badge badge-info">Total: ${this.formatCurrency(totalExpenses)}</span>
-            ` : ''}
+            <div style="display: flex; align-items: center; gap: var(--spacing-sm); flex-wrap: wrap;">
+              ${expensesWithoutReceipt.length > 0 ? `
+                <span class="badge badge-warning">${expensesWithoutReceipt.length} sem NF</span>
+              ` : ''}
+              ${expenses.length > 0 ? `
+                <span class="badge badge-info">Total: ${this.formatCurrency(totalExpenses)}</span>
+              ` : ''}
+              ${event.status !== 'PAID' ? `
+                <button class="btn btn-sm btn-primary" id="btn-add-expense-header" 
+                        style="padding: 6px 12px; border-radius: var(--radius-full); font-size: 18px; line-height: 1; min-width: 32px; height: 32px; display: flex; align-items: center; justify-content: center;"
+                        title="Adicionar Despesa">
+                  ➕
+                </button>
+              ` : ''}
+            </div>
           </div>
           ${expenses.length === 0 ? `
             <div class="empty-state">
@@ -258,9 +267,18 @@ class EventDetailView {
         <div class="card">
           <div class="card-header">
             <h3 class="card-title">💰 Honorários (Lucro)</h3>
-            ${fees.length > 0 ? `
-              <span class="badge badge-success">Total: ${this.formatCurrency(totalFees)}</span>
-            ` : ''}
+            <div style="display: flex; align-items: center; gap: var(--spacing-sm); flex-wrap: wrap;">
+              ${fees.length > 0 ? `
+                <span class="badge badge-success">Total: ${this.formatCurrency(totalFees)}</span>
+              ` : ''}
+              ${event.status !== 'PAID' ? `
+                <button class="btn btn-sm btn-success" id="btn-add-fee-header" 
+                        style="padding: 6px 12px; border-radius: var(--radius-full); font-size: 18px; line-height: 1; min-width: 32px; height: 32px; display: flex; align-items: center; justify-content: center;"
+                        title="Adicionar Honorário">
+                  ➕
+                </button>
+              ` : ''}
+            </div>
           </div>
           ${fees.length === 0 ? `
             <div class="empty-state">
@@ -276,9 +294,18 @@ class EventDetailView {
         <div class="card">
           <div class="card-header">
             <h3 class="card-title">🚗 KM / Viagens (Reembolso)</h3>
-            ${reimbursements.length > 0 ? `
-              <span class="badge badge-info">Total: ${this.formatCurrency(totalReimbursements)}</span>
-            ` : ''}
+            <div style="display: flex; align-items: center; gap: var(--spacing-sm); flex-wrap: wrap;">
+              ${reimbursements.length > 0 ? `
+                <span class="badge badge-info">Total: ${this.formatCurrency(totalReimbursements)}</span>
+              ` : ''}
+              ${event.status !== 'PAID' ? `
+                <button class="btn btn-sm btn-secondary" id="btn-add-km-travel-header" 
+                        style="padding: 6px 12px; border-radius: var(--radius-full); font-size: 18px; line-height: 1; min-width: 32px; height: 32px; display: flex; align-items: center; justify-content: center;"
+                        title="Adicionar KM/Viagem">
+                  ➕
+                </button>
+              ` : ''}
+            </div>
           </div>
           ${reimbursements.length === 0 ? `
             <div class="empty-state">
@@ -294,6 +321,7 @@ class EventDetailView {
 
       // Event listeners (apenas se o evento não estiver finalizado)
       if (event.status !== 'PAID') {
+        // Botões da seção "Ações Rápidas"
         const btnAddExpense = document.getElementById('btn-add-expense');
         if (btnAddExpense) {
           btnAddExpense.addEventListener('click', () => {
@@ -311,6 +339,28 @@ class EventDetailView {
         const btnAddKmTravel = document.getElementById('btn-add-km-travel');
         if (btnAddKmTravel) {
           btnAddKmTravel.addEventListener('click', () => {
+            this.showAddKmTravelModal();
+          });
+        }
+
+        // Botões nos headers das seções
+        const btnAddExpenseHeader = document.getElementById('btn-add-expense-header');
+        if (btnAddExpenseHeader) {
+          btnAddExpenseHeader.addEventListener('click', () => {
+            this.showAddExpenseModal();
+          });
+        }
+
+        const btnAddFeeHeader = document.getElementById('btn-add-fee-header');
+        if (btnAddFeeHeader) {
+          btnAddFeeHeader.addEventListener('click', () => {
+            this.showAddFeeModal();
+          });
+        }
+
+        const btnAddKmTravelHeader = document.getElementById('btn-add-km-travel-header');
+        if (btnAddKmTravelHeader) {
+          btnAddKmTravelHeader.addEventListener('click', () => {
             this.showAddKmTravelModal();
           });
         }
