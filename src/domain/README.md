@@ -1,4 +1,4 @@
-# Domain Layer - Gi Finanças
+# Domain Layer - Chef Finance
 
 Esta camada contém as entidades de domínio e interfaces de repositórios, seguindo os princípios de Domain-Driven Design (DDD).
 

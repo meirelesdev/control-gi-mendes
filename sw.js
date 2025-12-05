@@ -1,9 +1,9 @@
 /**
- * Service Worker - Gi Finanças
+ * Service Worker - Chef Finance
  * Permite funcionamento offline e instalação como PWA
  */
 
-const CACHE_NAME = 'gi-financas-v1';
+const CACHE_NAME = 'chef-finance-v1';
 // Base path para GitHub Pages
 const BASE_PATH = '/control-gi-mendes';
 

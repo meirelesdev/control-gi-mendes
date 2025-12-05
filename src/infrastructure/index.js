@@ -1,5 +1,5 @@
 /**
- * Infrastructure Layer - Gi Finanças
+ * Infrastructure Layer - Chef Finance
  * 
  * Este módulo exporta todas as implementações de repositórios
  */

@@ -1,10 +1,10 @@
-# Gi Finanças
+# Chef Finance
 
 Sistema web (SPA) para gestão financeira de eventos corporativos culinários.
 
 ## 📋 Sobre o Sistema
 
-O **Gi Finanças** foi desenvolvido para auxiliar na gestão financeira de eventos culinários, diferenciando claramente entre **reembolsos** (dinheiro gasto que será devolvido) e **lucros** (diárias, horas extras, compensações de viagem).
+O **Chef Finance** foi desenvolvido para auxiliar na gestão financeira de eventos culinários, diferenciando claramente entre **reembolsos** (dinheiro gasto que será devolvido) e **lucros** (diárias, horas extras, compensações de viagem).
 
 ## 🏗️ Arquitetura
 
@@ -124,9 +124,9 @@ control-gi-mendes/
 Todos os dados são armazenados no `localStorage` do navegador, usando as seguintes chaves:
 
 **Nova Arquitetura:**
-- `gi_financas_events` - Eventos
-- `gi_financas_transactions` - Transações (despesas e receitas unificadas)
-- `gi_financas_settings` - Configurações
+- `chef_finance_events` - Eventos
+- `chef_finance_transactions` - Transações (despesas e receitas unificadas)
+- `chef_finance_settings` - Configurações
 
 **Estrutura Antiga (compatibilidade):**
 - `gi_financas_eventos`
@@ -142,7 +142,7 @@ O sistema foi projetado para ser hospedado no GitHub Pages, funcionando apenas c
 
 1. **Crie um repositório no GitHub**
    - Vá para [github.com/new](https://github.com/new)
-   - Nome do repositório: `gi-financas` (ou outro nome de sua preferência)
+   - Nome do repositório: `chef-finance` (ou outro nome de sua preferência)
    - Escolha se será público ou privado
    - **NÃO** marque "Initialize this repository with a README" (você já tem um)
 
@@ -150,9 +150,9 @@ O sistema foi projetado para ser hospedado no GitHub Pages, funcionando apenas c
    ```bash
    git init
    git add .
-   git commit -m "Initial commit: Gi Finanças"
+   git commit -m "Initial commit: Chef Finance"
    git branch -M main
-   git remote add origin https://github.com/SEU-USUARIO/gi-financas.git
+   git remote add origin https://github.com/SEU-USUARIO/chef-finance.git
    git push -u origin main
    ```
    
@@ -172,18 +172,18 @@ O sistema foi projetado para ser hospedado no GitHub Pages, funcionando apenas c
 4. **Acesse seu site**
    - Aguarde alguns minutos para o GitHub processar
    - Seu site estará disponível em:
-     `https://SEU-USUARIO.github.io/gi-financas/`
+     `https://SEU-USUARIO.github.io/chef-finance/`
 
 ### ⚠️ Erro de Domínio Personalizado
 
 Se você recebeu o erro:
-> "The custom domain `gi-financas` is not properly formatted"
+> "The custom domain `chef-finance` is not properly formatted"
 
 **Solução**: Você não precisa configurar um domínio personalizado! O GitHub Pages funciona automaticamente sem isso.
 
 **Se você realmente quiser usar um domínio personalizado:**
-- Você precisa ter um domínio registrado (ex: `gi-financas.com`)
-- O formato correto seria `gi-financas.com` ou `www.gi-financas.com` (não apenas `gi-financas`)
+- Você precisa ter um domínio registrado (ex: `chef-finance.com`)
+- O formato correto seria `chef-finance.com` ou `www.chef-finance.com` (não apenas `chef-finance`)
 - Configure o DNS do seu domínio apontando para o GitHub Pages
 - Adicione o domínio completo nas configurações do GitHub Pages
 

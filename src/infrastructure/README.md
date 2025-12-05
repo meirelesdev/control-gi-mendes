@@ -1,4 +1,4 @@
-# Infrastructure Layer - Gi Finanças
+# Infrastructure Layer - Chef Finance
 
 Esta camada contém as implementações concretas dos repositórios usando `localStorage` do navegador.
 

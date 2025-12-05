@@ -1,4 +1,4 @@
-# Presentation Layer - Gi Finanças
+# Presentation Layer - Chef Finance
 
 Esta camada contém toda a interface gráfica do sistema, seguindo design mobile-first.
 

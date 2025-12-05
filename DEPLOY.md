@@ -1,6 +1,6 @@
-# 🚀 Guia de Deploy - Gi Finanças
+# 🚀 Guia de Deploy - Chef Finance
 
-## Erro: "The custom domain `gi-financas` is not properly formatted"
+## Erro: "The custom domain `chef-finance` is not properly formatted"
 
 Este erro acontece quando você tenta configurar um **domínio personalizado** no GitHub Pages, mas o formato está incorreto.
 
@@ -35,7 +35,7 @@ Este erro acontece quando você tenta configurar um **domínio personalizado** n
 
 1. **Crie o repositório**
    - Acesse [github.com/new](https://github.com/new)
-   - Nome: `gi-financas` (ou outro)
+   - Nome: `chef-finance` (ou outro)
    - **NÃO** marque "Initialize with README"
 
 2. **Faça upload dos arquivos**
@@ -59,7 +59,7 @@ Este erro acontece quando você tenta configurar um **domínio personalizado** n
 
 4. **Acesse seu site**
    - Aguarde 1-2 minutos
-   - Acesse: `https://SEU-USUARIO.github.io/gi-financas/`
+   - Acesse: `https://SEU-USUARIO.github.io/chef-finance/`
 
 ### Opção 2: Via Git (Linha de Comando)
 
@@ -71,7 +71,7 @@ git init
 git add .
 
 # 3. Faça o primeiro commit
-git commit -m "Initial commit: Gi Finanças"
+git commit -m "Initial commit: Chef Finance"
 
 # 4. Renomeie a branch para main (se necessário)
 git branch -M main
@@ -89,7 +89,7 @@ Depois, siga os passos 3 e 4 da Opção 1 para ativar o GitHub Pages.
 
 ## 🌐 Domínio Personalizado (Opcional)
 
-**IMPORTANTE**: Você só precisa disso se realmente tiver um domínio próprio registrado (ex: `gi-financas.com`).
+**IMPORTANTE**: Você só precisa disso se realmente tiver um domínio próprio registrado (ex: `chef-finance.com`).
 
 ### Se você tem um domínio:
 
@@ -103,17 +103,17 @@ Depois, siga os passos 3 e 4 da Opção 1 para ativar o GitHub Pages.
 
 2. **Configure no GitHub**
    - Vá em **Settings** → **Pages**
-   - Em **Custom domain**, digite: `gi-financas.com` (domínio completo!)
+   - Em **Custom domain**, digite: `chef-finance.com` (domínio completo!)
    - Marque **"Enforce HTTPS"** (após o DNS propagar)
 
 3. **Aguarde a propagação DNS**
    - Pode levar até 24 horas
-   - Verifique com: `nslookup gi-financas.com`
+   - Verifique com: `nslookup chef-finance.com`
 
 ### Formato Correto vs Incorreto
 
-❌ **ERRADO**: `gi-financas`  
-✅ **CORRETO**: `gi-financas.com` ou `www.gi-financas.com`
+❌ **ERRADO**: `chef-finance`  
+✅ **CORRETO**: `chef-finance.com` ou `www.chef-finance.com`
 
 ---
 

@@ -1,5 +1,5 @@
 /**
- * Ponto de Entrada Principal - Gi Finanças
+ * Ponto de Entrada Principal - Chef Finance
  * Inicializa a aplicação com todas as dependências usando Injeção de Dependência
  */
 
@@ -149,7 +149,7 @@ document.addEventListener('DOMContentLoaded', () => {
     // Torna toast disponível globalmente
     window.toast = toast;
     
-    console.log('✅ Gi Finanças inicializado com sucesso!');
+    console.log('✅ Chef Finance inicializado com sucesso!');
     
     // Registrar Service Worker para PWA
     if ('serviceWorker' in navigator) {
@@ -180,7 +180,7 @@ document.addEventListener('DOMContentLoaded', () => {
       });
     }
   } catch (error) {
-    console.error('❌ Erro ao inicializar Gi Finanças:', error);
+    console.error('❌ Erro ao inicializar Chef Finance:', error);
     
     // Mostra mensagem de erro na tela
     const dashboardContent = document.getElementById('dashboard-content');

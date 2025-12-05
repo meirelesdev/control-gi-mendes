@@ -1,5 +1,5 @@
 /**
- * Domain Layer - Gi Finanças
+ * Domain Layer - Chef Finance
  * 
  * Este módulo exporta todas as entidades e interfaces de repositórios do domínio
  */

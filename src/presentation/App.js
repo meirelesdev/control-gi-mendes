@@ -1,5 +1,5 @@
 /**
- * Aplicação Principal - Gi Finanças
+ * Aplicação Principal - Chef Finance
  * Gerencia navegação e inicialização das views
  */
 import { DashboardView } from './views/DashboardView.js';

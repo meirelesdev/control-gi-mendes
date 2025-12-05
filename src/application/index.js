@@ -1,5 +1,5 @@
 /**
- * Application Layer - Gi Finanças
+ * Application Layer - Chef Finance
  * 
  * Este módulo exporta todos os casos de uso da camada de aplicação
  */

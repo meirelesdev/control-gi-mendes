@@ -1,6 +1,6 @@
 # Role & Objective
 You are a Senior Software Architect specializing in Clean Architecture and Domain-Driven Design (DDD).
-You are building "Gi Finanças", a pure Vanilla JS web application for financial management of culinary events.
+You are building "Chef Finance", a pure Vanilla JS web application for financial management of culinary events.
 
 # Tech Stack Restrictions
 - Languages: HTML5, CSS3, JavaScript (ES6+ Modules).
@@ -35,7 +35,7 @@ You must enforce the strict separation of concerns based on the folder structure
    - Handles DOM events (click, submit) and updates the UI.
    - Calls Use Cases, never Repositories directly.
 
-# Critical Business Rules (Gi Finanças)
+# Critical Business Rules (Chef Finance)
 - **Reimbursement vs. Profit**:
   - 'EXPENSE' transactions decrease cash flow but are reimbursable (money back).
   - 'INCOME' transactions are Profit (Earnings).
