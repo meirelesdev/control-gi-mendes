@@ -261,10 +261,43 @@ class Transaction {
 
   /**
    * Cria uma transação de KM (INCOME - geralmente reembolso)
+   * @param {string} eventId - ID do evento
+   * @param {string} description - Descrição (será gerada automaticamente se origin/destination forem fornecidos)
+   * @param {number} distance - Distância em KM
+   * @param {number} rateKm - Taxa por KM
+   * @param {boolean} isReimbursement - Se é reembolso (padrão: true)
+   * @param {string} [origin] - Cidade/Local de origem (opcional)
+   * @param {string} [destination] - Cidade/Local de destino (opcional)
    */
-  static createKmIncome(eventId, description, distance, rateKm, isReimbursement = true) {
+  static createKmIncome(eventId, description, distance, rateKm, isReimbursement = true, origin = null, destination = null) {
     const amount = distance * rateKm;
-    return Transaction.createIncome(eventId, description, amount, isReimbursement, 'km');
+    
+    // Se origin e destination forem fornecidos, gera descrição automaticamente
+    let finalDescription = description;
+    if (origin && destination) {
+      finalDescription = `Deslocamento: ${origin} → ${destination}`;
+      // Se description foi fornecida, adiciona como complemento
+      if (description && description.trim() !== '') {
+        finalDescription += ` - ${description}`;
+      }
+    }
+    
+    const metadata = {
+      isReimbursement,
+      category: 'km',
+      distance
+    };
+    
+    // Adiciona origin e destination ao metadata se fornecidos
+    if (origin) {
+      metadata.origin = origin;
+    }
+    if (destination) {
+      metadata.destination = destination;
+    }
+    
+    const id = `income_${Date.now()}_${Math.random().toString(36).substr(2, 9)}`;
+    return new Transaction(id, eventId, 'INCOME', finalDescription, amount, metadata);
   }
 
   /**

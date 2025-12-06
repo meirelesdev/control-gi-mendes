@@ -39,6 +39,7 @@ import { DeleteTransaction } from './application/use-cases/DeleteTransaction.js'
 import { GetEventSummary } from './application/use-cases/GetEventSummary.js';
 import { UpdateSettings } from './application/use-cases/UpdateSettings.js';
 import { GenerateEventReport } from './application/use-cases/GenerateEventReport.js';
+import { GenerateMonthlyReport } from './application/use-cases/GenerateMonthlyReport.js';
 import { UpdateEventStatus } from './application/use-cases/UpdateEventStatus.js';
 import { UpdateEvent } from './application/use-cases/UpdateEvent.js';
 import { UpdateTransaction } from './application/use-cases/UpdateTransaction.js';
@@ -96,6 +97,12 @@ const generateEventReport = new GenerateEventReport(
   transactionRepository
 );
 
+// Use Case: Gerar Relatório Mensal
+const generateMonthlyReport = new GenerateMonthlyReport(
+  eventRepository,
+  transactionRepository
+);
+
 // Use Case: Atualizar Status do Evento
 const updateEventStatus = new UpdateEventStatus(
   eventRepository,
@@ -137,6 +144,7 @@ document.addEventListener('DOMContentLoaded', () => {
       getEventSummary,
       updateSettings,
       generateEventReport,
+      generateMonthlyReport,
       updateEventStatus,
       updateEvent,
       updateTransaction,

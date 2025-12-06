@@ -3,9 +3,9 @@
  * Gera dados estruturados para relatório de prestação de contas do evento
  * 
  * Separa as transações conforme exigências do contrato:
- * - Serviços (honorários): Diárias e Horas Extras
- * - Insumos (despesas reembolsáveis): Todas as despesas
- * - Deslocamento: KM e Tempo de Viagem
+ * - Serviços Prestados (honorários): Diárias e Horas Extras
+ * - Custos de Insumos: Todas as despesas reembolsáveis
+ * - Deslocamentos: KM e Tempo de Viagem
  */
 class GenerateEventReport {
   constructor(eventRepository, transactionRepository) {
@@ -61,6 +61,11 @@ class GenerateEventReport {
             eventDate: event.date,
             eventDescription: event.description || '',
             generatedAt: new Date().toISOString()
+          },
+          paymentInfo: {
+            pixKey: '48988321351',
+            beneficiary: 'Gisele Mendes',
+            paymentDays: 21
           },
           services: {
             items: services,
@@ -129,6 +134,7 @@ class GenerateEventReport {
 
   /**
    * Extrai deslocamentos: KM e Tempo de Viagem
+   * Conforme contrato: "Relatório de custos de deslocamentos"
    * @private
    */
   _extractTravel(transactions) {

@@ -168,10 +168,12 @@ class AddTransaction {
           const settings = await this._getSettings();
           transaction = TransactionClass.createKmIncome(
             input.eventId,
-            input.description,
+            input.description || '',
             input.distance,
             settings.rateKm,
-            input.isReimbursement !== undefined ? input.isReimbursement : true
+            input.isReimbursement !== undefined ? input.isReimbursement : true,
+            input.origin || null,
+            input.destination || null
           );
         } else if (input.category === 'tempo_viagem') {
           // Transação de Tempo de Viagem - calcula valor automaticamente

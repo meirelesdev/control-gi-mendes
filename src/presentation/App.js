@@ -5,6 +5,7 @@
 import { DashboardView } from './views/DashboardView.js';
 import { EventDetailView } from './views/EventDetailView.js';
 import { SettingsView } from './views/SettingsView.js';
+import { MonthlyReportView } from './views/MonthlyReportView.js';
 
 class App {
   constructor(dependencies) {
@@ -12,6 +13,11 @@ class App {
     this.currentView = 'dashboard';
     this.currentEventId = null;
     this.init();
+  }
+
+  navigateTo(view) {
+    this.currentView = view;
+    this.render();
   }
 
   init() {
@@ -54,6 +60,8 @@ class App {
       } else if (view === 'dashboard') {
         this.currentEventId = null; // Limpa o ID do evento ao voltar ao dashboard
         this.navigateTo('dashboard');
+      } else if (view === 'monthly-report') {
+        this.navigateTo('monthly-report');
       }
     });
   }
@@ -84,7 +92,7 @@ class App {
     // Controla visibilidade do FAB (só aparece no dashboard)
     const fab = document.getElementById('fab-new-event');
     if (fab) {
-      if (view === 'dashboard') {
+      if (view === 'dashboard' || view === 'monthly-report') {
         fab.classList.remove('hidden');
       } else {
         fab.classList.add('hidden');
@@ -105,6 +113,7 @@ class App {
       deleteTransaction,
       updateSettings,
       generateEventReport,
+      generateMonthlyReport,
       updateEventStatus,
       updateEvent,
       updateTransaction,
@@ -116,12 +125,20 @@ class App {
         eventRepository,
         transactionRepository,
         settingsRepository,
-        this.dependencies.createEvent
+        this.dependencies.createEvent,
+        generateMonthlyReport
       );
       const content = document.getElementById('dashboard-content');
       if (content) {
         content.classList.add('active');
         await dashboardView.render();
+      }
+    } else if (this.currentView === 'monthly-report') {
+      const monthlyReportView = new MonthlyReportView(generateMonthlyReport);
+      const content = document.getElementById('dashboard-content');
+      if (content) {
+        content.classList.add('active');
+        await monthlyReportView.render();
       }
     } else if (this.currentView === 'event-detail') {
       const eventDetailView = new EventDetailView(

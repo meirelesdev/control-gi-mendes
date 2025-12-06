@@ -3,11 +3,12 @@
  * Exibe lista de eventos ativos e card com total a receber
  */
 class DashboardView {
-  constructor(eventRepository, transactionRepository, settingsRepository, createEventUseCase = null) {
+  constructor(eventRepository, transactionRepository, settingsRepository, createEventUseCase = null, generateMonthlyReportUseCase = null) {
     this.eventRepository = eventRepository;
     this.transactionRepository = transactionRepository;
     this.settingsRepository = settingsRepository;
     this.createEventUseCase = createEventUseCase;
+    this.generateMonthlyReportUseCase = generateMonthlyReportUseCase;
     this.currentFilter = 'all'; // 'all', 'pending', 'paid'
     this._handleCreateNewEvent = null; // Referência para o handler do evento
   }
@@ -57,7 +58,7 @@ class DashboardView {
           (t.metadata.category === 'diaria' || t.metadata.category === 'hora_extra' || 
            t.metadata.isReimbursement === false)
         );
-        // Total a receber = Honorários (lucro) + Despesas (reembolsos)
+        // Total a receber = Honorários (lucro) + Custos de Insumos (reembolsos)
         totalToReceive += fees.reduce((sum, f) => sum + f.amount, 0) + 
                           expenses.reduce((sum, e) => sum + e.amount, 0);
       }
@@ -69,6 +70,23 @@ class DashboardView {
           <div class="card-value">${this.formatCurrency(totalToReceive)}</div>
           <div class="card-subtitle">${activeEvents.length} evento(s) ativo(s)</div>
         </div>
+
+        ${this.generateMonthlyReportUseCase ? `
+        <div class="card" style="margin-bottom: var(--spacing-md); background: linear-gradient(135deg, #FCE4EC 0%, #F8BBD0 100%); border-left: 4px solid var(--color-primary);">
+          <div style="display: flex; align-items: center; justify-content: space-between; flex-wrap: wrap; gap: var(--spacing-md);">
+            <div>
+              <h3 style="margin: 0 0 var(--spacing-xs) 0; color: var(--color-primary);">📅 Fechamento Mensal</h3>
+              <p style="margin: 0; color: var(--color-text-secondary); font-size: var(--font-size-sm);">
+                Gere o relatório mensal de prestação de contas conforme contrato
+              </p>
+            </div>
+            <button class="btn btn-primary" id="btn-monthly-report" 
+                    style="white-space: nowrap; padding: var(--spacing-md) var(--spacing-lg);">
+              Gerar Relatório Mensal
+            </button>
+          </div>
+        </div>
+        ` : ''}
 
         <div style="margin-bottom: var(--spacing-md);">
           <h2 style="margin: 0;">Eventos Ativos</h2>
@@ -143,6 +161,18 @@ class DashboardView {
           }
         };
         window.addEventListener('create-new-event', this._handleCreateNewEvent);
+      }
+
+      // Event listener para fechamento mensal
+      if (this.generateMonthlyReportUseCase) {
+        const btnMonthlyReport = document.getElementById('btn-monthly-report');
+        if (btnMonthlyReport) {
+          btnMonthlyReport.addEventListener('click', () => {
+            window.dispatchEvent(new CustomEvent('navigate', { 
+              detail: { view: 'monthly-report' } 
+            }));
+          });
+        }
       }
     } catch (error) {
       container.innerHTML = `

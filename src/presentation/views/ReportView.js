@@ -10,8 +10,9 @@ class ReportView {
   /**
    * Renderiza o relatório em uma nova janela para impressão
    * @param {Object} reportData - Dados do relatório gerados pelo Use Case
+   * @param {boolean} isMonthly - Se true, é relatório mensal; se false, é relatório de evento
    */
-  render(reportData) {
+  render(reportData, isMonthly = false) {
     if (!reportData || !reportData.success || !reportData.data) {
       window.toast?.error('Erro ao gerar relatório: dados inválidos');
       return;
@@ -27,7 +28,7 @@ class ReportView {
     }
 
     // Monta o HTML do relatório
-    printWindow.document.write(this._generateHTML(data));
+    printWindow.document.write(this._generateHTML(data, isMonthly));
     printWindow.document.close();
 
     // Aguarda o conteúdo carregar antes de mostrar o botão de impressão
@@ -44,9 +45,11 @@ class ReportView {
 
   /**
    * Gera o HTML do relatório
+   * @param {Object} data - Dados do relatório
+   * @param {boolean} isMonthly - Se true, é relatório mensal
    * @private
    */
-  _generateHTML(data) {
+  _generateHTML(data, isMonthly = false) {
     const formatCurrency = (value) => {
       return new Intl.NumberFormat('pt-BR', {
         style: 'currency',
@@ -74,13 +77,17 @@ class ReportView {
       }).format(date);
     };
 
+    const title = isMonthly 
+      ? `Relatório Mensal de Prestação de Contas - ${data.header.period}`
+      : `Relatório de Prestação de Contas - ${this._escapeHtml(data.header.eventName)}`;
+    
     return `
 <!DOCTYPE html>
 <html lang="pt-BR">
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Relatório de Prestação de Contas - ${this._escapeHtml(data.header.eventName)}</title>
+    <title>${title}</title>
     <style>
         * {
             margin: 0;
@@ -268,12 +275,18 @@ class ReportView {
 <body>
     <div class="header">
         <h1>Relatório de Prestação de Contas</h1>
+        ${isMonthly ? `
+        <div class="event-name">${data.header.period}</div>
+        <div class="event-date">Período: ${data.header.monthName} de ${data.header.year}</div>
+        <div class="event-date" style="margin-top: 5px;">Total de Eventos: ${data.header.eventsCount}</div>
+        ` : `
         <div class="event-name">${this._escapeHtml(data.header.eventName)}</div>
         <div class="event-date">Data do Evento: ${formatDate(data.header.eventDate)}</div>
+        `}
         <div class="generated-at">Relatório gerado em: ${formatDateTime(data.header.generatedAt)}</div>
     </div>
 
-    ${data.header.eventDescription ? `
+    ${!isMonthly && data.header.eventDescription ? `
     <div class="section">
         <div style="font-size: 11pt; color: #333; line-height: 1.8;">
             <strong>Descrição do Evento:</strong><br>
@@ -282,8 +295,30 @@ class ReportView {
     </div>
     ` : ''}
 
+    ${isMonthly && data.events && data.events.length > 0 ? `
     <div class="section">
-        <div class="section-title">1. Serviços Prestados (Honorários)</div>
+        <div class="section-title">Eventos do Mês</div>
+        <table>
+            <thead>
+                <tr>
+                    <th style="width: 60%;">Nome do Evento</th>
+                    <th style="width: 40%;">Data</th>
+                </tr>
+            </thead>
+            <tbody>
+                ${data.events.map(event => `
+                <tr>
+                    <td>${this._escapeHtml(event.name)}</td>
+                    <td>${formatDate(event.date)}</td>
+                </tr>
+                `).join('')}
+            </tbody>
+        </table>
+    </div>
+    ` : ''}
+
+    <div class="section">
+        <div class="section-title">1. Serviços Prestados</div>
         ${data.services.items.length > 0 ? `
         <table>
             <thead>
@@ -296,7 +331,7 @@ class ReportView {
             <tbody>
                 ${data.services.items.map(item => `
                 <tr>
-                    <td>${this._escapeHtml(item.description)}</td>
+                    <td>${this._escapeHtml(item.description)}${isMonthly && item.eventName ? ` <small style="color: #666;">(${this._escapeHtml(item.eventName)})</small>` : ''}</td>
                     <td>${this._escapeHtml(item.category)}</td>
                     <td>${formatCurrency(item.amount)}</td>
                 </tr>
@@ -313,7 +348,7 @@ class ReportView {
     </div>
 
     <div class="section">
-        <div class="section-title">2. Insumos (Despesas Reembolsáveis)</div>
+        <div class="section-title">2. Custos de Insumos</div>
         ${data.expenses.items.length > 0 ? `
         <table>
             <thead>
@@ -326,24 +361,24 @@ class ReportView {
             <tbody>
                 ${data.expenses.items.map(item => `
                 <tr>
-                    <td>${this._escapeHtml(item.description)}</td>
+                    <td>${this._escapeHtml(item.description)}${isMonthly && item.eventName ? ` <small style="color: #666;">(${this._escapeHtml(item.eventName)})</small>` : ''}</td>
                     <td>${item.hasReceipt ? '✓ Sim' : '✗ Não'}</td>
                     <td>${formatCurrency(item.amount)}</td>
                 </tr>
                 `).join('')}
                 <tr class="total-row">
-                    <td colspan="2"><strong>Total de Insumos</strong></td>
+                    <td colspan="2"><strong>Total de Custos de Insumos</strong></td>
                     <td><strong>${formatCurrency(data.expenses.total)}</strong></td>
                 </tr>
             </tbody>
         </table>
         ` : `
-        <div class="no-data">Nenhuma despesa registrada</div>
+        <div class="no-data">Nenhum insumo registrado</div>
         `}
     </div>
 
     <div class="section">
-        <div class="section-title">3. Deslocamento</div>
+        <div class="section-title">3. Deslocamentos</div>
         ${data.travel.items.length > 0 ? `
         <table>
             <thead>
@@ -356,13 +391,13 @@ class ReportView {
             <tbody>
                 ${data.travel.items.map(item => `
                 <tr>
-                    <td>${this._escapeHtml(item.description)}</td>
+                    <td>${this._escapeHtml(item.description)}${isMonthly && item.eventName ? ` <small style="color: #666;">(${this._escapeHtml(item.eventName)})</small>` : ''}${item.origin && item.destination ? ` <br><small style="color: #666;">${this._escapeHtml(item.origin)} → ${this._escapeHtml(item.destination)}</small>` : ''}</td>
                     <td>${this._escapeHtml(item.category)}</td>
                     <td>${formatCurrency(item.amount)}</td>
                 </tr>
                 `).join('')}
                 <tr class="total-row">
-                    <td colspan="2"><strong>Total de Deslocamento</strong></td>
+                    <td colspan="2"><strong>Total de Deslocamentos</strong></td>
                     <td><strong>${formatCurrency(data.travel.total)}</strong></td>
                 </tr>
             </tbody>
@@ -379,16 +414,32 @@ class ReportView {
             <span><strong>${formatCurrency(data.summary.totalServices)}</strong></span>
         </div>
         <div class="summary-row">
-            <span>Total de Insumos:</span>
+            <span>Total de Custos de Insumos:</span>
             <span><strong>${formatCurrency(data.summary.totalExpenses)}</strong></span>
         </div>
         <div class="summary-row">
-            <span>Total de Deslocamento:</span>
+            <span>Total de Deslocamentos:</span>
             <span><strong>${formatCurrency(data.summary.totalTravel)}</strong></span>
         </div>
         <div class="summary-row total">
             <span>TOTAL GERAL:</span>
             <span>${formatCurrency(data.summary.grandTotal)}</span>
+        </div>
+    </div>
+
+    <div class="summary" style="margin-top: 30px; border-top: 2px solid #000; padding-top: 20px;">
+        <div class="summary-title">Dados para Pagamento</div>
+        <div class="summary-row" style="padding: 10px 0;">
+            <span><strong>Chave PIX (Celular):</strong></span>
+            <span><strong>48988321351</strong></span>
+        </div>
+        <div class="summary-row" style="padding: 5px 0;">
+            <span><strong>Favorecido:</strong></span>
+            <span><strong>Gisele Mendes</strong></span>
+        </div>
+        <div style="margin-top: 15px; padding-top: 15px; border-top: 1px solid #ccc; font-size: 10pt; color: #666; text-align: center;">
+            <p style="margin: 5px 0;">Pagamento mediante apresentação de Nota Fiscal</p>
+            <p style="margin: 5px 0;">Prazo: 21 dias após apresentação da NF</p>
         </div>
     </div>
 
@@ -398,6 +449,23 @@ class ReportView {
 </body>
 </html>
     `;
+  }
+
+  /**
+   * Retorna label do status do evento
+   * @private
+   */
+  _getStatusLabel(status) {
+    const labels = {
+      'PLANNED': 'Planejando',
+      'DONE': 'Realizado',
+      'COMPLETED': 'Realizado',
+      'IN_PROGRESS': 'Em Andamento',
+      'REPORT_SENT': 'Relatório Enviado',
+      'PAID': 'Finalizado/Pago',
+      'CANCELLED': 'Cancelado'
+    };
+    return labels[status] || status;
   }
 
   /**

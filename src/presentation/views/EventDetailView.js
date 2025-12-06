@@ -1,6 +1,6 @@
 /**
  * View: Detalhe do Evento
- * Exibe detalhes do evento, botões de ação e lista de despesas
+ * Exibe detalhes do evento, botões de ação e lista de insumos
  */
 import { ReportView } from './ReportView.js';
 
@@ -169,7 +169,7 @@ class EventDetailView {
                 💸 Investimento Realizado
               </div>
               <div style="font-size: var(--font-size-xs); color: #757575;">
-                Valor que você pagou do próprio bolso (Insumos + Gasolina)
+                Valor que você pagou do próprio bolso (Custos de Insumos + Gasolina)
               </div>
             </div>
             <div style="font-size: var(--font-size-xl); font-weight: var(--font-weight-bold); color: #C62828;">
@@ -184,7 +184,7 @@ class EventDetailView {
                 📥 Total a Receber
               </div>
               <div style="font-size: var(--font-size-xs); color: #757575;">
-                Reembolso + Lucro
+                Reembolsos (Insumos + Deslocamentos) + Lucro (Honorários)
               </div>
             </div>
             <div style="font-size: var(--font-size-xl); font-weight: var(--font-weight-bold); color: #1565C0;">
@@ -213,22 +213,25 @@ class EventDetailView {
           <h3 style="margin-bottom: var(--spacing-md);">Ações Rápidas</h3>
           <div style="display: grid; grid-template-columns: repeat(3, 1fr); gap: var(--spacing-sm);">
             <button class="btn btn-primary" id="btn-add-expense" 
-                    style="padding: var(--spacing-md); border-radius: var(--radius-lg); font-size: 24px; line-height: 1; display: flex; flex-direction: column; align-items: center; gap: 4px;"
-                    title="Adicionar Despesa">
-              <span>➕</span>
-              <span style="font-size: 11px; font-weight: var(--font-weight-medium);">Despesa</span>
+                    style="padding: var(--spacing-md); border-radius: var(--radius-lg); font-size: 24px; line-height: 1; display: flex; flex-direction: column; align-items: center; gap: 2px;"
+                    title="Adicionar Insumo (Reembolso)">
+              <span>📦</span>
+              <span style="font-size: 11px; font-weight: var(--font-weight-medium);">Insumo</span>
+              <span style="font-size: 9px; color: var(--color-text-secondary);">(Reembolso)</span>
             </button>
             <button class="btn btn-success" id="btn-add-fee" 
-                    style="padding: var(--spacing-md); border-radius: var(--radius-lg); font-size: 24px; line-height: 1; display: flex; flex-direction: column; align-items: center; gap: 4px;"
-                    title="Adicionar Honorário">
+                    style="padding: var(--spacing-md); border-radius: var(--radius-lg); font-size: 24px; line-height: 1; display: flex; flex-direction: column; align-items: center; gap: 2px;"
+                    title="Adicionar Honorário (Lucro)">
               <span>💰</span>
               <span style="font-size: 11px; font-weight: var(--font-weight-medium);">Honorário</span>
+              <span style="font-size: 9px; color: var(--color-success);">(Lucro)</span>
             </button>
             <button class="btn btn-secondary" id="btn-add-km-travel" 
-                    style="padding: var(--spacing-md); border-radius: var(--radius-lg); font-size: 24px; line-height: 1; display: flex; flex-direction: column; align-items: center; gap: 4px;"
-                    title="Adicionar KM/Viagem">
+                    style="padding: var(--spacing-md); border-radius: var(--radius-lg); font-size: 24px; line-height: 1; display: flex; flex-direction: column; align-items: center; gap: 2px;"
+                    title="Adicionar Deslocamento (Reembolso)">
               <span>🚗</span>
-              <span style="font-size: 11px; font-weight: var(--font-weight-medium);">KM/Viagem</span>
+              <span style="font-size: 11px; font-weight: var(--font-weight-medium);">Deslocamento</span>
+              <span style="font-size: 9px; color: var(--color-text-secondary);">(Reembolso)</span>
             </button>
           </div>
         </div>
@@ -236,7 +239,7 @@ class EventDetailView {
 
         <div class="card">
           <div class="card-header">
-            <h3 class="card-title">Despesas</h3>
+            <h3 class="card-title">📦 Insumos (Reembolso)</h3>
             <div style="display: flex; align-items: center; gap: var(--spacing-sm); flex-wrap: wrap;">
               ${expensesWithoutReceipt.length > 0 ? `
                 <span class="badge badge-warning">${expensesWithoutReceipt.length} sem NF</span>
@@ -247,7 +250,7 @@ class EventDetailView {
               ${event.status !== 'PAID' ? `
                 <button class="btn btn-sm btn-primary" id="btn-add-expense-header" 
                         style="padding: 6px 12px; border-radius: var(--radius-full); font-size: 18px; line-height: 1; min-width: 32px; height: 32px; display: flex; align-items: center; justify-content: center;"
-                        title="Adicionar Despesa">
+                        title="Adicionar Insumo">
                   ➕
                 </button>
               ` : ''}
@@ -255,7 +258,7 @@ class EventDetailView {
           </div>
           ${expenses.length === 0 ? `
             <div class="empty-state">
-              <p class="text-muted">Nenhuma despesa cadastrada ainda.</p>
+              <p class="text-muted">Nenhum insumo cadastrado ainda.</p>
             </div>
           ` : `
             <div class="expense-list">
@@ -293,7 +296,7 @@ class EventDetailView {
 
         <div class="card">
           <div class="card-header">
-            <h3 class="card-title">🚗 KM / Viagens (Reembolso)</h3>
+            <h3 class="card-title">🚗 Deslocamentos (Reembolso)</h3>
             <div style="display: flex; align-items: center; gap: var(--spacing-sm); flex-wrap: wrap;">
               ${reimbursements.length > 0 ? `
                 <span class="badge badge-info">Total: ${this.formatCurrency(totalReimbursements)}</span>
@@ -301,7 +304,7 @@ class EventDetailView {
               ${event.status !== 'PAID' ? `
                 <button class="btn btn-sm btn-secondary" id="btn-add-km-travel-header" 
                         style="padding: 6px 12px; border-radius: var(--radius-full); font-size: 18px; line-height: 1; min-width: 32px; height: 32px; display: flex; align-items: center; justify-content: center;"
-                        title="Adicionar KM/Viagem">
+                        title="Adicionar Deslocamento">
                   ➕
                 </button>
               ` : ''}
@@ -309,7 +312,7 @@ class EventDetailView {
           </div>
           ${reimbursements.length === 0 ? `
             <div class="empty-state">
-              <p class="text-muted">Nenhuma KM/Viagem cadastrada ainda.</p>
+              <p class="text-muted">Nenhum deslocamento cadastrado ainda.</p>
             </div>
           ` : `
             <div class="expense-list">
@@ -506,7 +509,10 @@ class EventDetailView {
     return `
       <div class="expense-item ${hasReceipt ? '' : 'no-receipt'}" style="border-left-color: var(--color-danger);">
         <div class="expense-item-info">
-          <div class="expense-item-description">🔴 ${this.escapeHtml(expense.description)}</div>
+          <div class="expense-item-description">
+            📦 ${this.escapeHtml(expense.description)}
+            <span class="badge badge-secondary" style="margin-left: var(--spacing-xs); font-size: 10px;">Reembolso</span>
+          </div>
           <div class="expense-item-value" style="color: var(--color-danger);">${this.formatCurrency(expense.amount)}</div>
         </div>
         <div class="expense-item-actions">
@@ -524,7 +530,7 @@ class EventDetailView {
             <button class="btn btn-sm btn-edit-transaction" 
                     data-transaction-id="${expense.id}"
                     data-transaction-type="expense"
-                    title="Editar despesa"
+                    title="Editar insumo"
                     style="background: transparent; color: var(--color-primary); padding: 4px 8px; border-radius: var(--radius-full); border: 1px solid var(--color-border); margin-right: var(--spacing-xs);">
               ✏️
             </button>
@@ -532,7 +538,7 @@ class EventDetailView {
           ${eventStatus !== 'PAID' ? `
           <button class="btn btn-sm btn-delete-transaction" 
                   data-transaction-id="${expense.id}"
-                  title="Excluir despesa">
+                  title="Excluir insumo">
             🗑️
           </button>
           ` : ''}
@@ -556,9 +562,9 @@ class EventDetailView {
       <div class="expense-item">
         <div class="expense-item-info">
           <div class="expense-item-description">
-            ${this.escapeHtml(income.description)}
+            🚗 ${this.escapeHtml(income.description)}
             <span class="badge badge-info" style="margin-left: var(--spacing-sm);">${categoryLabel}</span>
-            ${isReimbursement ? '<span class="badge badge-secondary" style="margin-left: var(--spacing-xs);">Reembolso</span>' : ''}
+            <span class="badge badge-secondary" style="margin-left: var(--spacing-xs);">Reembolso</span>
           </div>
           <div class="expense-item-value" style="color: var(--color-success);">${this.formatCurrency(income.amount)}</div>
         </div>
@@ -597,9 +603,9 @@ class EventDetailView {
       <div class="expense-item" style="border-left-color: var(--color-success); background-color: rgba(34, 197, 94, 0.05);">
         <div class="expense-item-info">
           <div class="expense-item-description">
-            🟢 ${this.escapeHtml(fee.description)}
+            💰 ${this.escapeHtml(fee.description)}
             <span class="badge badge-success" style="margin-left: var(--spacing-sm);">${categoryLabel}</span>
-            <span class="badge badge-success" style="margin-left: var(--spacing-xs);">Lucro</span>
+            <span class="badge badge-success" style="margin-left: var(--spacing-xs); font-weight: bold;">Lucro</span>
           </div>
           <div class="expense-item-value" style="color: var(--color-success); font-weight: bold;">${this.formatCurrency(fee.amount)}</div>
         </div>
@@ -636,7 +642,7 @@ class EventDetailView {
       }
     }
 
-    const modal = this.createModal('Adicionar Despesa Rápida', `
+    const modal = this.createModal('Adicionar Insumo', `
       <form id="form-add-expense">
         <div class="form-group">
           <label class="form-label">Descrição</label>
@@ -868,7 +874,7 @@ class EventDetailView {
   }
 
   showAddKmTravelModal() {
-    const modal = this.createModal('Adicionar KM / Viagem', `
+    const modal = this.createModal('Adicionar Deslocamento', `
       <form id="form-add-km-travel">
         <div class="form-group">
           <label class="form-label">Tipo</label>
@@ -883,15 +889,30 @@ class EventDetailView {
           <input type="number" class="form-input" id="km-distance" 
                  step="0.1" min="0.1" placeholder="0">
         </div>
+        <div class="form-group" id="km-origin-group" style="display: none;">
+          <label class="form-label">Origem (Cidade/Local)</label>
+          <input type="text" class="form-input" id="km-origin" 
+                 placeholder="Ex: Florianópolis">
+          <small class="text-muted">Cidade ou local de partida</small>
+        </div>
+        <div class="form-group" id="km-destination-group" style="display: none;">
+          <label class="form-label">Destino (Cidade/Local)</label>
+          <input type="text" class="form-input" id="km-destination" 
+                 placeholder="Ex: Tupandi">
+          <small class="text-muted">Cidade ou local de chegada</small>
+        </div>
         <div class="form-group" id="hours-group" style="display: none;">
           <label class="form-label">Horas de Viagem</label>
           <input type="number" class="form-input" id="travel-hours" 
                  step="0.1" min="0.1" placeholder="0">
         </div>
-        <div class="form-group">
+        <div class="form-group" id="description-group">
           <label class="form-label">Descrição</label>
           <input type="text" class="form-input" id="km-travel-description" 
                  placeholder="Ex: Deslocamento até o evento" required>
+          <small class="text-muted" id="description-hint" style="display: none;">
+            A descrição será gerada automaticamente como "Deslocamento: Origem → Destino"
+          </small>
         </div>
         <div class="modal-footer">
           <button type="button" class="btn btn-secondary" onclick="this.closest('.modal-backdrop').remove()">
@@ -907,10 +928,43 @@ class EventDetailView {
     this._addModalOpenClass();
 
     // Mostra/esconde campos baseado no tipo
-    document.getElementById('km-travel-type').addEventListener('change', (e) => {
+    const typeSelect = document.getElementById('km-travel-type');
+    const kmGroup = document.getElementById('km-group');
+    const kmOriginGroup = document.getElementById('km-origin-group');
+    const kmDestinationGroup = document.getElementById('km-destination-group');
+    const hoursGroup = document.getElementById('hours-group');
+    const descriptionGroup = document.getElementById('description-group');
+    const descriptionInput = document.getElementById('km-travel-description');
+    const descriptionHint = document.getElementById('description-hint');
+    
+    typeSelect.addEventListener('change', (e) => {
       const type = e.target.value;
-      document.getElementById('km-group').style.display = type === 'km' ? 'block' : 'none';
-      document.getElementById('hours-group').style.display = type === 'tempo_viagem' ? 'block' : 'none';
+      
+      if (type === 'km') {
+        kmGroup.style.display = 'block';
+        kmOriginGroup.style.display = 'block';
+        kmDestinationGroup.style.display = 'block';
+        hoursGroup.style.display = 'none';
+        descriptionGroup.style.display = 'block';
+        descriptionHint.style.display = 'block';
+        descriptionInput.required = false; // Não obrigatório se origem/destino forem preenchidos
+      } else if (type === 'tempo_viagem') {
+        kmGroup.style.display = 'none';
+        kmOriginGroup.style.display = 'none';
+        kmDestinationGroup.style.display = 'none';
+        hoursGroup.style.display = 'block';
+        descriptionGroup.style.display = 'block';
+        descriptionHint.style.display = 'none';
+        descriptionInput.required = true;
+      } else {
+        kmGroup.style.display = 'none';
+        kmOriginGroup.style.display = 'none';
+        kmDestinationGroup.style.display = 'none';
+        hoursGroup.style.display = 'none';
+        descriptionGroup.style.display = 'block';
+        descriptionHint.style.display = 'none';
+        descriptionInput.required = true;
+      }
     });
 
     document.getElementById('form-add-km-travel').addEventListener('submit', async (e) => {
@@ -940,15 +994,15 @@ class EventDetailView {
 
       if (result && result.success) {
         if (window.toast && typeof window.toast.success === 'function') {
-          window.toast.success('Despesa adicionada com sucesso!');
+          window.toast.success('Insumo adicionado com sucesso!');
         } else {
-          console.log('✅ Despesa adicionada com sucesso!');
+          console.log('✅ Insumo adicionado com sucesso!');
         }
         await this.render(this.currentEventId);
         return true; // Retorna true para indicar sucesso
       } else {
-        const errorMsg = (result && result.error) || 'Erro desconhecido ao adicionar despesa';
-        console.error('Erro ao adicionar despesa:', errorMsg);
+        const errorMsg = (result && result.error) || 'Erro desconhecido ao adicionar insumo';
+        console.error('Erro ao adicionar insumo:', errorMsg);
         
         // GARANTE que nunca vai gerar um alert nativo
         if (window.toast && typeof window.toast.error === 'function') {
@@ -965,7 +1019,7 @@ class EventDetailView {
         return false; // Retorna false para indicar erro
       }
     } catch (error) {
-      const errorMsg = `Erro ao adicionar despesa: ${error?.message || 'Erro desconhecido'}`;
+      const errorMsg = `Erro ao adicionar insumo: ${error?.message || 'Erro desconhecido'}`;
       console.error('Erro em saveExpense:', error);
       
       // GARANTE que nunca vai gerar um alert nativo
@@ -998,7 +1052,28 @@ class EventDetailView {
       };
 
       if (type === 'km') {
-        input.distance = parseFloat(document.getElementById('km-distance').value);
+        const distance = parseFloat(document.getElementById('km-distance').value);
+        const origin = document.getElementById('km-origin')?.value.trim() || '';
+        const destination = document.getElementById('km-destination')?.value.trim() || '';
+        
+        if (!distance || distance <= 0) {
+          window.toast?.error('Distância é obrigatória e deve ser maior que zero');
+          return false;
+        }
+        
+        input.distance = distance;
+        
+        // Se origem e destino forem fornecidos, passa para o use case
+        if (origin && destination) {
+          input.origin = origin;
+          input.destination = destination;
+          // Descrição será gerada automaticamente pelo use case
+          input.description = description || ''; // Mantém descrição adicional se houver
+        } else if (!description || description.trim() === '') {
+          // Se não tem origem/destino E não tem descrição, exige descrição
+          window.toast?.error('Preencha Origem e Destino ou informe uma Descrição');
+          return false;
+        }
       } else if (type === 'tempo_viagem') {
         input.hours = parseFloat(document.getElementById('travel-hours').value);
       }
@@ -1245,7 +1320,7 @@ class EventDetailView {
       let modalContent = '';
 
       if (transactionType === 'expense' || transaction.type === 'EXPENSE') {
-        // Modal para editar despesa
+        // Modal para editar insumo
         modalContent = `
           <form id="form-edit-expense">
             <div class="form-group">
@@ -1281,17 +1356,35 @@ class EventDetailView {
         if (isKm) {
           // Editar KM Rodado
           const distance = transaction.metadata.distance || (transaction.amount / (await this.settingsRepository.find())?.rateKm || 0.90);
+          const origin = transaction.metadata.origin || '';
+          const destination = transaction.metadata.destination || '';
           modalContent = `
             <form id="form-edit-km">
               <div class="form-group">
-                <label class="form-label">Descrição *</label>
-                <input type="text" class="form-input" id="edit-km-description" 
-                       value="${this.escapeHtml(transaction.description)}" required>
+                <label class="form-label">Origem (Cidade/Local)</label>
+                <input type="text" class="form-input" id="edit-km-origin" 
+                       value="${this.escapeHtml(origin)}" 
+                       placeholder="Ex: Florianópolis">
+                <small class="text-muted">Cidade ou local de partida</small>
+              </div>
+              <div class="form-group">
+                <label class="form-label">Destino (Cidade/Local)</label>
+                <input type="text" class="form-input" id="edit-km-destination" 
+                       value="${this.escapeHtml(destination)}" 
+                       placeholder="Ex: Tupandi">
+                <small class="text-muted">Cidade ou local de chegada</small>
               </div>
               <div class="form-group">
                 <label class="form-label">Distância (KM) *</label>
                 <input type="number" class="form-input" id="edit-km-distance" 
                        value="${distance.toFixed(1)}" step="0.1" min="0.1" required>
+              </div>
+              <div class="form-group">
+                <label class="form-label">Descrição Adicional (opcional)</label>
+                <input type="text" class="form-input" id="edit-km-description" 
+                       value="${this.escapeHtml(transaction.description)}" 
+                       placeholder="Informações adicionais">
+                <small class="text-muted">A descrição será gerada automaticamente como "Deslocamento: Origem → Destino"</small>
               </div>
               <div class="modal-footer">
                 <button type="button" class="btn btn-secondary" onclick="this.closest('.modal-backdrop').remove()">
@@ -1446,7 +1539,7 @@ class EventDetailView {
       let updateData = {};
 
       if (transactionType === 'expense' || transaction.type === 'EXPENSE') {
-        // Editar despesa
+        // Editar insumo
         const description = document.getElementById('edit-expense-description').value.trim();
         const amount = parseFloat(document.getElementById('edit-expense-amount').value);
         const hasReceipt = document.getElementById('edit-expense-has-receipt').checked;
@@ -1472,27 +1565,45 @@ class EventDetailView {
 
         if (isKm) {
           // Editar KM Rodado
-          const description = document.getElementById('edit-km-description').value.trim();
+          const origin = document.getElementById('edit-km-origin')?.value.trim() || '';
+          const destination = document.getElementById('edit-km-destination')?.value.trim() || '';
+          const description = document.getElementById('edit-km-description')?.value.trim() || '';
           const distance = parseFloat(document.getElementById('edit-km-distance').value);
           const settings = await this.settingsRepository.find();
           const rateKm = settings?.rateKm || 0.90;
           const amount = distance * rateKm;
 
-          if (!description || !distance || distance <= 0) {
+          if (!distance || distance <= 0) {
             if (window.toast) {
-              window.toast.error('Descrição e distância são obrigatórios');
+              window.toast.error('Distância é obrigatória e deve ser maior que zero');
+            }
+            return false;
+          }
+
+          // Gera descrição automaticamente se origem e destino forem fornecidos
+          let finalDescription = description;
+          if (origin && destination) {
+            finalDescription = `Deslocamento: ${origin} → ${destination}`;
+            if (description && description.trim() !== '') {
+              finalDescription += ` - ${description}`;
+            }
+          } else if (!description || description.trim() === '') {
+            if (window.toast) {
+              window.toast.error('Preencha Origem e Destino ou informe uma Descrição');
             }
             return false;
           }
 
           updateData = {
-            description,
+            description: finalDescription,
             amount,
             metadata: {
               ...transaction.metadata,
               category: 'km',
               distance,
-              isReimbursement: true
+              isReimbursement: true,
+              origin: origin || null,
+              destination: destination || null
             }
           };
         } else if (isTravelTime) {
