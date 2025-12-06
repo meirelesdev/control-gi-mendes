@@ -43,13 +43,17 @@ class DashboardView {
       }
       // 'all' não filtra nada
 
-      // Calcula resumo financeiro consolidado de todos os eventos ativos (não cancelados)
+      // Calcula resumo financeiro consolidado apenas de eventos PENDENTES (não pagos e não cancelados)
+      // Eventos pagos não devem aparecer no resumo financeiro, pois já foram recebidos
       let totalUpfrontCost = 0; // Investimento realizado
       let totalNetProfit = 0; // Lucro líquido
       let totalReimbursements = 0; // Reembolsos
       
-      // Inclui todos os eventos não cancelados para o cálculo consolidado
-      const eventsForCalculation = activeEvents;
+      // Filtra apenas eventos pendentes (não pagos e não cancelados) para o cálculo consolidado
+      const eventsForCalculation = events.filter(e => 
+        e.status !== 'CANCELLED' && 
+        e.status !== 'PAID' // Exclui eventos pagos do resumo financeiro
+      );
       
       for (const event of eventsForCalculation) {
         const transactions = await this.transactionRepository.findByEventId(event.id);
@@ -148,7 +152,10 @@ class DashboardView {
           
           <div style="margin-top: var(--spacing-md); padding-top: var(--spacing-md); border-top: 1px solid var(--color-border); text-align: center;">
             <p style="margin: 0; color: var(--color-text-secondary); font-size: var(--font-size-sm);">
-              📊 Consolidado de ${activeEvents.length} evento(s) ativo(s)
+              📊 Consolidado de ${eventsForCalculation.length} evento(s) pendente(s)
+            </p>
+            <p style="margin: var(--spacing-xs) 0 0 0; color: var(--color-text-secondary); font-size: var(--font-size-xs);">
+              (Eventos pagos não são incluídos no resumo financeiro)
             </p>
           </div>
         </div>

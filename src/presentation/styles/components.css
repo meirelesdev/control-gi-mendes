@@ -278,13 +278,14 @@
   border-left: 4px solid var(--color-border);
   display: flex;
   justify-content: space-between;
-  align-items: center;
+  align-items: flex-start; /* Alinha no topo para permitir múltiplas linhas */
   gap: var(--spacing-md);
   transition: all var(--transition-fast);
   box-shadow: var(--shadow-sm);
   border-right: none;
   border-top: none;
   border-bottom: none;
+  min-width: 0; /* Permite que elementos filhos encolham */
 }
 
 .expense-item:active {
@@ -309,12 +310,16 @@
 
 .expense-item-info {
   flex: 1;
+  min-width: 0; /* Permite que o conteúdo encolha se necessário */
+  overflow: visible; /* Permite que o texto seja exibido completamente */
 }
 
 .expense-item-description {
   font-weight: var(--font-weight-medium);
   color: var(--color-text);
   margin-bottom: var(--spacing-xs);
+  word-wrap: break-word; /* Permite quebra de palavras longas */
+  overflow-wrap: break-word; /* Garante quebra adequada */
 }
 
 .expense-item-value {
@@ -329,12 +334,16 @@
   gap: var(--spacing-xs);
   font-size: var(--font-size-xs);
   color: var(--color-warning);
+  white-space: nowrap;
 }
 
 .expense-item-actions {
   display: flex;
-  align-items: center;
+  align-items: flex-start; /* Alinha no topo para combinar com o item-info */
   gap: var(--spacing-sm);
+  flex-wrap: nowrap;
+  flex-shrink: 0;
+  padding-top: 2px; /* Pequeno ajuste para alinhar com o texto */
 }
 
 .btn-delete-transaction {

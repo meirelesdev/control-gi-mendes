@@ -515,32 +515,33 @@ class EventDetailView {
           </div>
           <div class="expense-item-value" style="color: var(--color-danger);">${this.formatCurrency(expense.amount)}</div>
         </div>
-        <div class="expense-item-actions">
-        ${!hasReceipt && eventStatus !== 'PAID' ? `
-          <div class="expense-item-receipt">
-            <span>⚠️</span>
-            <button class="btn btn-sm btn-success btn-mark-receipt" data-transaction-id="${expense.id}">
-              Marcar NF
+        <div class="expense-item-actions" style="display: flex; align-items: center; gap: var(--spacing-sm); flex-wrap: nowrap;">
+          ${!hasReceipt && eventStatus !== 'PAID' ? `
+            <button class="btn btn-sm btn-success btn-mark-receipt" 
+                    data-transaction-id="${expense.id}"
+                    style="white-space: nowrap; padding: 6px 12px; display: flex; align-items: center; gap: 4px;">
+              <span>⚠️</span>
+              <span>Marcar NF</span>
             </button>
-          </div>
-        ` : hasReceipt ? `
-          <span class="badge badge-success">NF OK</span>
-        ` : ''}
+          ` : hasReceipt ? `
+            <span class="badge badge-success" style="white-space: nowrap;">NF OK</span>
+          ` : ''}
           ${this.updateTransactionUseCase && eventStatus !== 'PAID' ? `
             <button class="btn btn-sm btn-edit-transaction" 
                     data-transaction-id="${expense.id}"
                     data-transaction-type="expense"
                     title="Editar insumo"
-                    style="background: transparent; color: var(--color-primary); padding: 4px 8px; border-radius: var(--radius-full); border: 1px solid var(--color-border); margin-right: var(--spacing-xs);">
+                    style="background: transparent; color: var(--color-primary); padding: 6px 8px; border-radius: var(--radius-full); border: 1px solid var(--color-border); flex-shrink: 0;">
               ✏️
             </button>
           ` : ''}
           ${eventStatus !== 'PAID' ? `
-          <button class="btn btn-sm btn-delete-transaction" 
-                  data-transaction-id="${expense.id}"
-                  title="Excluir insumo">
-            🗑️
-          </button>
+            <button class="btn btn-sm btn-delete-transaction" 
+                    data-transaction-id="${expense.id}"
+                    title="Excluir insumo"
+                    style="flex-shrink: 0;">
+              🗑️
+            </button>
           ` : ''}
         </div>
       </div>
