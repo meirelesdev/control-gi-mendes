@@ -44,6 +44,9 @@ import { UpdateEventStatus } from './application/use-cases/UpdateEventStatus.js'
 import { UpdateEvent } from './application/use-cases/UpdateEvent.js';
 import { UpdateTransaction } from './application/use-cases/UpdateTransaction.js';
 import { DeleteEvent } from './application/use-cases/DeleteEvent.js';
+import { ExportData } from './application/use-cases/data/ExportData.js';
+import { ImportData } from './application/use-cases/data/ImportData.js';
+import { ExportTransactionsToCSV } from './application/use-cases/data/ExportTransactionsToCSV.js';
 
 // Presentation Layer
 import { App } from './presentation/App.js';
@@ -123,6 +126,15 @@ const updateTransaction = new UpdateTransaction(
 // Use Case: Excluir Evento
 const deleteEvent = new DeleteEvent(eventRepository, transactionRepository);
 
+// Use Case: Exportar Dados (Backup)
+const exportData = new ExportData(eventRepository, transactionRepository, settingsRepository);
+
+// Use Case: Importar Dados (Restaurar Backup)
+const importData = new ImportData(eventRepository, transactionRepository, settingsRepository);
+
+// Use Case: Exportar Transações para CSV
+const exportTransactionsToCSV = new ExportTransactionsToCSV(eventRepository, transactionRepository);
+
 // ============================================
 // 4. INICIALIZAÇÃO DA UI
 // ============================================
@@ -148,7 +160,10 @@ document.addEventListener('DOMContentLoaded', () => {
       updateEventStatus,
       updateEvent,
       updateTransaction,
-      deleteEvent
+      deleteEvent,
+      exportData,
+      importData,
+      exportTransactionsToCSV
     };
 
     // Inicializar a aplicação

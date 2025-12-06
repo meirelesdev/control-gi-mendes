@@ -163,7 +163,12 @@ class App {
     } else if (this.currentView === 'settings') {
       const settingsView = new SettingsView(
         settingsRepository,
-        updateSettings
+        updateSettings,
+        this.dependencies.exportData,
+        this.dependencies.importData,
+        this.dependencies.exportTransactionsToCSV,
+        this.dependencies.eventRepository,
+        this.dependencies.transactionRepository
       );
       const content = document.getElementById('settings-content');
       if (content) {
