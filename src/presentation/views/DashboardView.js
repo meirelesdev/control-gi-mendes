@@ -44,7 +44,6 @@ class DashboardView {
       // 'all' não filtra nada
 
       // Calcula resumo financeiro consolidado apenas de eventos PENDENTES (não pagos e não cancelados)
-      // Eventos pagos não devem aparecer no resumo financeiro, pois já foram recebidos
       let totalUpfrontCost = 0; // Investimento realizado
       let totalNetProfit = 0; // Lucro líquido
       let totalReimbursements = 0; // Reembolsos
@@ -99,83 +98,69 @@ class DashboardView {
 
       // Renderiza
       container.innerHTML = `
-        <!-- Card de Resumo Financeiro Detalhado -->
-        <div class="card" style="background: linear-gradient(135deg, #F4F7F6 0%, #FFFFFF 100%); border: 2px solid var(--color-border-light); margin-bottom: var(--spacing-md);">
-          <h3 style="margin-bottom: var(--spacing-lg); color: var(--color-text); font-size: var(--font-size-lg);">
-            💰 Resumo Financeiro Consolidado
-          </h3>
-          
-          <!-- Linha 1: Investimento Realizado (Vermelho/Laranja) -->
-          <div style="display: flex; justify-content: space-between; align-items: center; padding: var(--spacing-md); background: linear-gradient(135deg, #FFEBEE 0%, #FFF3E0 100%); border-radius: var(--radius-md); margin-bottom: var(--spacing-md); border-left: 4px solid #EF5350;">
-            <div>
-              <div style="font-size: var(--font-size-sm); color: #C62828; font-weight: var(--font-weight-semibold); margin-bottom: var(--spacing-xs);">
-                💸 Investimento Realizado
-              </div>
-              <div style="font-size: var(--font-size-xs); color: #757575;">
-                Valor que você pagou do próprio bolso (Custos de Insumos + Gasolina)
-              </div>
-            </div>
-            <div style="font-size: var(--font-size-xl); font-weight: var(--font-weight-bold); color: #C62828;">
-              ${this.formatCurrency(totalUpfrontCost)}
-            </div>
+        <!-- Card de Resumo Financeiro Consolidado (Card destacado) -->
+        <div class="card" style="background: linear-gradient(135deg, #F4F7F6 0%, #FFFFFF 100%); border: 2px solid var(--color-primary); margin-bottom: var(--spacing-md); box-shadow: 0 4px 12px rgba(233, 30, 99, 0.1);">
+          <div style="display: flex; align-items: center; justify-content: space-between; margin-bottom: var(--spacing-md);">
+            <h3 style="margin: 0; color: var(--color-text); font-size: var(--font-size-lg); display: flex; align-items: center; gap: var(--spacing-sm);">
+              💰 Resumo Financeiro Consolidado
+            </h3>
+            ${this.generateMonthlyReportUseCase ? `
+            <button class="btn btn-sm btn-primary" id="btn-monthly-report-dashboard" 
+                    style="white-space: nowrap; padding: 6px 12px; font-size: 12px;">
+              📅 Mensal
+            </button>
+            ` : ''}
           </div>
+          
+          <!-- Cards compactos em grid 2x2 -->
+          <div style="display: grid; grid-template-columns: 1fr 1fr; gap: var(--spacing-sm); margin-bottom: var(--spacing-md);">
+            <!-- Investimento Realizado -->
+            <div style="padding: var(--spacing-sm); background: linear-gradient(135deg, #FFEBEE 0%, #FFF3E0 100%); border-radius: var(--radius-md); border-left: 3px solid #EF5350;">
+              <div style="font-size: 10px; color: #C62828; font-weight: var(--font-weight-semibold); margin-bottom: 4px;">
+                💸 Investimento
+              </div>
+              <div style="font-size: var(--font-size-lg); font-weight: var(--font-weight-bold); color: #C62828;">
+                ${this.formatCurrency(totalUpfrontCost)}
+              </div>
+            </div>
 
-          <!-- Linha 2: Total a Receber (Azul) -->
-          <div style="display: flex; justify-content: space-between; align-items: center; padding: var(--spacing-md); background: linear-gradient(135deg, #E3F2FD 0%, #E1F5FE 100%); border-radius: var(--radius-md); margin-bottom: var(--spacing-md); border-left: 4px solid #2196F3;">
-            <div>
-              <div style="font-size: var(--font-size-sm); color: #1565C0; font-weight: var(--font-weight-semibold); margin-bottom: var(--spacing-xs);">
+            <!-- Reembolsos -->
+            <div style="padding: var(--spacing-sm); background: linear-gradient(135deg, #F3E5F5 0%, #E1BEE7 100%); border-radius: var(--radius-md); border-left: 3px solid #9C27B0;">
+              <div style="font-size: 10px; color: #7B1FA2; font-weight: var(--font-weight-semibold); margin-bottom: 4px;">
+                💳 Reembolsos
+              </div>
+              <div style="font-size: var(--font-size-lg); font-weight: var(--font-weight-bold); color: #7B1FA2;">
+                ${this.formatCurrency(totalReimbursements)}
+              </div>
+            </div>
+
+            <!-- Total a Receber -->
+            <div style="padding: var(--spacing-sm); background: linear-gradient(135deg, #E3F2FD 0%, #E1F5FE 100%); border-radius: var(--radius-md); border-left: 3px solid #2196F3;">
+              <div style="font-size: 10px; color: #1565C0; font-weight: var(--font-weight-semibold); margin-bottom: 4px;">
                 📥 Total a Receber
               </div>
-              <div style="font-size: var(--font-size-xs); color: #757575;">
-                Reembolsos (Insumos + Deslocamentos) + Lucro (Honorários)
+              <div style="font-size: var(--font-size-lg); font-weight: var(--font-weight-bold); color: #1565C0;">
+                ${this.formatCurrency(totalToReceive)}
               </div>
             </div>
-            <div style="font-size: var(--font-size-xl); font-weight: var(--font-weight-bold); color: #1565C0;">
-              ${this.formatCurrency(totalToReceive)}
-            </div>
-          </div>
 
-          <!-- Destaque Principal: Lucro Líquido (Verde) -->
-          <div style="display: flex; justify-content: space-between; align-items: center; padding: var(--spacing-lg); background: linear-gradient(135deg, #E0F2F1 0%, #C8E6C9 100%); border-radius: var(--radius-lg); border: 2px solid #26A69A; box-shadow: 0 4px 12px rgba(38, 166, 154, 0.2);">
-            <div>
-              <div style="font-size: var(--font-size-base); color: #00897B; font-weight: var(--font-weight-bold); margin-bottom: var(--spacing-xs);">
-                ✨ Seu Lucro Líquido
+            <!-- Lucro Líquido -->
+            <div style="padding: var(--spacing-sm); background: linear-gradient(135deg, #E0F2F1 0%, #C8E6C9 100%); border-radius: var(--radius-md); border-left: 3px solid #26A69A;">
+              <div style="font-size: 10px; color: #00897B; font-weight: var(--font-weight-semibold); margin-bottom: 4px;">
+                ✨ Lucro Líquido
               </div>
-              <div style="font-size: var(--font-size-xs); color: #00695C;">
-                Apenas Diárias + Horas Extras (dinheiro realmente ganho)
+              <div style="font-size: var(--font-size-lg); font-weight: var(--font-weight-bold); color: #00897B;">
+                ${this.formatCurrency(totalNetProfit)}
               </div>
-            </div>
-            <div style="font-size: var(--font-size-2xl); font-weight: var(--font-weight-bold); color: #00897B;">
-              ${this.formatCurrency(totalNetProfit)}
             </div>
           </div>
           
-          <div style="margin-top: var(--spacing-md); padding-top: var(--spacing-md); border-top: 1px solid var(--color-border); text-align: center;">
-            <p style="margin: 0; color: var(--color-text-secondary); font-size: var(--font-size-sm);">
-              📊 Consolidado de ${eventsForCalculation.length} evento(s) pendente(s)
-            </p>
-            <p style="margin: var(--spacing-xs) 0 0 0; color: var(--color-text-secondary); font-size: var(--font-size-xs);">
-              (Eventos pagos não são incluídos no resumo financeiro)
+          <div style="text-align: center; padding-top: var(--spacing-sm); border-top: 1px solid var(--color-border-light);">
+            <p style="margin: 0; color: var(--color-text-secondary); font-size: var(--font-size-xs);">
+              📊 ${eventsForCalculation.length} evento(s) pendente(s) • Eventos pagos não incluídos
             </p>
           </div>
         </div>
-
-        ${this.generateMonthlyReportUseCase ? `
-        <div class="card" style="margin-bottom: var(--spacing-md); background: linear-gradient(135deg, #FCE4EC 0%, #F8BBD0 100%); border-left: 4px solid var(--color-primary);">
-          <div style="display: flex; align-items: center; justify-content: space-between; flex-wrap: wrap; gap: var(--spacing-md);">
-            <div>
-              <h3 style="margin: 0 0 var(--spacing-xs) 0; color: var(--color-primary);">📅 Fechamento Mensal</h3>
-              <p style="margin: 0; color: var(--color-text-secondary); font-size: var(--font-size-sm);">
-                Gere o relatório mensal de prestação de contas conforme contrato
-              </p>
-            </div>
-            <button class="btn btn-primary" id="btn-monthly-report" 
-                    style="white-space: nowrap; padding: var(--spacing-md) var(--spacing-lg);">
-              Gerar Relatório Mensal
-            </button>
-          </div>
-        </div>
-        ` : ''}
 
         <div style="margin-bottom: var(--spacing-md);">
           <h2 style="margin: 0;">Eventos Ativos</h2>
@@ -231,6 +216,18 @@ class DashboardView {
         });
       });
 
+      // Event listener para fechamento mensal no dashboard
+      if (this.generateMonthlyReportUseCase) {
+        const btnMonthlyReport = document.getElementById('btn-monthly-report-dashboard');
+        if (btnMonthlyReport) {
+          btnMonthlyReport.addEventListener('click', () => {
+            window.dispatchEvent(new CustomEvent('navigate', { 
+              detail: { view: 'monthly-report' } 
+            }));
+          });
+        }
+      }
+
       // Event listener para criar evento (apenas via FAB)
       if (this.createEventUseCase) {
         // Listener global para o FAB (botão flutuante)
@@ -252,17 +249,6 @@ class DashboardView {
         window.addEventListener('create-new-event', this._handleCreateNewEvent);
       }
 
-      // Event listener para fechamento mensal
-      if (this.generateMonthlyReportUseCase) {
-        const btnMonthlyReport = document.getElementById('btn-monthly-report');
-        if (btnMonthlyReport) {
-          btnMonthlyReport.addEventListener('click', () => {
-            window.dispatchEvent(new CustomEvent('navigate', { 
-              detail: { view: 'monthly-report' } 
-            }));
-          });
-        }
-      }
     } catch (error) {
       container.innerHTML = `
         <div class="card" style="border-left-color: var(--color-danger);">

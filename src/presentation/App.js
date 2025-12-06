@@ -89,7 +89,7 @@ class App {
       content.classList.remove('active');
     });
 
-    // Controla visibilidade do FAB (só aparece no dashboard)
+    // Controla visibilidade do FAB (só aparece no dashboard e monthly-report)
     const fab = document.getElementById('fab-new-event');
     if (fab) {
       if (view === 'dashboard' || view === 'monthly-report') {
@@ -135,7 +135,7 @@ class App {
       }
     } else if (this.currentView === 'monthly-report') {
       const monthlyReportView = new MonthlyReportView(generateMonthlyReport);
-      const content = document.getElementById('dashboard-content');
+      const content = document.getElementById('monthly-report-content');
       if (content) {
         content.classList.add('active');
         await monthlyReportView.render();

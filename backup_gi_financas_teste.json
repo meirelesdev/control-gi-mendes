@@ -1,0 +1,428 @@
+{
+  "version": "1.0",
+  "exportDate": "2025-12-06T10:00:00.000Z",
+  "events": [
+    {
+      "id": "event_1733491200000_abc123",
+      "name": "Evento Corporativo - Empresa XYZ",
+      "date": "2025-11-15",
+      "status": "REPORT_SENT",
+      "description": "Evento corporativo realizado em Florianópolis com 200 participantes",
+      "expectedPaymentDate": "2025-12-06",
+      "createdAt": "2025-10-01T10:00:00.000Z",
+      "updatedAt": "2025-11-20T15:30:00.000Z"
+    },
+    {
+      "id": "event_1733491200001_def456",
+      "name": "Workshop Gastronômico - Curitiba",
+      "date": "2025-11-20",
+      "status": "DONE",
+      "description": "Workshop de culinária italiana para 50 pessoas",
+      "expectedPaymentDate": null,
+      "createdAt": "2025-10-05T14:20:00.000Z",
+      "updatedAt": "2025-11-20T18:00:00.000Z"
+    },
+    {
+      "id": "event_1733491200002_ghi789",
+      "name": "Jantar de Gala - Hotel Copacabana",
+      "date": "2025-12-10",
+      "status": "PLANNED",
+      "description": "Jantar de gala para 150 convidados",
+      "expectedPaymentDate": null,
+      "createdAt": "2025-11-15T09:00:00.000Z",
+      "updatedAt": "2025-11-15T09:00:00.000Z"
+    },
+    {
+      "id": "event_1733491200003_jkl012",
+      "name": "Evento de Inauguração - Restaurante Novo",
+      "date": "2025-10-25",
+      "status": "PAID",
+      "description": "Evento de inauguração de restaurante em São Paulo",
+      "expectedPaymentDate": "2025-11-15",
+      "createdAt": "2025-09-20T11:00:00.000Z",
+      "updatedAt": "2025-11-15T10:00:00.000Z"
+    },
+    {
+      "id": "event_1733491200004_mno345",
+      "name": "Catering Casamento - Porto Alegre",
+      "date": "2025-12-20",
+      "status": "PLANNED",
+      "description": "Catering completo para casamento com 300 convidados",
+      "expectedPaymentDate": null,
+      "createdAt": "2025-11-10T16:00:00.000Z",
+      "updatedAt": "2025-11-10T16:00:00.000Z"
+    },
+    {
+      "id": "event_1733491200005_pqr678",
+      "name": "Treinamento Culinário - Belo Horizonte",
+      "date": "2025-11-28",
+      "status": "DONE",
+      "description": "Treinamento de equipe de cozinha para restaurante",
+      "expectedPaymentDate": null,
+      "createdAt": "2025-10-20T13:00:00.000Z",
+      "updatedAt": "2025-11-28T20:00:00.000Z"
+    }
+  ],
+  "transactions": [
+    {
+      "id": "expense_1733491201000_insumo1",
+      "eventId": "event_1733491200000_abc123",
+      "type": "EXPENSE",
+      "description": "Compra de ingredientes diversos",
+      "amount": 450.00,
+      "metadata": {
+        "hasReceipt": true
+      },
+      "createdAt": "2025-11-10T08:00:00.000Z",
+      "updatedAt": "2025-11-10T08:00:00.000Z"
+    },
+    {
+      "id": "expense_1733491201001_insumo2",
+      "eventId": "event_1733491200000_abc123",
+      "type": "EXPENSE",
+      "description": "Compra de carnes e peixes",
+      "amount": 850.00,
+      "metadata": {
+        "hasReceipt": false
+      },
+      "createdAt": "2025-11-12T10:30:00.000Z",
+      "updatedAt": "2025-11-12T10:30:00.000Z"
+    },
+    {
+      "id": "expense_1733491201002_insumo3",
+      "eventId": "event_1733491200000_abc123",
+      "type": "EXPENSE",
+      "description": "Bebidas e sucos",
+      "amount": 320.00,
+      "metadata": {
+        "hasReceipt": true
+      },
+      "createdAt": "2025-11-13T14:00:00.000Z",
+      "updatedAt": "2025-11-13T14:00:00.000Z"
+    },
+    {
+      "id": "income_1733491202000_diaria1",
+      "eventId": "event_1733491200000_abc123",
+      "type": "INCOME",
+      "description": "Diária Técnica Padrão",
+      "amount": 300.00,
+      "metadata": {
+        "category": "diaria",
+        "isReimbursement": false
+      },
+      "createdAt": "2025-10-01T10:00:00.000Z",
+      "updatedAt": "2025-10-01T10:00:00.000Z"
+    },
+    {
+      "id": "income_1733491202001_diaria2",
+      "eventId": "event_1733491200000_abc123",
+      "type": "INCOME",
+      "description": "Diária Adicional - Preparação",
+      "amount": 300.00,
+      "metadata": {
+        "category": "diaria",
+        "isReimbursement": false
+      },
+      "createdAt": "2025-11-14T09:00:00.000Z",
+      "updatedAt": "2025-11-14T09:00:00.000Z"
+    },
+    {
+      "id": "income_1733491202002_horaextra1",
+      "eventId": "event_1733491200000_abc123",
+      "type": "INCOME",
+      "description": "Hora Extra - Finalização",
+      "amount": 150.00,
+      "metadata": {
+        "category": "hora_extra",
+        "hours": 2,
+        "isReimbursement": false
+      },
+      "createdAt": "2025-11-15T22:00:00.000Z",
+      "updatedAt": "2025-11-15T22:00:00.000Z"
+    },
+    {
+      "id": "income_1733491202003_km1",
+      "eventId": "event_1733491200000_abc123",
+      "type": "INCOME",
+      "description": "Deslocamento: Florianópolis → Tupandi",
+      "amount": 45.00,
+      "metadata": {
+        "category": "km",
+        "distance": 50,
+        "isReimbursement": true,
+        "origin": "Florianópolis",
+        "destination": "Tupandi"
+      },
+      "createdAt": "2025-11-14T06:00:00.000Z",
+      "updatedAt": "2025-11-14T06:00:00.000Z"
+    },
+    {
+      "id": "income_1733491202004_tempo1",
+      "eventId": "event_1733491200000_abc123",
+      "type": "INCOME",
+      "description": "Tempo de Viagem - Ida e Volta",
+      "amount": 150.00,
+      "metadata": {
+        "category": "tempo_viagem",
+        "hours": 2,
+        "isReimbursement": true
+      },
+      "createdAt": "2025-11-14T06:00:00.000Z",
+      "updatedAt": "2025-11-14T06:00:00.000Z"
+    },
+    {
+      "id": "expense_1733491201003_insumo4",
+      "eventId": "event_1733491200001_def456",
+      "type": "EXPENSE",
+      "description": "Ingredientes para workshop",
+      "amount": 280.00,
+      "metadata": {
+        "hasReceipt": true
+      },
+      "createdAt": "2025-11-18T11:00:00.000Z",
+      "updatedAt": "2025-11-18T11:00:00.000Z"
+    },
+    {
+      "id": "income_1733491202005_diaria3",
+      "eventId": "event_1733491200001_def456",
+      "type": "INCOME",
+      "description": "Diária Técnica Padrão",
+      "amount": 300.00,
+      "metadata": {
+        "category": "diaria",
+        "isReimbursement": false
+      },
+      "createdAt": "2025-10-05T14:20:00.000Z",
+      "updatedAt": "2025-10-05T14:20:00.000Z"
+    },
+    {
+      "id": "income_1733491202006_km2",
+      "eventId": "event_1733491200001_def456",
+      "type": "INCOME",
+      "description": "Deslocamento: Florianópolis → Curitiba",
+      "amount": 315.00,
+      "metadata": {
+        "category": "km",
+        "distance": 350,
+        "isReimbursement": true,
+        "origin": "Florianópolis",
+        "destination": "Curitiba"
+      },
+      "createdAt": "2025-11-19T05:00:00.000Z",
+      "updatedAt": "2025-11-19T05:00:00.000Z"
+    },
+    {
+      "id": "expense_1733491201004_insumo5",
+      "eventId": "event_1733491200002_ghi789",
+      "type": "EXPENSE",
+      "description": "Ingredientes premium para jantar",
+      "amount": 1200.00,
+      "metadata": {
+        "hasReceipt": false
+      },
+      "createdAt": "2025-12-05T09:00:00.000Z",
+      "updatedAt": "2025-12-05T09:00:00.000Z"
+    },
+    {
+      "id": "income_1733491202007_diaria4",
+      "eventId": "event_1733491200002_ghi789",
+      "type": "INCOME",
+      "description": "Diária Técnica Padrão",
+      "amount": 300.00,
+      "metadata": {
+        "category": "diaria",
+        "isReimbursement": false
+      },
+      "createdAt": "2025-11-15T09:00:00.000Z",
+      "updatedAt": "2025-11-15T09:00:00.000Z"
+    },
+    {
+      "id": "expense_1733491201005_insumo6",
+      "eventId": "event_1733491200003_jkl012",
+      "type": "EXPENSE",
+      "description": "Ingredientes diversos",
+      "amount": 550.00,
+      "metadata": {
+        "hasReceipt": true
+      },
+      "createdAt": "2025-10-20T10:00:00.000Z",
+      "updatedAt": "2025-10-20T10:00:00.000Z"
+    },
+    {
+      "id": "income_1733491202008_diaria5",
+      "eventId": "event_1733491200003_jkl012",
+      "type": "INCOME",
+      "description": "Diária Técnica Padrão",
+      "amount": 300.00,
+      "metadata": {
+        "category": "diaria",
+        "isReimbursement": false
+      },
+      "createdAt": "2025-09-20T11:00:00.000Z",
+      "updatedAt": "2025-09-20T11:00:00.000Z"
+    },
+    {
+      "id": "income_1733491202009_horaextra2",
+      "eventId": "event_1733491200003_jkl012",
+      "type": "INCOME",
+      "description": "Hora Extra - Montagem",
+      "amount": 225.00,
+      "metadata": {
+        "category": "hora_extra",
+        "hours": 3,
+        "isReimbursement": false
+      },
+      "createdAt": "2025-10-25T08:00:00.000Z",
+      "updatedAt": "2025-10-25T08:00:00.000Z"
+    },
+    {
+      "id": "income_1733491202010_km3",
+      "eventId": "event_1733491200003_jkl012",
+      "type": "INCOME",
+      "description": "Deslocamento: Florianópolis → São Paulo",
+      "amount": 540.00,
+      "metadata": {
+        "category": "km",
+        "distance": 600,
+        "isReimbursement": true,
+        "origin": "Florianópolis",
+        "destination": "São Paulo"
+      },
+      "createdAt": "2025-10-24T05:00:00.000Z",
+      "updatedAt": "2025-10-24T05:00:00.000Z"
+    },
+    {
+      "id": "expense_1733491201006_insumo7",
+      "eventId": "event_1733491200004_mno345",
+      "type": "EXPENSE",
+      "description": "Ingredientes para casamento",
+      "amount": 1800.00,
+      "metadata": {
+        "hasReceipt": false
+      },
+      "createdAt": "2025-12-01T10:00:00.000Z",
+      "updatedAt": "2025-12-01T10:00:00.000Z"
+    },
+    {
+      "id": "income_1733491202011_diaria6",
+      "eventId": "event_1733491200004_mno345",
+      "type": "INCOME",
+      "description": "Diária Técnica Padrão",
+      "amount": 300.00,
+      "metadata": {
+        "category": "diaria",
+        "isReimbursement": false
+      },
+      "createdAt": "2025-11-10T16:00:00.000Z",
+      "updatedAt": "2025-11-10T16:00:00.000Z"
+    },
+    {
+      "id": "income_1733491202012_diaria7",
+      "eventId": "event_1733491200004_mno345",
+      "type": "INCOME",
+      "description": "Diária Adicional - Preparação",
+      "amount": 300.00,
+      "metadata": {
+        "category": "diaria",
+        "isReimbursement": false
+      },
+      "createdAt": "2025-12-19T08:00:00.000Z",
+      "updatedAt": "2025-12-19T08:00:00.000Z"
+    },
+    {
+      "id": "income_1733491202013_km4",
+      "eventId": "event_1733491200004_mno345",
+      "type": "INCOME",
+      "description": "Deslocamento: Florianópolis → Porto Alegre",
+      "amount": 405.00,
+      "metadata": {
+        "category": "km",
+        "distance": 450,
+        "isReimbursement": true,
+        "origin": "Florianópolis",
+        "destination": "Porto Alegre"
+      },
+      "createdAt": "2025-12-19T06:00:00.000Z",
+      "updatedAt": "2025-12-19T06:00:00.000Z"
+    },
+    {
+      "id": "expense_1733491201007_insumo8",
+      "eventId": "event_1733491200005_pqr678",
+      "type": "EXPENSE",
+      "description": "Ingredientes para treinamento",
+      "amount": 380.00,
+      "metadata": {
+        "hasReceipt": true
+      },
+      "createdAt": "2025-11-25T14:00:00.000Z",
+      "updatedAt": "2025-11-25T14:00:00.000Z"
+    },
+    {
+      "id": "income_1733491202014_diaria8",
+      "eventId": "event_1733491200005_pqr678",
+      "type": "INCOME",
+      "description": "Diária Técnica Padrão",
+      "amount": 300.00,
+      "metadata": {
+        "category": "diaria",
+        "isReimbursement": false
+      },
+      "createdAt": "2025-10-20T13:00:00.000Z",
+      "updatedAt": "2025-10-20T13:00:00.000Z"
+    },
+    {
+      "id": "income_1733491202015_horaextra3",
+      "eventId": "event_1733491200005_pqr678",
+      "type": "INCOME",
+      "description": "Hora Extra - Prática",
+      "amount": 75.00,
+      "metadata": {
+        "category": "hora_extra",
+        "hours": 1,
+        "isReimbursement": false
+      },
+      "createdAt": "2025-11-28T17:00:00.000Z",
+      "updatedAt": "2025-11-28T17:00:00.000Z"
+    },
+    {
+      "id": "income_1733491202016_km5",
+      "eventId": "event_1733491200005_pqr678",
+      "type": "INCOME",
+      "description": "Deslocamento: Florianópolis → Belo Horizonte",
+      "amount": 1080.00,
+      "metadata": {
+        "category": "km",
+        "distance": 1200,
+        "isReimbursement": true,
+        "origin": "Florianópolis",
+        "destination": "Belo Horizonte"
+      },
+      "createdAt": "2025-11-27T04:00:00.000Z",
+      "updatedAt": "2025-11-27T04:00:00.000Z"
+    },
+    {
+      "id": "income_1733491202017_tempo2",
+      "eventId": "event_1733491200005_pqr678",
+      "type": "INCOME",
+      "description": "Tempo de Viagem - Longa Distância",
+      "amount": 300.00,
+      "metadata": {
+        "category": "tempo_viagem",
+        "hours": 4,
+        "isReimbursement": true
+      },
+      "createdAt": "2025-11-27T04:00:00.000Z",
+      "updatedAt": "2025-11-27T04:00:00.000Z"
+    }
+  ],
+  "settings": {
+    "rateKm": 0.90,
+    "rateTravelTime": 75.00,
+    "defaultReimbursementDays": 21,
+    "maxHotelRate": 280.00,
+    "standardDailyRate": 300.00,
+    "overtimeRate": 75.00,
+    "updatedAt": "2025-12-06T10:00:00.000Z"
+  }
+}
+

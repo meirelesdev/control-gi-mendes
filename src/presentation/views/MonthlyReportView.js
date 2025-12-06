@@ -12,7 +12,7 @@ class MonthlyReportView {
   }
 
   async render() {
-    const container = document.getElementById('dashboard-content');
+    const container = document.getElementById('monthly-report-content');
     if (!container) return;
 
     container.innerHTML = '<div class="loading">Carregando...</div>';
@@ -54,12 +54,12 @@ class MonthlyReportView {
                      value="${this.currentYear}" min="2020" max="2100" required>
             </div>
 
-            <div class="modal-footer" style="margin-top: var(--spacing-xl);">
-              <button type="button" class="btn btn-secondary" id="btn-back-dashboard">
+            <div style="display: flex; gap: var(--spacing-md); margin-top: var(--spacing-xl); flex-wrap: wrap;">
+              <button type="button" class="btn btn-secondary" id="btn-back-dashboard" style="flex: 1; min-width: 100px;">
                 Voltar
               </button>
-              <button type="submit" class="btn btn-primary btn-lg">
-                📄 Gerar Relatório Mensal
+              <button type="submit" class="btn btn-primary" style="flex: 1; min-width: 140px; white-space: nowrap;">
+                📄 Relatório Mensal
               </button>
             </div>
           </form>
