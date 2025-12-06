@@ -1,0 +1,251 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Limpar Cache PWA - Chef Finance</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+            background: linear-gradient(135deg, #E91E63 0%, #C2185B 100%);
+            min-height: 100vh;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            padding: 20px;
+        }
+
+        .container {
+            background: white;
+            border-radius: 20px;
+            padding: 40px;
+            max-width: 600px;
+            width: 100%;
+            box-shadow: 0 20px 60px rgba(0, 0, 0, 0.3);
+        }
+
+        h1 {
+            color: #E91E63;
+            margin-bottom: 10px;
+            font-size: 2em;
+        }
+
+        .subtitle {
+            color: #666;
+            margin-bottom: 30px;
+        }
+
+        .button-group {
+            display: flex;
+            flex-direction: column;
+            gap: 15px;
+            margin: 30px 0;
+        }
+
+        button {
+            background: #E91E63;
+            color: white;
+            border: none;
+            padding: 15px 30px;
+            border-radius: 10px;
+            font-size: 1em;
+            font-weight: bold;
+            cursor: pointer;
+            transition: all 0.3s;
+            box-shadow: 0 4px 15px rgba(233, 30, 99, 0.3);
+        }
+
+        button:hover {
+            background: #C2185B;
+            transform: translateY(-2px);
+            box-shadow: 0 6px 20px rgba(233, 30, 99, 0.4);
+        }
+
+        button:active {
+            transform: translateY(0);
+        }
+
+        button.secondary {
+            background: #26A69A;
+        }
+
+        button.secondary:hover {
+            background: #00897B;
+        }
+
+        .info {
+            background: #F4F7F6;
+            padding: 15px;
+            border-radius: 10px;
+            margin-top: 20px;
+            color: #666;
+            font-size: 0.9em;
+            line-height: 1.6;
+        }
+
+        .info strong {
+            color: #E91E63;
+        }
+
+        .status {
+            margin-top: 20px;
+            padding: 15px;
+            border-radius: 10px;
+            display: none;
+        }
+
+        .status.success {
+            background: #E0F2F1;
+            color: #00897B;
+            border: 2px solid #26A69A;
+        }
+
+        .status.error {
+            background: #FFEBEE;
+            color: #C62828;
+            border: 2px solid #EF5350;
+        }
+
+        .status.show {
+            display: block;
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <h1>🔄 Limpar Cache PWA</h1>
+        <p class="subtitle">Chef Finance</p>
+
+        <div class="button-group">
+            <button onclick="limparServiceWorkers()">🗑️ Limpar Service Workers</button>
+            <button onclick="limparCaches()">🗑️ Limpar Caches</button>
+            <button onclick="limparTudo()" class="secondary">🧹 Limpar Tudo</button>
+            <button onclick="verificarIcones()">👁️ Verificar Ícones</button>
+        </div>
+
+        <div id="status" class="status"></div>
+
+        <div class="info">
+            <strong>📋 Instruções:</strong><br>
+            1. Clique em "Limpar Tudo" para remover todo o cache<br>
+            2. Feche todas as abas do site<br>
+            3. Feche o navegador completamente<br>
+            4. Abra o navegador novamente<br>
+            5. Acesse o site em modo anônimo (Ctrl + Shift + N) para testar<br>
+            6. Se funcionar, acesse normalmente e instale novamente
+        </div>
+    </div>
+
+    <script>
+        function showStatus(message, type = 'success') {
+            const status = document.getElementById('status');
+            status.textContent = message;
+            status.className = `status ${type} show`;
+            setTimeout(() => {
+                status.classList.remove('show');
+            }, 5000);
+        }
+
+        async function limparServiceWorkers() {
+            try {
+                if ('serviceWorker' in navigator) {
+                    const registrations = await navigator.serviceWorker.getRegistrations();
+                    for (let registration of registrations) {
+                        await registration.unregister();
+                    }
+                    showStatus(`✅ ${registrations.length} Service Worker(s) removido(s)!`);
+                } else {
+                    showStatus('ℹ️ Service Workers não suportados neste navegador', 'error');
+                }
+            } catch (error) {
+                showStatus('❌ Erro ao limpar Service Workers: ' + error.message, 'error');
+            }
+        }
+
+        async function limparCaches() {
+            try {
+                if ('caches' in window) {
+                    const cacheNames = await caches.keys();
+                    await Promise.all(cacheNames.map(name => caches.delete(name)));
+                    showStatus(`✅ ${cacheNames.length} Cache(s) removido(s)!`);
+                } else {
+                    showStatus('ℹ️ Cache API não suportada neste navegador', 'error');
+                }
+            } catch (error) {
+                showStatus('❌ Erro ao limpar caches: ' + error.message, 'error');
+            }
+        }
+
+        async function limparTudo() {
+            try {
+                // Limpa Service Workers
+                if ('serviceWorker' in navigator) {
+                    const registrations = await navigator.serviceWorker.getRegistrations();
+                    for (let registration of registrations) {
+                        await registration.unregister();
+                    }
+                }
+
+                // Limpa Caches
+                if ('caches' in window) {
+                    const cacheNames = await caches.keys();
+                    await Promise.all(cacheNames.map(name => caches.delete(name)));
+                }
+
+                // Limpa LocalStorage
+                localStorage.clear();
+
+                // Limpa SessionStorage
+                sessionStorage.clear();
+
+                showStatus('✅ Todo o cache foi limpo! Feche o navegador e abra novamente.', 'success');
+                
+                setTimeout(() => {
+                    if (confirm('Deseja recarregar a página agora?')) {
+                        window.location.reload();
+                    }
+                }, 2000);
+            } catch (error) {
+                showStatus('❌ Erro ao limpar: ' + error.message, 'error');
+            }
+        }
+
+        async function verificarIcones() {
+            try {
+                const basePath = window.location.pathname.includes('/control-gi-mendes/') 
+                    ? '/control-gi-mendes' 
+                    : '';
+                
+                const icon192 = `${basePath}/icon-192.png?v=2`;
+                const icon512 = `${basePath}/icon-512.png?v=2`;
+
+                const response192 = await fetch(icon192);
+                const response512 = await fetch(icon512);
+
+                if (response192.ok && response512.ok) {
+                    showStatus('✅ Ícones encontrados! Verifique se são os novos (chapéu + cifrão)');
+                    
+                    // Abre os ícones em novas abas para visualização
+                    window.open(icon192, '_blank');
+                    setTimeout(() => window.open(icon512, '_blank'), 500);
+                } else {
+                    showStatus('❌ Ícones não encontrados! Verifique se foram enviados para o GitHub.', 'error');
+                }
+            } catch (error) {
+                showStatus('❌ Erro ao verificar ícones: ' + error.message, 'error');
+            }
+        }
+
+        // Mostra status ao carregar
+        window.addEventListener('load', () => {
+            console.log('🔄 Página de limpeza de cache carregada');
+        });
+    </script>
+</body>
+</html>

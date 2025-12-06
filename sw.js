@@ -3,7 +3,7 @@
  * Permite funcionamento offline e instalação como PWA
  */
 
-const CACHE_NAME = 'chef-finance-v1';
+const CACHE_NAME = 'chef-finance-v2'; // Atualizado para forçar refresh dos ícones
 // Base path para GitHub Pages
 const BASE_PATH = '/control-gi-mendes';
 
@@ -15,7 +15,10 @@ const urlsToCache = [
   `${BASE_PATH}/src/presentation/styles/variables.css`,
   `${BASE_PATH}/src/presentation/styles/base.css`,
   `${BASE_PATH}/src/presentation/styles/components.css`,
-  `${BASE_PATH}/manifest.json`
+  `${BASE_PATH}/manifest.json`,
+  // Força atualização dos ícones
+  `${BASE_PATH}/icon-192.png?v=2`,
+  `${BASE_PATH}/icon-512.png?v=2`
 ];
 
 // Ícones opcionais (só faz cache se existirem)
