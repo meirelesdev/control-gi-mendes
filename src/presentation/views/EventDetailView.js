@@ -694,6 +694,19 @@ class EventDetailView {
       }
     }
 
+    // Busca valores das configurações antes de criar o modal
+    let dailyRate = 300.00;
+    let overtimeRate = 75.00;
+    try {
+      const settings = await this.settingsRepository.find();
+      if (settings) {
+        dailyRate = settings.standardDailyRate || 300.00;
+        overtimeRate = settings.overtimeRate || 75.00;
+      }
+    } catch (error) {
+      console.warn('Erro ao buscar configurações, usando valores padrão:', error);
+    }
+
     const modal = this.createModal('Adicionar Honorário', `
       <form id="form-add-fee">
         <div class="form-group">
@@ -703,14 +716,14 @@ class EventDetailView {
               <input type="radio" name="fee-type" value="diaria" id="fee-type-diaria" checked style="cursor: pointer;">
               <div style="flex: 1;">
                 <strong>Diária Adicional</strong>
-                <div class="text-muted" style="font-size: 0.9em;" id="diaria-value">Valor: R$ 300,00</div>
+                <div class="text-muted" style="font-size: 0.9em;" id="diaria-value">Valor: ${this.formatCurrency(dailyRate)}</div>
               </div>
             </label>
             <label style="display: flex; align-items: center; gap: var(--spacing-sm); cursor: pointer; padding: var(--spacing-sm); border: 1px solid var(--color-border); border-radius: var(--radius-md);">
               <input type="radio" name="fee-type" value="hora_extra" id="fee-type-hora" style="cursor: pointer;">
               <div style="flex: 1;">
                 <strong>Hora Extra</strong>
-                <div class="text-muted" style="font-size: 0.9em;" id="hora-extra-info">Taxa: R$ 75,00 por hora</div>
+                <div class="text-muted" style="font-size: 0.9em;" id="hora-extra-info">Taxa: ${this.formatCurrency(overtimeRate)} por hora</div>
               </div>
             </label>
           </div>

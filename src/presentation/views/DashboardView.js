@@ -43,32 +43,114 @@ class DashboardView {
       }
       // 'all' não filtra nada
 
-      // Calcula total a receber em aberto (apenas eventos realizados ou com relatório enviado)
-      let totalToReceive = 0;
-      const eventsToReceive = events.filter(e => 
-        e.status !== 'CANCELLED' && 
-        (e.status === 'DONE' || e.status === 'REPORT_SENT' || e.status === 'COMPLETED' || e.status === 'IN_PROGRESS')
-      );
+      // Calcula resumo financeiro consolidado de todos os eventos ativos (não cancelados)
+      let totalUpfrontCost = 0; // Investimento realizado
+      let totalNetProfit = 0; // Lucro líquido
+      let totalReimbursements = 0; // Reembolsos
       
-      for (const event of eventsToReceive) {
+      // Inclui todos os eventos não cancelados para o cálculo consolidado
+      const eventsForCalculation = activeEvents;
+      
+      for (const event of eventsForCalculation) {
         const transactions = await this.transactionRepository.findByEventId(event.id);
+        
+        // Separa transações
         const expenses = transactions.filter(t => t.type === 'EXPENSE');
-        const fees = transactions.filter(t => 
-          t.type === 'INCOME' && 
-          (t.metadata.category === 'diaria' || t.metadata.category === 'hora_extra' || 
-           t.metadata.isReimbursement === false)
+        const incomes = transactions.filter(t => t.type === 'INCOME');
+        
+        // Honorários (Lucro): Diárias e Horas Extras
+        const fees = incomes.filter(t => 
+          (t.metadata.category === 'diaria' || t.metadata.category === 'hora_extra') &&
+          t.metadata.isReimbursement !== true
         );
-        // Total a receber = Honorários (lucro) + Custos de Insumos (reembolsos)
-        totalToReceive += fees.reduce((sum, f) => sum + f.amount, 0) + 
-                          expenses.reduce((sum, e) => sum + e.amount, 0);
+        
+        // Reembolsos: KM e Tempo de Viagem
+        const reimbursements = incomes.filter(t => 
+          t.metadata.category === 'km' || 
+          t.metadata.category === 'tempo_viagem' ||
+          t.metadata.isReimbursement === true
+        );
+        
+        // KM (gasolina paga hoje)
+        const kmTransactions = reimbursements.filter(r => r.metadata.category === 'km');
+        const travelTimeTransactions = reimbursements.filter(r => r.metadata.category === 'tempo_viagem');
+        
+        // Calcula valores do evento (mesma lógica do EventDetailView)
+        const eventExpenses = expenses.reduce((sum, e) => sum + e.amount, 0);
+        const eventKmCost = kmTransactions.reduce((sum, k) => sum + k.amount, 0);
+        const eventTravelTimeCost = travelTimeTransactions.reduce((sum, t) => sum + t.amount, 0);
+        const eventFees = fees.reduce((sum, f) => sum + f.amount, 0);
+        
+        // Acumula totais (mesma lógica do EventDetailView)
+        totalUpfrontCost += eventExpenses + eventKmCost; // Investimento: Insumos + Gasolina
+        totalNetProfit += eventFees; // Lucro: Apenas Honorários
+        
+        // Valor de reembolso = Insumos + KM + Tempo de Viagem
+        const eventReimbursementValue = eventExpenses + eventKmCost + eventTravelTimeCost;
+        totalReimbursements += eventReimbursementValue;
       }
+      
+      // Total a receber = Reembolsos + Lucro
+      const totalToReceive = totalReimbursements + totalNetProfit;
 
       // Renderiza
       container.innerHTML = `
-        <div class="card-highlight">
-          <div class="card-title">Total a Receber em Aberto</div>
-          <div class="card-value">${this.formatCurrency(totalToReceive)}</div>
-          <div class="card-subtitle">${activeEvents.length} evento(s) ativo(s)</div>
+        <!-- Card de Resumo Financeiro Detalhado -->
+        <div class="card" style="background: linear-gradient(135deg, #F4F7F6 0%, #FFFFFF 100%); border: 2px solid var(--color-border-light); margin-bottom: var(--spacing-md);">
+          <h3 style="margin-bottom: var(--spacing-lg); color: var(--color-text); font-size: var(--font-size-lg);">
+            💰 Resumo Financeiro Consolidado
+          </h3>
+          
+          <!-- Linha 1: Investimento Realizado (Vermelho/Laranja) -->
+          <div style="display: flex; justify-content: space-between; align-items: center; padding: var(--spacing-md); background: linear-gradient(135deg, #FFEBEE 0%, #FFF3E0 100%); border-radius: var(--radius-md); margin-bottom: var(--spacing-md); border-left: 4px solid #EF5350;">
+            <div>
+              <div style="font-size: var(--font-size-sm); color: #C62828; font-weight: var(--font-weight-semibold); margin-bottom: var(--spacing-xs);">
+                💸 Investimento Realizado
+              </div>
+              <div style="font-size: var(--font-size-xs); color: #757575;">
+                Valor que você pagou do próprio bolso (Custos de Insumos + Gasolina)
+              </div>
+            </div>
+            <div style="font-size: var(--font-size-xl); font-weight: var(--font-weight-bold); color: #C62828;">
+              ${this.formatCurrency(totalUpfrontCost)}
+            </div>
+          </div>
+
+          <!-- Linha 2: Total a Receber (Azul) -->
+          <div style="display: flex; justify-content: space-between; align-items: center; padding: var(--spacing-md); background: linear-gradient(135deg, #E3F2FD 0%, #E1F5FE 100%); border-radius: var(--radius-md); margin-bottom: var(--spacing-md); border-left: 4px solid #2196F3;">
+            <div>
+              <div style="font-size: var(--font-size-sm); color: #1565C0; font-weight: var(--font-weight-semibold); margin-bottom: var(--spacing-xs);">
+                📥 Total a Receber
+              </div>
+              <div style="font-size: var(--font-size-xs); color: #757575;">
+                Reembolsos (Insumos + Deslocamentos) + Lucro (Honorários)
+              </div>
+            </div>
+            <div style="font-size: var(--font-size-xl); font-weight: var(--font-weight-bold); color: #1565C0;">
+              ${this.formatCurrency(totalToReceive)}
+            </div>
+          </div>
+
+          <!-- Destaque Principal: Lucro Líquido (Verde) -->
+          <div style="display: flex; justify-content: space-between; align-items: center; padding: var(--spacing-lg); background: linear-gradient(135deg, #E0F2F1 0%, #C8E6C9 100%); border-radius: var(--radius-lg); border: 2px solid #26A69A; box-shadow: 0 4px 12px rgba(38, 166, 154, 0.2);">
+            <div>
+              <div style="font-size: var(--font-size-base); color: #00897B; font-weight: var(--font-weight-bold); margin-bottom: var(--spacing-xs);">
+                ✨ Seu Lucro Líquido
+              </div>
+              <div style="font-size: var(--font-size-xs); color: #00695C;">
+                Apenas Diárias + Horas Extras (dinheiro realmente ganho)
+              </div>
+            </div>
+            <div style="font-size: var(--font-size-2xl); font-weight: var(--font-weight-bold); color: #00897B;">
+              ${this.formatCurrency(totalNetProfit)}
+            </div>
+          </div>
+          
+          <div style="margin-top: var(--spacing-md); padding-top: var(--spacing-md); border-top: 1px solid var(--color-border); text-align: center;">
+            <p style="margin: 0; color: var(--color-text-secondary); font-size: var(--font-size-sm);">
+              📊 Consolidado de ${activeEvents.length} evento(s) ativo(s)
+            </p>
+          </div>
         </div>
 
         ${this.generateMonthlyReportUseCase ? `
@@ -274,11 +356,22 @@ class DashboardView {
     return div.innerHTML;
   }
 
-  showCreateEventModal() {
+  async showCreateEventModal() {
     // Verifica se já existe um modal aberto
     const existingModal = document.querySelector('.modal-backdrop.active');
     if (existingModal) {
       return; // Não cria novo modal se já existe um
+    }
+
+    // Busca o valor da diária padrão das configurações
+    let dailyRate = 300.00; // Valor padrão
+    try {
+      const settings = await this.settingsRepository.find();
+      if (settings && settings.standardDailyRate) {
+        dailyRate = settings.standardDailyRate;
+      }
+    } catch (error) {
+      console.warn('Erro ao buscar configurações, usando valor padrão:', error);
     }
 
     const modal = document.createElement('div');
@@ -309,7 +402,7 @@ class DashboardView {
             <div class="form-group">
               <label style="display: flex; align-items: center; gap: var(--spacing-sm); cursor: pointer;">
                 <input type="checkbox" id="auto-create-daily" checked style="cursor: pointer;">
-                <span>Lançar Diária Padrão Automaticamente (R$ 300,00)</span>
+                <span>Lançar Diária Padrão Automaticamente (<span id="daily-rate-display">${this.formatCurrency(dailyRate)}</span>)</span>
               </label>
               <small class="text-muted" style="display: block; margin-top: var(--spacing-xs); margin-left: 24px;">
                 Cria automaticamente uma receita de "Diária Técnica Padrão" ao criar o evento
