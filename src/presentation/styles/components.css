@@ -119,6 +119,7 @@
 }
 
 .fab:hover {
+  transform: translateX(-50%); /* Mantém centralização */
   background: var(--color-primary-dark);
 }
 
@@ -669,7 +670,9 @@ html.modal-open {
   }
 
   .fab {
-    left: calc(50% + 300px); /* Ajusta para ficar centralizado no container */
+    /* Mantém centralizado na bottom-nav */
+    left: 50%;
+    transform: translateX(-50%);
   }
 }
 
@@ -683,7 +686,9 @@ html.modal-open {
   }
 
   .fab {
-    left: calc(50% + 400px);
+    /* Mantém centralizado na bottom-nav */
+    left: 50%;
+    transform: translateX(-50%);
   }
 }
 
