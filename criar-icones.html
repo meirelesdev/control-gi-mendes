@@ -3,222 +3,232 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Gerador de Ícones - Gi Finanças</title>
+    <title>Criar Ícones - Chef Finance</title>
     <style>
-        * { margin: 0; padding: 0; box-sizing: border-box; }
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
         body {
-            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Arial, sans-serif;
-            background: linear-gradient(135deg, #E91E63 0%, #26A69A 100%);
+            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Oxygen, Ubuntu, Cantarell, sans-serif;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
             min-height: 100vh;
             display: flex;
-            align-items: center;
             justify-content: center;
+            align-items: center;
             padding: 20px;
         }
+
         .container {
             background: white;
-            padding: 40px;
             border-radius: 20px;
-            box-shadow: 0 20px 60px rgba(0,0,0,0.3);
+            padding: 40px;
             max-width: 600px;
             width: 100%;
+            box-shadow: 0 20px 60px rgba(0, 0, 0, 0.3);
         }
+
         h1 {
             color: #E91E63;
             margin-bottom: 10px;
-            font-size: 28px;
+            font-size: 2em;
         }
+
         .subtitle {
             color: #666;
             margin-bottom: 30px;
-            font-size: 14px;
         }
-        canvas {
-            border: 3px solid #e0e0e0;
-            border-radius: 15px;
-            margin: 15px;
-            display: block;
-            box-shadow: 0 4px 10px rgba(0,0,0,0.1);
-        }
+
         .preview-container {
+            display: flex;
+            gap: 20px;
+            justify-content: center;
+            margin: 30px 0;
+            flex-wrap: wrap;
+        }
+
+        .preview-item {
             text-align: center;
-            margin: 20px 0;
         }
-        .preview-container h3 {
+
+        .preview-item h3 {
             color: #333;
-            margin-bottom: 15px;
-            font-size: 18px;
+            margin-bottom: 10px;
+            font-size: 0.9em;
         }
+
+        canvas {
+            border: 3px solid #E91E63;
+            border-radius: 12px;
+            box-shadow: 0 4px 10px rgba(0, 0, 0, 0.1);
+        }
+
+        .button-group {
+            display: flex;
+            gap: 10px;
+            flex-wrap: wrap;
+            justify-content: center;
+            margin-top: 30px;
+        }
+
         button {
-            background: linear-gradient(135deg, #E91E63 0%, #26A69A 100%);
+            background: #E91E63;
             color: white;
             border: none;
             padding: 15px 30px;
-            border-radius: 50px;
+            border-radius: 10px;
+            font-size: 1em;
+            font-weight: bold;
             cursor: pointer;
-            font-size: 16px;
-            font-weight: 600;
-            margin: 10px 5px;
-            transition: transform 0.2s, box-shadow 0.2s;
-            box-shadow: 0 4px 15px rgba(233, 30, 99, 0.4);
+            transition: all 0.3s;
+            box-shadow: 0 4px 15px rgba(233, 30, 99, 0.3);
         }
+
         button:hover {
+            background: #C2185B;
             transform: translateY(-2px);
-            box-shadow: 0 6px 20px rgba(233, 30, 99, 0.5);
+            box-shadow: 0 6px 20px rgba(233, 30, 99, 0.4);
         }
+
         button:active {
             transform: translateY(0);
         }
-        .instructions {
-            background: #FCE4EC;
-            padding: 20px;
-            border-radius: 16px;
-            margin: 20px 0;
-            border-left: 4px solid #E91E63;
-        }
-        .instructions h3 {
-            color: #E91E63;
-            margin-bottom: 10px;
-            font-size: 16px;
-        }
-        .instructions ol {
-            margin-left: 20px;
-            color: #555;
-            line-height: 1.8;
-        }
-        .instructions code {
-            background: #FCE4EC;
-            padding: 2px 6px;
-            border-radius: 4px;
-            font-size: 13px;
-            color: #E91E63;
-            font-weight: 600;
-        }
-        .success {
-            background: #d4edda;
-            color: #155724;
+
+        .info {
+            background: #F4F7F6;
             padding: 15px;
             border-radius: 10px;
-            margin: 15px 0;
-            border-left: 4px solid #28a745;
-            display: none;
+            margin-top: 20px;
+            color: #666;
+            font-size: 0.9em;
+            line-height: 1.6;
         }
-        .success.show {
-            display: block;
+
+        .info strong {
+            color: #E91E63;
         }
     </style>
 </head>
 <body>
     <div class="container">
-        <h1>🎨 Gerador de Ícones PWA</h1>
-        <p class="subtitle">Gi Finanças - Gestão Financeira de Eventos</p>
-        
-        <div class="instructions">
-            <h3>📋 Instruções Rápidas:</h3>
-            <ol>
-                <li>Os ícones já foram gerados automaticamente abaixo</li>
-                <li>Clique em <strong>"💾 Baixar Todos os Ícones"</strong></li>
-                <li>Coloque os arquivos <code>icon-192.png</code> e <code>icon-512.png</code> na <strong>raiz do projeto</strong> (mesma pasta do index.html)</li>
-                <li>Recarregue a página da aplicação</li>
-            </ol>
-        </div>
+        <h1>👨‍🍳 Chef Finance</h1>
+        <p class="subtitle">Gerador de Ícones PWA</p>
 
         <div class="preview-container">
-            <h3>Preview dos Ícones:</h3>
-            <div id="preview"></div>
-        </div>
-        
-        <div style="text-align: center; margin-top: 20px;">
-            <button onclick="downloadAll()">💾 Baixar Todos os Ícones</button>
-        </div>
-
-        <div class="success" id="success-message">
-            ✅ Ícones baixados! Agora coloque-os na raiz do projeto e recarregue a aplicação.
+            <div class="preview-item">
+                <h3>192x192</h3>
+                <canvas id="icon192" width="192" height="192"></canvas>
+            </div>
+            <div class="preview-item">
+                <h3>512x512</h3>
+                <canvas id="icon512" width="512" height="512"></canvas>
+            </div>
         </div>
 
-        <canvas id="canvas192" width="192" height="192" style="display: none;"></canvas>
-        <canvas id="canvas512" width="512" height="512" style="display: none;"></canvas>
+        <div class="button-group">
+            <button onclick="downloadIcon('icon192', 'icon-192.png')">💾 Baixar 192x192</button>
+            <button onclick="downloadIcon('icon512', 'icon-512.png')">💾 Baixar 512x512</button>
+            <button onclick="downloadAll()">💾 Baixar Todos</button>
+        </div>
+
+        <div class="info">
+            <strong>📋 Instruções:</strong><br>
+            1. Visualize os ícones acima<br>
+            2. Clique em "Baixar Todos" para salvar ambos os ícones<br>
+            3. Coloque os arquivos <strong>icon-192.png</strong> e <strong>icon-512.png</strong> na raiz do projeto (mesma pasta do index.html)<br>
+            4. Recarregue a aplicação (F5)
+        </div>
     </div>
 
     <script>
-        function generateIcons() {
-            // Ícone 192x192
-            const canvas192 = document.getElementById('canvas192');
-            const ctx192 = canvas192.getContext('2d');
+        // Cores do tema Chef Finance
+        const colors = {
+            primary: '#E91E63',
+            secondary: '#F4F7F6',
+            accent: '#FF6B9D',
+            dark: '#C2185B',
+            white: '#FFFFFF',
+            gold: '#FFD700'
+        };
+
+        function createIcon(canvas, size) {
+            const ctx = canvas.getContext('2d');
+
+            // Fundo com gradiente radial
+            const gradient = ctx.createRadialGradient(
+                size * 0.3, size * 0.3, 0,
+                size * 0.5, size * 0.5, size * 0.8
+            );
+            gradient.addColorStop(0, colors.primary);
+            gradient.addColorStop(1, colors.dark);
             
-            // Fundo com gradiente
-            const gradient192 = ctx192.createLinearGradient(0, 0, 192, 192);
-            gradient192.addColorStop(0, '#667eea');
-            gradient192.addColorStop(1, '#764ba2');
-            ctx192.fillStyle = gradient192;
-            ctx192.fillRect(0, 0, 192, 192);
+            ctx.fillStyle = gradient;
+            ctx.fillRect(0, 0, size, size);
+
+            // Bordas arredondadas
+            ctx.globalCompositeOperation = 'destination-in';
+            ctx.beginPath();
+            const radius = size * 0.15;
+            roundRect(ctx, 0, 0, size, size, radius);
+            ctx.fill();
+            ctx.globalCompositeOperation = 'source-over';
+
+            const centerX = size / 2;
+            const centerY = size / 2;
             
-            // Texto "GF"
-            ctx192.fillStyle = 'white';
-            ctx192.font = 'bold 80px Arial';
-            ctx192.textAlign = 'center';
-            ctx192.textBaseline = 'middle';
-            ctx192.fillText('GF', 96, 96);
+            // Chapéu de chef (parte superior branca)
+            ctx.fillStyle = colors.white;
+            ctx.beginPath();
+            ctx.arc(centerX, centerY - size * 0.15, size * 0.25, 0, Math.PI * 2);
+            ctx.fill();
             
-            // Ícone 512x512
-            const canvas512 = document.getElementById('canvas512');
-            const ctx512 = canvas512.getContext('2d');
+            // Faixa do chapéu (rosa)
+            ctx.fillStyle = colors.accent;
+            ctx.fillRect(centerX - size * 0.2, centerY - size * 0.05, size * 0.4, size * 0.08);
             
-            const gradient512 = ctx512.createLinearGradient(0, 0, 512, 512);
-            gradient512.addColorStop(0, '#E91E63'); // Rosa Pink
-            gradient512.addColorStop(1, '#26A69A'); // Verde Água
-            ctx512.fillStyle = gradient512;
-            ctx512.fillRect(0, 0, 512, 512);
-            
-            ctx512.fillStyle = 'white';
-            ctx512.font = 'bold 200px Arial';
-            ctx512.textAlign = 'center';
-            ctx512.textBaseline = 'middle';
-            ctx512.fillText('GF', 256, 256);
-            
-            // Mostra preview
-            document.getElementById('preview').innerHTML = `
-                <div style="display: flex; justify-content: center; gap: 20px; flex-wrap: wrap;">
-                    <div>
-                        <p style="margin-bottom: 10px; color: #666; font-size: 14px;">192x192</p>
-                        <img src="${canvas192.toDataURL()}" alt="192x192" style="width: 192px; height: 192px; border: 3px solid #e0e0e0; border-radius: 15px; box-shadow: 0 4px 10px rgba(0,0,0,0.1);">
-                    </div>
-                    <div>
-                        <p style="margin-bottom: 10px; color: #666; font-size: 14px;">512x512</p>
-                        <img src="${canvas512.toDataURL()}" alt="512x512" style="width: 256px; height: 256px; border: 3px solid #e0e0e0; border-radius: 15px; box-shadow: 0 4px 10px rgba(0,0,0,0.1);">
-                    </div>
-                </div>
-            `;
+            // Símbolo de cifrão ($) dourado
+            ctx.fillStyle = colors.gold;
+            ctx.font = `bold ${size * 0.35}px Arial`;
+            ctx.textAlign = 'center';
+            ctx.textBaseline = 'middle';
+            ctx.fillText('$', centerX, centerY + size * 0.25);
         }
-        
-        function downloadCanvas(canvas, filename) {
+
+        function roundRect(ctx, x, y, width, height, radius) {
+            ctx.beginPath();
+            ctx.moveTo(x + radius, y);
+            ctx.lineTo(x + width - radius, y);
+            ctx.quadraticCurveTo(x + width, y, x + width, y + radius);
+            ctx.lineTo(x + width, y + height - radius);
+            ctx.quadraticCurveTo(x + width, y + height, x + width - radius, y + height);
+            ctx.lineTo(x + radius, y + height);
+            ctx.quadraticCurveTo(x, y + height, x, y + height - radius);
+            ctx.lineTo(x, y + radius);
+            ctx.quadraticCurveTo(x, y, x + radius, y);
+            ctx.closePath();
+        }
+
+        function downloadIcon(canvasId, filename) {
+            const canvas = document.getElementById(canvasId);
             const link = document.createElement('a');
             link.download = filename;
             link.href = canvas.toDataURL('image/png');
-            document.body.appendChild(link);
             link.click();
-            document.body.removeChild(link);
         }
-        
+
         function downloadAll() {
-            const canvas192 = document.getElementById('canvas192');
-            const canvas512 = document.getElementById('canvas512');
-            
-            if (canvas192.width === 0 || canvas512.width === 0) {
-                alert('Por favor, aguarde os ícones serem gerados...');
-                return;
-            }
-            
-            downloadCanvas(canvas192, 'icon-192.png');
+            downloadIcon('icon192', 'icon-192.png');
             setTimeout(() => {
-                downloadCanvas(canvas512, 'icon-512.png');
-                document.getElementById('success-message').classList.add('show');
-            }, 500);
+                downloadIcon('icon512', 'icon-512.png');
+            }, 300);
         }
-        
-        // Gera automaticamente ao carregar
+
+        // Gera os ícones ao carregar a página
         window.addEventListener('load', () => {
-            generateIcons();
+            createIcon(document.getElementById('icon192'), 192);
+            createIcon(document.getElementById('icon512'), 512);
         });
     </script>
 </body>

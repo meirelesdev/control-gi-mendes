@@ -18,7 +18,7 @@ npm-debug.log*
 *.tmp
 *.temp
 
-create-icons.html
-criar-icones.html
+# Gerador de ícones (opcional - pode ser útil manter no repositório)
+# criar-icones.html
 
 assets/
