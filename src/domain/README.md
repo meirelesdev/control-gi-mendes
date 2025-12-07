@@ -24,8 +24,10 @@ src/domain/
 Singleton que contém as configurações do sistema:
 
 - **rateKm**: Taxa por quilômetro rodado (padrão: 0.90)
-- **rateTravelTime**: Taxa por hora de viagem (padrão: 75.00)
 - **defaultReimbursementDays**: Dias padrão para reembolso (padrão: 21)
+- **maxHotelRate**: Teto de hospedagem (padrão: 280.00)
+- **standardDailyRate**: Diária técnica padrão (padrão: 300.00)
+- **overtimeRate**: Taxa de hora extra (padrão: 75.00)
 
 **Validações:**
 - Taxas não podem ser negativas
@@ -33,10 +35,9 @@ Singleton que contém as configurações do sistema:
 - Dias de reembolso devem estar entre 1 e 365
 
 **Métodos principais:**
-- `calculateKmValue(distance)` - Calcula valor de KM
-- `calculateTravelTimeValue(hours)` - Calcula valor de tempo de viagem
+- `calculateKmValue(distance)` - Calcula valor de KM rodado
 - `calculateExpectedReimbursementDate(eventDate)` - Calcula data esperada de reembolso
-- `update(rateKm, rateTravelTime, defaultReimbursementDays)` - Atualiza configurações
+- `update(rateKm, defaultReimbursementDays, maxHotelRate, standardDailyRate, overtimeRate)` - Atualiza configurações
 
 ### Event
 
@@ -174,19 +175,6 @@ const kmIncome = Transaction.createKmIncome(
   'Deslocamento até o evento',
   150, // km rodados
   settings.rateKm,
-  true // é reembolso
-);
-```
-
-### Criar uma Receita de Tempo de Viagem (INCOME - Reembolso)
-
-```javascript
-const settings = Settings.createDefault();
-const travelIncome = Transaction.createTravelTimeIncome(
-  event.id,
-  'Tempo de deslocamento',
-  3.5, // horas
-  settings.rateTravelTime,
   true // é reembolso
 );
 ```

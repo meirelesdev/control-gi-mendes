@@ -16,7 +16,6 @@ class UpdateSettings {
    * Executa o caso de uso
    * @param {Object} input - Dados de entrada
    * @param {number} [input.rateKm] - Nova taxa por KM
-   * @param {number} [input.rateTravelTime] - Nova taxa por hora de viagem
    * @param {number} [input.defaultReimbursementDays] - Novos dias padrão para reembolso
    * @param {number} [input.maxHotelRate] - Novo teto de hospedagem
    * @param {number} [input.standardDailyRate] - Nova diária técnica padrão
@@ -37,7 +36,6 @@ class UpdateSettings {
       // Atualiza apenas os campos informados
       settings.update(
         input.rateKm,
-        input.rateTravelTime,
         input.defaultReimbursementDays,
         input.maxHotelRate,
         input.standardDailyRate,
@@ -70,7 +68,6 @@ class UpdateSettings {
 
     // Verifica se pelo menos um campo foi informado
     if (input.rateKm === undefined && 
-        input.rateTravelTime === undefined && 
         input.defaultReimbursementDays === undefined &&
         input.maxHotelRate === undefined &&
         input.standardDailyRate === undefined &&

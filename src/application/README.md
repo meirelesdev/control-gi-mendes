@@ -244,8 +244,10 @@ Atualiza os valores padrão do sistema (taxas e dias de reembolso).
 ```javascript
 {
   rateKm?: number,                    // Nova taxa por KM
-  rateTravelTime?: number,            // Nova taxa por hora de viagem
-  defaultReimbursementDays?: number   // Novos dias padrão para reembolso
+  defaultReimbursementDays?: number,  // Novos dias padrão para reembolso
+  maxHotelRate?: number,              // Novo teto de hospedagem
+  standardDailyRate?: number,         // Nova diária técnica padrão
+  overtimeRate?: number               // Nova taxa de hora extra
 }
 // Pelo menos um campo deve ser informado
 ```
@@ -271,7 +273,7 @@ await updateSettings.execute({
 // Atualizar múltiplos campos
 await updateSettings.execute({
   rateKm: 1.00,
-  rateTravelTime: 80.00,
+  overtimeRate: 80.00,
   defaultReimbursementDays: 30
 });
 ```

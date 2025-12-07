@@ -19,7 +19,6 @@ class LocalStorageSettingsRepository extends SettingsRepository {
     try {
       const data = {
         rateKm: settings.rateKm,
-        rateTravelTime: settings.rateTravelTime,
         defaultReimbursementDays: settings.defaultReimbursementDays,
         maxHotelRate: settings.maxHotelRate,
         standardDailyRate: settings.standardDailyRate,

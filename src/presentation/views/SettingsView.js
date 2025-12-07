@@ -41,14 +41,7 @@ class SettingsView {
               <label class="form-label">Preço por KM (R$)</label>
               <input type="number" class="form-input" id="settings-rate-km" 
                      step="0.01" min="0" value="${settings.rateKm}" required>
-              <small class="text-muted">Valor usado para calcular receitas de KM rodado</small>
-            </div>
-
-            <div class="form-group">
-              <label class="form-label">Preço por Hora de Viagem (R$)</label>
-              <input type="number" class="form-input" id="settings-rate-travel-time" 
-                     step="0.01" min="0" value="${settings.rateTravelTime}" required>
-              <small class="text-muted">Valor usado para calcular receitas de tempo de viagem</small>
+              <small class="text-muted">Valor usado para calcular KM rodado (combustível)</small>
             </div>
 
             <div class="form-group">
@@ -76,7 +69,7 @@ class SettingsView {
               <label class="form-label">Taxa de Hora Extra (R$)</label>
               <input type="number" class="form-input" id="settings-overtime-rate" 
                      step="0.01" min="0" value="${settings.overtimeRate || DEFAULT_VALUES.OVERTIME_RATE}" required>
-              <small class="text-muted">Valor por hora extra trabalhada</small>
+              <small class="text-muted">Valor por hora extra (trabalho adicional e tempo de viagem)</small>
             </div>
 
             <div class="modal-footer" style="margin-top: var(--spacing-xl);">
@@ -149,7 +142,6 @@ class SettingsView {
 
   async saveSettings() {
     const rateKm = parseFloat(document.getElementById('settings-rate-km').value);
-    const rateTravelTime = parseFloat(document.getElementById('settings-rate-travel-time').value);
     const defaultReimbursementDays = parseInt(document.getElementById('settings-reimbursement-days').value);
     const maxHotelRate = parseFloat(document.getElementById('settings-max-hotel-rate').value);
     const standardDailyRate = parseFloat(document.getElementById('settings-standard-daily-rate').value);
@@ -157,7 +149,6 @@ class SettingsView {
 
     const result = await this.updateSettingsUseCase.execute({
       rateKm,
-      rateTravelTime,
       defaultReimbursementDays,
       maxHotelRate,
       standardDailyRate,

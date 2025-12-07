@@ -5,16 +5,14 @@
 import { DEFAULT_VALUES } from '../constants/DefaultValues.js';
 
 class Settings {
-  constructor(rateKm = DEFAULT_VALUES.KM_RATE, rateTravelTime = DEFAULT_VALUES.TRAVEL_TIME_RATE, defaultReimbursementDays = DEFAULT_VALUES.DEFAULT_REIMBURSEMENT_DAYS, maxHotelRate = DEFAULT_VALUES.MAX_HOTEL_RATE, standardDailyRate = DEFAULT_VALUES.DAILY_RATE, overtimeRate = DEFAULT_VALUES.OVERTIME_RATE) {
+  constructor(rateKm = DEFAULT_VALUES.KM_RATE, defaultReimbursementDays = DEFAULT_VALUES.DEFAULT_REIMBURSEMENT_DAYS, maxHotelRate = DEFAULT_VALUES.MAX_HOTEL_RATE, standardDailyRate = DEFAULT_VALUES.DAILY_RATE, overtimeRate = DEFAULT_VALUES.OVERTIME_RATE) {
     this._validateRateKm(rateKm);
-    this._validateRateTravelTime(rateTravelTime);
     this._validateDefaultReimbursementDays(defaultReimbursementDays);
     this._validateMaxHotelRate(maxHotelRate);
     this._validateStandardDailyRate(standardDailyRate);
     this._validateOvertimeRate(overtimeRate);
 
     this.rateKm = rateKm;
-    this.rateTravelTime = rateTravelTime;
     this.defaultReimbursementDays = defaultReimbursementDays;
     this.maxHotelRate = maxHotelRate;
     this.standardDailyRate = standardDailyRate;
@@ -38,25 +36,6 @@ class Settings {
     }
     if (rateKm > 1000) {
       throw new Error('Taxa por KM não pode ser superior a R$ 1.000,00');
-    }
-  }
-
-  /**
-   * Valida o preço por hora de viagem
-   * @private
-   */
-  _validateRateTravelTime(rateTravelTime) {
-    if (rateTravelTime === null || rateTravelTime === undefined) {
-      throw new Error('Taxa por hora de viagem é obrigatória');
-    }
-    if (typeof rateTravelTime !== 'number' || isNaN(rateTravelTime)) {
-      throw new Error('Taxa por hora de viagem deve ser um número');
-    }
-    if (rateTravelTime < 0) {
-      throw new Error('Taxa por hora de viagem não pode ser negativa');
-    }
-    if (rateTravelTime > 10000) {
-      throw new Error('Taxa por hora de viagem não pode ser superior a R$ 10.000,00');
     }
   }
 
@@ -139,14 +118,10 @@ class Settings {
   /**
    * Atualiza as configurações
    */
-  update(rateKm, rateTravelTime, defaultReimbursementDays, maxHotelRate, standardDailyRate, overtimeRate) {
+  update(rateKm, defaultReimbursementDays, maxHotelRate, standardDailyRate, overtimeRate) {
     if (rateKm !== undefined && rateKm !== null) {
       this._validateRateKm(rateKm);
       this.rateKm = rateKm;
-    }
-    if (rateTravelTime !== undefined && rateTravelTime !== null) {
-      this._validateRateTravelTime(rateTravelTime);
-      this.rateTravelTime = rateTravelTime;
     }
     if (defaultReimbursementDays !== undefined && defaultReimbursementDays !== null) {
       this._validateDefaultReimbursementDays(defaultReimbursementDays);
@@ -178,16 +153,6 @@ class Settings {
   }
 
   /**
-   * Calcula o valor de tempo de viagem
-   */
-  calculateTravelTimeValue(hours) {
-    if (!hours || hours < 0) {
-      throw new Error('Horas de viagem deve ser um número positivo');
-    }
-    return hours * this.rateTravelTime;
-  }
-
-  /**
    * Calcula a data esperada de reembolso baseada na data do evento
    */
   calculateExpectedReimbursementDate(eventDate) {
@@ -205,17 +170,15 @@ class Settings {
   /**
    * Cria uma instância padrão
    * Valores conforme contrato de prestação de serviços:
-   * - rateKm: R$ 0,90 por KM
-   * - rateTravelTime: R$ 75,00 por hora (Tempo de Viagem)
+   * - rateKm: R$ 0,90 por KM (combustível)
    * - defaultReimbursementDays: 21 dias após NF
    * - maxHotelRate: R$ 280,00 teto para hospedagem
    * - standardDailyRate: R$ 300,00 diária técnica padrão
-   * - overtimeRate: R$ 75,00 por hora extra
+   * - overtimeRate: R$ 75,00 por hora extra (trabalho + tempo de viagem)
    */
   static createDefault() {
     return new Settings(
       DEFAULT_VALUES.KM_RATE,
-      DEFAULT_VALUES.TRAVEL_TIME_RATE,
       DEFAULT_VALUES.DEFAULT_REIMBURSEMENT_DAYS,
       DEFAULT_VALUES.MAX_HOTEL_RATE,
       DEFAULT_VALUES.DAILY_RATE,
@@ -226,6 +189,7 @@ class Settings {
   /**
    * Restaura uma instância a partir de dados serializados
    * Usa valores padrão para campos que não existirem nos dados antigos
+   * NOTA: rateTravelTime foi removido (use overtimeRate para hora extra/tempo de viagem)
    */
   static restore(data) {
     if (!data) {
@@ -233,7 +197,6 @@ class Settings {
     }
     return new Settings(
       data.rateKm !== undefined ? data.rateKm : DEFAULT_VALUES.KM_RATE,
-      data.rateTravelTime !== undefined ? data.rateTravelTime : DEFAULT_VALUES.TRAVEL_TIME_RATE,
       data.defaultReimbursementDays !== undefined ? data.defaultReimbursementDays : DEFAULT_VALUES.DEFAULT_REIMBURSEMENT_DAYS,
       data.maxHotelRate !== undefined ? data.maxHotelRate : DEFAULT_VALUES.MAX_HOTEL_RATE,
       data.standardDailyRate !== undefined ? data.standardDailyRate : DEFAULT_VALUES.DAILY_RATE,

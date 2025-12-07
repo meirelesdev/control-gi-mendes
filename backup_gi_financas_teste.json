@@ -389,7 +389,6 @@
   ],
   "settings": {
     "rateKm": 0.90,
-    "rateTravelTime": 75.00,
     "defaultReimbursementDays": 21,
     "maxHotelRate": 280.00,
     "standardDailyRate": 300.00,

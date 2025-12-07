@@ -97,8 +97,10 @@ Implementa `TransactionRepository` usando `localStorage`.
 ```json
 {
   "rateKm": 0.90,
-  "rateTravelTime": 75.00,
   "defaultReimbursementDays": 21,
+  "maxHotelRate": 280.00,
+  "standardDailyRate": 300.00,
+  "overtimeRate": 75.00,
   "updatedAt": "2024-01-01T00:00:00.000Z"
 }
 ```
