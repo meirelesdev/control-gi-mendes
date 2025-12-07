@@ -49,9 +49,30 @@ class LocalStorageSettingsRepository extends SettingsRepository {
       // Restaura instância de Settings usando o método restore
       return Settings.restore(parsed);
     } catch (error) {
-      // Se houver erro ao ler, retorna null
-      console.error('Erro ao ler configurações do localStorage:', error);
-      return null;
+      // Se for erro de sintaxe JSON (dados corrompidos), faz backup e retorna null
+      if (error instanceof SyntaxError) {
+        const backupKey = `${this.storageKey}_corrupted_bkp_${Date.now()}`;
+        try {
+          const corruptedData = window.localStorage.getItem(this.storageKey);
+          window.localStorage.setItem(backupKey, corruptedData);
+          window.localStorage.removeItem(this.storageKey);
+          console.error('⚠️ DADOS CORROMPIDOS DETECTADOS:', {
+            storageKey: this.storageKey,
+            backupKey: backupKey,
+            error: error.message,
+            message: 'As configurações foram movidas para backup. O sistema usará valores padrão.'
+          });
+          // Notifica o usuário via console (em produção, poderia usar toast)
+          if (window.toast) {
+            window.toast.warning('Configurações corrompidas detectadas. Backup criado. Usando valores padrão.');
+          }
+        } catch (backupError) {
+          console.error('Erro ao criar backup de dados corrompidos:', backupError);
+        }
+        return null;
+      }
+      // Para outros erros, lança exceção
+      throw new Error(`Erro ao ler configurações do localStorage: ${error.message}`);
     }
   }
 

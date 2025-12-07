@@ -59,7 +59,10 @@ class DashboardView {
         e.status !== 'PAID' // Exclui eventos pagos do resumo financeiro
       );
       
-      if (this.getEventSummaryUseCase) {
+      // Depende EXCLUSIVAMENTE do Use Case GetEventSummary (lógica de negócio centralizada)
+      if (!this.getEventSummaryUseCase) {
+        console.error('GetEventSummaryUseCase não está disponível. Resumo financeiro não será calculado.');
+      } else {
         // Usa GetEventSummary para cada evento (lógica de negócio centralizada)
         for (const event of eventsForCalculation) {
           const summaryResult = await this.getEventSummaryUseCase.execute({ eventId: event.id });
@@ -69,32 +72,6 @@ class DashboardView {
             totalNetProfit += summary.totals.netProfit;
             totalReimbursements += summary.totals.reimbursementValue;
           }
-        }
-      } else {
-        // Fallback: cálculo manual se GetEventSummary não estiver disponível
-        for (const event of eventsForCalculation) {
-          const transactions = await this.transactionRepository.findByEventId(event.id);
-          const expenses = transactions.filter(t => t.type === 'EXPENSE');
-          const incomes = transactions.filter(t => t.type === 'INCOME');
-          const fees = incomes.filter(t => 
-            (t.metadata.category === 'diaria' || t.metadata.category === 'hora_extra') &&
-            t.metadata.isReimbursement !== true
-          );
-          const reimbursements = incomes.filter(t => 
-            t.metadata.category === 'km' || 
-            t.metadata.category === 'tempo_viagem' ||
-            t.metadata.isReimbursement === true
-          );
-          const kmTransactions = reimbursements.filter(r => r.metadata.category === 'km');
-          const travelTimeTransactions = reimbursements.filter(r => r.metadata.category === 'tempo_viagem');
-          const eventExpenses = expenses.reduce((sum, e) => sum + e.amount, 0);
-          const eventKmCost = kmTransactions.reduce((sum, k) => sum + k.amount, 0);
-          const eventTravelTimeCost = travelTimeTransactions.reduce((sum, t) => sum + t.amount, 0);
-          const eventFees = fees.reduce((sum, f) => sum + f.amount, 0);
-          totalUpfrontCost += eventExpenses + eventKmCost;
-          totalNetProfit += eventFees;
-          const eventReimbursementValue = eventExpenses + eventKmCost + eventTravelTimeCost;
-          totalReimbursements += eventReimbursementValue;
         }
       }
       

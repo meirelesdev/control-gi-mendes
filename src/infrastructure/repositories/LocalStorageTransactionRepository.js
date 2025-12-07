@@ -250,8 +250,30 @@ class LocalStorageTransactionRepository extends TransactionRepository {
       }
       return JSON.parse(data);
     } catch (error) {
-      console.error('Erro ao ler transações do localStorage:', error);
-      return [];
+      // Se for erro de sintaxe JSON (dados corrompidos), faz backup e retorna vazio
+      if (error instanceof SyntaxError) {
+        const backupKey = `${this.storageKey}_corrupted_bkp_${Date.now()}`;
+        try {
+          const corruptedData = window.localStorage.getItem(this.storageKey);
+          window.localStorage.setItem(backupKey, corruptedData);
+          window.localStorage.removeItem(this.storageKey);
+          console.error('⚠️ DADOS CORROMPIDOS DETECTADOS:', {
+            storageKey: this.storageKey,
+            backupKey: backupKey,
+            error: error.message,
+            message: 'Os dados foram movidos para backup. O sistema iniciará com dados vazios.'
+          });
+          // Notifica o usuário via console (em produção, poderia usar toast)
+          if (window.toast) {
+            window.toast.error('Dados corrompidos detectados. Backup criado. Sistema iniciado com dados vazios.');
+          }
+        } catch (backupError) {
+          console.error('Erro ao criar backup de dados corrompidos:', backupError);
+        }
+        return [];
+      }
+      // Para outros erros, lança exceção
+      throw new Error(`Erro ao ler transações do localStorage: ${error.message}`);
     }
   }
 }

@@ -5,6 +5,9 @@
 import { ReportView } from './ReportView.js';
 import { Formatters } from '../utils/Formatters.js';
 import { DEFAULT_VALUES } from '../../domain/constants/DefaultValues.js';
+import { ExpenseModal } from '../components/modals/ExpenseModal.js';
+import { FeeModal } from '../components/modals/FeeModal.js';
+import { KmTravelModal } from '../components/modals/KmTravelModal.js';
 
 class EventDetailView {
   constructor(eventRepository, transactionRepository, settingsRepository, addTransactionUseCase, deleteTransactionUseCase = null, generateEventReportUseCase = null, updateEventStatusUseCase = null, updateEventUseCase = null, updateTransactionUseCase = null, deleteEventUseCase = null, getEventSummaryUseCase = null) {
@@ -31,60 +34,32 @@ class EventDetailView {
     container.innerHTML = '<div class="loading">Carregando...</div>';
 
     try {
-      // Usa GetEventSummary para obter todos os dados calculados (lógica de negócio no Use Case)
-      let event, summary;
-      if (this.getEventSummaryUseCase) {
-        const summaryResult = await this.getEventSummaryUseCase.execute({ eventId });
-        if (!summaryResult.success) {
-          container.innerHTML = `<div class="empty-state"><p>Erro ao carregar evento: ${summaryResult.error}</p></div>`;
-          return;
-        }
-        summary = summaryResult.data;
-        event = summary.event;
-      } else {
-        // Fallback: busca manualmente se GetEventSummary não estiver disponível
-        event = await this.eventRepository.findById(eventId);
-        if (!event) {
-          container.innerHTML = '<div class="empty-state"><p>Evento não encontrado.</p></div>';
-          return;
-        }
-        // Calcula manualmente (compatibilidade com código antigo)
-        const transactions = await this.transactionRepository.findByEventId(eventId);
-        const expenses = transactions.filter(t => t.type === 'EXPENSE');
-        const incomes = transactions.filter(t => t.type === 'INCOME');
-        const reimbursements = incomes.filter(i => 
-          i.metadata.category === 'km' || i.metadata.category === 'tempo_viagem'
-        );
-        const fees = incomes.filter(i => 
-          i.metadata.category === 'diaria' || i.metadata.category === 'hora_extra'
-        );
-        const kmTransactions = reimbursements.filter(r => r.metadata.category === 'km');
-        const totalExpenses = expenses.reduce((sum, e) => sum + e.amount, 0);
-        const totalKmCost = kmTransactions.reduce((sum, k) => sum + k.amount, 0);
-        summary = {
-          event: event,
-          totals: {
-            upfrontCost: totalExpenses + totalKmCost,
-            reimbursementValue: totalExpenses + totalKmCost,
-            netProfit: fees.reduce((sum, f) => sum + f.amount, 0),
-            totalToReceive: 0,
-            totalExpenses: totalExpenses,
-            totalKmCost: totalKmCost,
-            totalTravelTimeCost: 0,
-            totalReimbursements: reimbursements.reduce((sum, r) => sum + r.amount, 0),
-            totalFees: fees.reduce((sum, f) => sum + f.amount, 0),
-            totalIncomes: incomes.reduce((sum, i) => sum + i.amount, 0)
-          },
-          transactions: {
-            expenses: expenses,
-            reimbursements: reimbursements,
-            fees: fees,
-            kmTransactions: kmTransactions,
-            travelTimeTransactions: []
-          }
-        };
-        summary.totals.totalToReceive = summary.totals.reimbursementValue + summary.totals.netProfit;
+      // Depende EXCLUSIVAMENTE do Use Case GetEventSummary (lógica de negócio centralizada)
+      if (!this.getEventSummaryUseCase) {
+        container.innerHTML = `
+          <div class="card" style="border-left-color: var(--color-danger);">
+            <h2 style="color: var(--color-danger);">Erro de Configuração</h2>
+            <p>GetEventSummaryUseCase não está disponível. Não é possível exibir os detalhes do evento.</p>
+            <p class="text-muted">Por favor, recarregue a página ou entre em contato com o suporte.</p>
+          </div>
+        `;
+        return;
       }
+
+      // Usa GetEventSummary para obter todos os dados calculados (lógica de negócio no Use Case)
+      const summaryResult = await this.getEventSummaryUseCase.execute({ eventId });
+      if (!summaryResult.success) {
+        container.innerHTML = `
+          <div class="card" style="border-left-color: var(--color-danger);">
+            <h2 style="color: var(--color-danger);">Erro ao Carregar Evento</h2>
+            <p>${summaryResult.error || 'Erro desconhecido ao carregar os dados do evento.'}</p>
+          </div>
+        `;
+        return;
+      }
+
+      const summary = summaryResult.data;
+      const event = summary.event;
 
       // Extrai dados do summary para facilitar uso no template
       const { upfrontCost, reimbursementValue, netProfit, totalToReceive, totalExpenses, totalReimbursements, totalFees } = summary.totals;
@@ -350,25 +325,49 @@ class EventDetailView {
 
       // Event listeners (apenas se o evento não estiver finalizado)
       if (event.status !== 'PAID') {
+        // Handler comum para recarregar a view após sucesso
+        const reloadView = async () => {
+          await this.render(this.currentEventId);
+        };
+
         // Botões da seção "Ações Rápidas"
         const btnAddExpense = document.getElementById('btn-add-expense');
         if (btnAddExpense) {
           btnAddExpense.addEventListener('click', () => {
-            this.showAddExpenseModal();
+            const modal = new ExpenseModal(
+              this.addTransactionUseCase,
+              this.eventRepository,
+              this.currentEventId,
+              reloadView
+            );
+            modal.show();
           });
         }
 
         const btnAddFee = document.getElementById('btn-add-fee');
         if (btnAddFee) {
           btnAddFee.addEventListener('click', () => {
-            this.showAddFeeModal();
+            const modal = new FeeModal(
+              this.addTransactionUseCase,
+              this.eventRepository,
+              this.settingsRepository,
+              this.currentEventId,
+              reloadView
+            );
+            modal.show();
           });
         }
 
         const btnAddKmTravel = document.getElementById('btn-add-km-travel');
         if (btnAddKmTravel) {
           btnAddKmTravel.addEventListener('click', () => {
-            this.showAddKmTravelModal();
+            const modal = new KmTravelModal(
+              this.addTransactionUseCase,
+              this.eventRepository,
+              this.currentEventId,
+              reloadView
+            );
+            modal.show();
           });
         }
 
@@ -376,21 +375,40 @@ class EventDetailView {
         const btnAddExpenseHeader = document.getElementById('btn-add-expense-header');
         if (btnAddExpenseHeader) {
           btnAddExpenseHeader.addEventListener('click', () => {
-            this.showAddExpenseModal();
+            const modal = new ExpenseModal(
+              this.addTransactionUseCase,
+              this.eventRepository,
+              this.currentEventId,
+              reloadView
+            );
+            modal.show();
           });
         }
 
         const btnAddFeeHeader = document.getElementById('btn-add-fee-header');
         if (btnAddFeeHeader) {
           btnAddFeeHeader.addEventListener('click', () => {
-            this.showAddFeeModal();
+            const modal = new FeeModal(
+              this.addTransactionUseCase,
+              this.eventRepository,
+              this.settingsRepository,
+              this.currentEventId,
+              reloadView
+            );
+            modal.show();
           });
         }
 
         const btnAddKmTravelHeader = document.getElementById('btn-add-km-travel-header');
         if (btnAddKmTravelHeader) {
           btnAddKmTravelHeader.addEventListener('click', () => {
-            this.showAddKmTravelModal();
+            const modal = new KmTravelModal(
+              this.addTransactionUseCase,
+              this.eventRepository,
+              this.currentEventId,
+              reloadView
+            );
+            modal.show();
           });
         }
       }
@@ -662,508 +680,7 @@ class EventDetailView {
     `;
   }
 
-  async showAddExpenseModal() {
-    // Valida se o evento não está finalizado
-    if (this.currentEventId) {
-      const event = await this.eventRepository.findById(this.currentEventId);
-      if (event && event.status === 'PAID') {
-        window.toast?.error('Não é possível adicionar transações em eventos finalizados/pagos.');
-        return;
-      }
-    }
-
-    const modal = this.createModal('Adicionar Insumo', `
-      <form id="form-add-expense">
-        <div class="form-group">
-          <label class="form-label">Descrição</label>
-          <input type="text" class="form-input" id="expense-description" 
-                 placeholder="Ex: Compra de ingredientes" required>
-        </div>
-        <div class="form-group">
-          <label class="form-label">Valor (R$)</label>
-          <input type="number" class="form-input" id="expense-amount" 
-                 step="0.01" min="0.01" placeholder="0,00" required>
-        </div>
-        <div class="form-group">
-          <label style="display: flex; align-items: center; gap: var(--spacing-sm);">
-            <input type="checkbox" id="expense-has-receipt">
-            <span>Nota fiscal já emitida/arquivada</span>
-          </label>
-        </div>
-        <div class="modal-footer">
-          <button type="button" class="btn btn-secondary" onclick="this.closest('.modal-backdrop').remove()">
-            Cancelar
-          </button>
-          <button type="submit" class="btn btn-primary">Salvar</button>
-        </div>
-      </form>
-    `);
-
-    document.body.appendChild(modal);
-    modal.classList.add('active');
-    this._addModalOpenClass();
-
-    document.getElementById('form-add-expense').addEventListener('submit', async (e) => {
-      e.preventDefault();
-      const result = await this.saveExpense();
-      // Só remove o modal se saveExpense retornou sucesso (sem erro)
-      if (result !== false) {
-        this._removeModalOpenClass();
-        modal.remove();
-      }
-    });
-  }
-
-  async showAddFeeModal() {
-    // Valida se o evento não está finalizado
-    if (this.currentEventId) {
-      const event = await this.eventRepository.findById(this.currentEventId);
-      if (event && event.status === 'PAID') {
-        window.toast?.error('Não é possível adicionar transações em eventos finalizados/pagos.');
-        return;
-      }
-    }
-
-    // Busca valores das configurações antes de criar o modal
-    let dailyRate = DEFAULT_VALUES.DAILY_RATE;
-    let overtimeRate = DEFAULT_VALUES.OVERTIME_RATE;
-    try {
-      const settings = await this.settingsRepository.find();
-      if (settings) {
-        dailyRate = settings.standardDailyRate || DEFAULT_VALUES.DAILY_RATE;
-        overtimeRate = settings.overtimeRate || DEFAULT_VALUES.OVERTIME_RATE;
-      }
-    } catch (error) {
-      // Usa valores padrão em caso de erro
-    }
-
-    const modal = this.createModal('Adicionar Honorário', `
-      <form id="form-add-fee">
-        <div class="form-group">
-          <label class="form-label">Tipo de Honorário</label>
-          <div style="display: flex; flex-direction: column; gap: var(--spacing-sm); margin-top: var(--spacing-xs);">
-            <label style="display: flex; align-items: center; gap: var(--spacing-sm); cursor: pointer; padding: var(--spacing-sm); border: 1px solid var(--color-border); border-radius: var(--radius-md);">
-              <input type="radio" name="fee-type" value="diaria" id="fee-type-diaria" checked style="cursor: pointer;">
-              <div style="flex: 1;">
-                <strong>Diária Adicional</strong>
-                <div class="text-muted" style="font-size: 0.9em;" id="diaria-value">Valor: ${this.formatCurrency(dailyRate)}</div>
-              </div>
-            </label>
-            <label style="display: flex; align-items: center; gap: var(--spacing-sm); cursor: pointer; padding: var(--spacing-sm); border: 1px solid var(--color-border); border-radius: var(--radius-md);">
-              <input type="radio" name="fee-type" value="hora_extra" id="fee-type-hora" style="cursor: pointer;">
-              <div style="flex: 1;">
-                <strong>Hora Extra</strong>
-                <div class="text-muted" style="font-size: 0.9em;" id="hora-extra-info">Taxa: ${this.formatCurrency(overtimeRate)} por hora</div>
-              </div>
-            </label>
-          </div>
-        </div>
-        <div class="form-group" id="hours-group" style="display: none;">
-          <label class="form-label">Quantidade de Horas</label>
-          <input type="number" class="form-input" id="fee-hours" 
-                 step="0.5" min="0.5" placeholder="0" value="1">
-          <small class="text-muted" id="hours-total" style="display: block; margin-top: var(--spacing-xs);">Total: R$ 0,00</small>
-        </div>
-        <div class="form-group">
-          <label class="form-label">Descrição</label>
-          <input type="text" class="form-input" id="fee-description" 
-                 placeholder="Ex: Diária técnica padrão" required>
-        </div>
-        <div class="modal-footer">
-          <button type="button" class="btn btn-secondary" onclick="this.closest('.modal-backdrop').remove()">
-            Cancelar
-          </button>
-          <button type="submit" class="btn btn-success">Salvar</button>
-        </div>
-      </form>
-    `);
-
-    document.body.appendChild(modal);
-    modal.classList.add('active');
-
-    // Carrega valores das configurações
-    this._loadFeeSettings(modal);
-
-    // Mostra/esconde campos baseado no tipo
-    const feeTypeInputs = modal.querySelectorAll('input[name="fee-type"]');
-    feeTypeInputs.forEach(input => {
-      input.addEventListener('change', () => {
-        const type = input.value;
-        const hoursGroup = modal.querySelector('#hours-group');
-        if (type === 'hora_extra') {
-          hoursGroup.style.display = 'block';
-          modal.querySelector('#fee-hours').required = true;
-          this._updateHoursTotal(modal);
-        } else {
-          hoursGroup.style.display = 'none';
-          modal.querySelector('#fee-hours').required = false;
-        }
-      });
-    });
-
-    // Atualiza total quando horas mudam
-    const hoursInput = modal.querySelector('#fee-hours');
-    if (hoursInput) {
-      hoursInput.addEventListener('input', () => {
-        this._updateHoursTotal(modal);
-      });
-    }
-
-    document.getElementById('form-add-fee').addEventListener('submit', async (e) => {
-      e.preventDefault();
-      const result = await this.saveFee(modal);
-      if (result !== false) {
-        this._removeModalOpenClass();
-        modal.remove();
-      }
-    });
-  }
-
-  async _loadFeeSettings(modal) {
-    try {
-      const settings = await this.settingsRepository.find();
-      if (settings) {
-        const diariaValue = modal.querySelector('#diaria-value');
-        const horaExtraInfo = modal.querySelector('#hora-extra-info');
-        if (diariaValue) {
-          diariaValue.textContent = `Valor: ${this.formatCurrency(settings.standardDailyRate || DEFAULT_VALUES.DAILY_RATE)}`;
-        }
-        if (horaExtraInfo) {
-          horaExtraInfo.textContent = `Taxa: ${this.formatCurrency(settings.overtimeRate || DEFAULT_VALUES.OVERTIME_RATE)} por hora`;
-        }
-        // Armazena valores no modal para uso posterior
-        modal.dataset.dailyRate = settings.standardDailyRate || DEFAULT_VALUES.DAILY_RATE;
-        modal.dataset.overtimeRate = settings.overtimeRate || DEFAULT_VALUES.OVERTIME_RATE;
-      }
-    } catch (error) {
-      // Usa valores padrão em caso de erro
-    }
-  }
-
-  _updateHoursTotal(modal) {
-    const hoursInput = modal.querySelector('#fee-hours');
-    const hoursTotal = modal.querySelector('#hours-total');
-    const overtimeRate = parseFloat(modal.dataset.overtimeRate || 75.00);
-    
-    if (hoursInput && hoursTotal) {
-      const hours = parseFloat(hoursInput.value) || 0;
-      const total = hours * overtimeRate;
-      hoursTotal.textContent = `Total: ${this.formatCurrency(total)}`;
-    }
-  }
-
-  async saveFee(modal) {
-    try {
-      const feeType = modal.querySelector('input[name="fee-type"]:checked').value;
-      const description = modal.querySelector('#fee-description').value.trim();
-      
-      if (!description) {
-        window.toast?.error('Descrição é obrigatória');
-        return false;
-      }
-
-      let amount;
-      let category;
-
-      if (feeType === 'diaria') {
-        const dailyRate = parseFloat(modal.dataset.dailyRate || DEFAULT_VALUES.DAILY_RATE);
-        amount = dailyRate;
-        category = 'diaria';
-      } else if (feeType === 'hora_extra') {
-        const hours = parseFloat(modal.querySelector('#fee-hours').value);
-        if (!hours || hours <= 0) {
-          window.toast?.error('Quantidade de horas deve ser maior que zero');
-          return false;
-        }
-        const overtimeRate = parseFloat(modal.dataset.overtimeRate || DEFAULT_VALUES.OVERTIME_RATE);
-        amount = hours * overtimeRate;
-        category = 'hora_extra';
-      } else {
-        window.toast?.error('Tipo de honorário inválido');
-        return false;
-      }
-
-      const result = await this.addTransactionUseCase.execute({
-        eventId: this.currentEventId,
-        type: 'INCOME',
-        description,
-        amount,
-        category,
-        isReimbursement: false
-      });
-
-      if (result && result.success) {
-        if (window.toast && typeof window.toast.success === 'function') {
-          window.toast.success('Honorário adicionado com sucesso!');
-        }
-        await this.render(this.currentEventId);
-        return true;
-      } else {
-        const errorMsg = (result && result.error) || 'Erro desconhecido ao adicionar honorário';
-        console.error('Erro ao adicionar honorário:', errorMsg);
-        if (window.toast && typeof window.toast.error === 'function') {
-          window.toast.error(errorMsg);
-        }
-        return false;
-      }
-    } catch (error) {
-      const errorMsg = `Erro ao adicionar honorário: ${error?.message || 'Erro desconhecido'}`;
-      console.error('Erro em saveFee:', error);
-      if (window.toast && typeof window.toast.error === 'function') {
-        window.toast.error(errorMsg);
-      }
-      return false;
-    }
-  }
-
-  showAddKmTravelModal() {
-    const modal = this.createModal('Adicionar Deslocamento', `
-      <form id="form-add-km-travel">
-        <div class="form-group">
-          <label class="form-label">Tipo</label>
-          <select class="form-input" id="km-travel-type" required>
-            <option value="">Selecione...</option>
-            <option value="km">KM Rodado</option>
-            <option value="tempo_viagem">Tempo de Viagem</option>
-          </select>
-        </div>
-        <div class="form-group" id="km-group" style="display: none;">
-          <label class="form-label">Distância (KM)</label>
-          <input type="number" class="form-input" id="km-distance" 
-                 step="0.1" min="0.1" placeholder="0">
-        </div>
-        <div class="form-group" id="km-origin-group" style="display: none;">
-          <label class="form-label">Origem (Cidade/Local)</label>
-          <input type="text" class="form-input" id="km-origin" 
-                 placeholder="Ex: Florianópolis">
-          <small class="text-muted">Cidade ou local de partida</small>
-        </div>
-        <div class="form-group" id="km-destination-group" style="display: none;">
-          <label class="form-label">Destino (Cidade/Local)</label>
-          <input type="text" class="form-input" id="km-destination" 
-                 placeholder="Ex: Tupandi">
-          <small class="text-muted">Cidade ou local de chegada</small>
-        </div>
-        <div class="form-group" id="hours-group" style="display: none;">
-          <label class="form-label">Horas de Viagem</label>
-          <input type="number" class="form-input" id="travel-hours" 
-                 step="0.1" min="0.1" placeholder="0">
-        </div>
-        <div class="form-group" id="description-group">
-          <label class="form-label">Descrição</label>
-          <input type="text" class="form-input" id="km-travel-description" 
-                 placeholder="Ex: Deslocamento até o evento" required>
-          <small class="text-muted" id="description-hint" style="display: none;">
-            A descrição será gerada automaticamente como "Deslocamento: Origem → Destino"
-          </small>
-        </div>
-        <div class="modal-footer">
-          <button type="button" class="btn btn-secondary" onclick="this.closest('.modal-backdrop').remove()">
-            Cancelar
-          </button>
-          <button type="submit" class="btn btn-primary">Salvar</button>
-        </div>
-      </form>
-    `);
-
-    document.body.appendChild(modal);
-    modal.classList.add('active');
-    this._addModalOpenClass();
-
-    // Mostra/esconde campos baseado no tipo
-    const typeSelect = document.getElementById('km-travel-type');
-    const kmGroup = document.getElementById('km-group');
-    const kmOriginGroup = document.getElementById('km-origin-group');
-    const kmDestinationGroup = document.getElementById('km-destination-group');
-    const hoursGroup = document.getElementById('hours-group');
-    const descriptionGroup = document.getElementById('description-group');
-    const descriptionInput = document.getElementById('km-travel-description');
-    const descriptionHint = document.getElementById('description-hint');
-    
-    typeSelect.addEventListener('change', (e) => {
-      const type = e.target.value;
-      
-      if (type === 'km') {
-        kmGroup.style.display = 'block';
-        kmOriginGroup.style.display = 'block';
-        kmDestinationGroup.style.display = 'block';
-        hoursGroup.style.display = 'none';
-        descriptionGroup.style.display = 'block';
-        descriptionHint.style.display = 'block';
-        descriptionInput.required = false; // Não obrigatório se origem/destino forem preenchidos
-      } else if (type === 'tempo_viagem') {
-        kmGroup.style.display = 'none';
-        kmOriginGroup.style.display = 'none';
-        kmDestinationGroup.style.display = 'none';
-        hoursGroup.style.display = 'block';
-        descriptionGroup.style.display = 'block';
-        descriptionHint.style.display = 'none';
-        descriptionInput.required = true;
-      } else {
-        kmGroup.style.display = 'none';
-        kmOriginGroup.style.display = 'none';
-        kmDestinationGroup.style.display = 'none';
-        hoursGroup.style.display = 'none';
-        descriptionGroup.style.display = 'block';
-        descriptionHint.style.display = 'none';
-        descriptionInput.required = true;
-      }
-    });
-
-    document.getElementById('form-add-km-travel').addEventListener('submit', async (e) => {
-      e.preventDefault();
-      const result = await this.saveKmTravel();
-      // Só remove o modal se saveKmTravel retornou sucesso (sem erro)
-      if (result !== false) {
-        this._removeModalOpenClass();
-        modal.remove();
-      }
-    });
-  }
-
-  async saveExpense() {
-    try {
-      const description = document.getElementById('expense-description').value;
-      const amount = parseFloat(document.getElementById('expense-amount').value);
-      const hasReceipt = document.getElementById('expense-has-receipt').checked;
-
-      const result = await this.addTransactionUseCase.execute({
-        eventId: this.currentEventId,
-        type: 'EXPENSE',
-        description,
-        amount,
-        hasReceipt
-      });
-
-      if (result && result.success) {
-        if (window.toast && typeof window.toast.success === 'function') {
-          window.toast.success('Insumo adicionado com sucesso!');
-        }
-        await this.render(this.currentEventId);
-        return true; // Retorna true para indicar sucesso
-      } else {
-        const errorMsg = (result && result.error) || 'Erro desconhecido ao adicionar insumo';
-        console.error('Erro ao adicionar insumo:', errorMsg);
-        
-        // GARANTE que nunca vai gerar um alert nativo
-        if (window.toast && typeof window.toast.error === 'function') {
-          window.toast.error(errorMsg);
-        } else {
-          console.error('Toast não disponível. Erro:', errorMsg);
-          // Aguarda um pouco e tenta novamente
-          setTimeout(() => {
-            if (window.toast && typeof window.toast.error === 'function') {
-              window.toast.error(errorMsg);
-            }
-          }, 500);
-        }
-        return false; // Retorna false para indicar erro
-      }
-    } catch (error) {
-      const errorMsg = `Erro ao adicionar insumo: ${error?.message || 'Erro desconhecido'}`;
-      console.error('Erro em saveExpense:', error);
-      
-      // GARANTE que nunca vai gerar um alert nativo
-      if (window.toast && typeof window.toast.error === 'function') {
-        window.toast.error(errorMsg);
-      } else {
-        console.error('Toast não disponível. Erro:', errorMsg);
-        // Aguarda um pouco e tenta novamente
-        setTimeout(() => {
-          if (window.toast && typeof window.toast.error === 'function') {
-            window.toast.error(errorMsg);
-          }
-        }, 500);
-      }
-      return false; // Retorna false para indicar erro
-    }
-  }
-
-  async saveKmTravel() {
-    try {
-      const type = document.getElementById('km-travel-type').value;
-      const description = document.getElementById('km-travel-description').value;
-      
-      let input = {
-        eventId: this.currentEventId,
-        type: 'INCOME',
-        description,
-        category: type,
-        isReimbursement: true
-      };
-
-      if (type === 'km') {
-        const distance = parseFloat(document.getElementById('km-distance').value);
-        const origin = document.getElementById('km-origin')?.value.trim() || '';
-        const destination = document.getElementById('km-destination')?.value.trim() || '';
-        
-        if (!distance || distance <= 0) {
-          window.toast?.error('Distância é obrigatória e deve ser maior que zero');
-          return false;
-        }
-        
-        input.distance = distance;
-        
-        // Se origem e destino forem fornecidos, passa para o use case
-        if (origin && destination) {
-          input.origin = origin;
-          input.destination = destination;
-          // Descrição será gerada automaticamente pelo use case
-          input.description = description || ''; // Mantém descrição adicional se houver
-        } else if (!description || description.trim() === '') {
-          // Se não tem origem/destino E não tem descrição, exige descrição
-          window.toast?.error('Preencha Origem e Destino ou informe uma Descrição');
-          return false;
-        }
-      } else if (type === 'tempo_viagem') {
-        input.hours = parseFloat(document.getElementById('travel-hours').value);
-      }
-
-      const result = await this.addTransactionUseCase.execute(input);
-
-      if (result && result.success) {
-        if (window.toast && typeof window.toast.success === 'function') {
-          window.toast.success('Transação adicionada com sucesso!');
-        }
-        await this.render(this.currentEventId);
-        return true; // Retorna true para indicar sucesso
-      } else {
-        const errorMsg = (result && result.error) || 'Erro desconhecido ao adicionar transação';
-        console.error('Erro ao adicionar transação:', errorMsg);
-        
-        // GARANTE que nunca vai gerar um alert nativo
-        if (window.toast && typeof window.toast.error === 'function') {
-          window.toast.error(errorMsg);
-        } else {
-          console.error('Toast não disponível. Erro:', errorMsg);
-          // Aguarda um pouco e tenta novamente
-          setTimeout(() => {
-            if (window.toast && typeof window.toast.error === 'function') {
-              window.toast.error(errorMsg);
-            }
-          }, 500);
-        }
-        return false; // Retorna false para indicar erro
-      }
-    } catch (error) {
-      const errorMsg = `Erro ao adicionar transação: ${error?.message || 'Erro desconhecido'}`;
-      console.error('Erro em saveKmTravel:', error);
-      
-      // GARANTE que nunca vai gerar um alert nativo
-      if (window.toast && typeof window.toast.error === 'function') {
-        window.toast.error(errorMsg);
-      } else {
-        console.error('Toast não disponível. Erro:', errorMsg);
-        // Aguarda um pouco e tenta novamente
-        setTimeout(() => {
-          if (window.toast && typeof window.toast.error === 'function') {
-            window.toast.error(errorMsg);
-          }
-        }, 500);
-      }
-      return false; // Retorna false para indicar erro
-    }
-  }
+  // Métodos de modais foram movidos para componentes separados em /components/modals/
 
   async markReceiptAsIssued(transactionId) {
     try {

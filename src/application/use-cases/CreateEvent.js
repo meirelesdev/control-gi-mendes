@@ -50,7 +50,7 @@ class CreateEvent {
       if (input.autoCreateDaily && this.addTransactionUseCase && this.settingsRepository) {
         try {
           const settings = await this.settingsRepository.find();
-          const dailyRate = settings?.standardDailyRate || 300.00;
+          const dailyRate = settings?.standardDailyRate || DEFAULT_VALUES.DAILY_RATE;
           
           await this.addTransactionUseCase.execute({
             eventId: savedEvent.id,
