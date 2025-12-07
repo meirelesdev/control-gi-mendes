@@ -23,6 +23,13 @@ class LocalStorageSettingsRepository extends SettingsRepository {
         maxHotelRate: settings.maxHotelRate,
         standardDailyRate: settings.standardDailyRate,
         overtimeRate: settings.overtimeRate,
+        contractorName: settings.contractorName,
+        contractorCNPJ: settings.contractorCNPJ,
+        contractorAddress: settings.contractorAddress,
+        contractorRepresentative: settings.contractorRepresentative,
+        contractorCPF: settings.contractorCPF,
+        contractorPixKey: settings.contractorPixKey,
+        contractorEmails: settings.contractorEmails,
         updatedAt: settings.updatedAt
       };
       window.localStorage.setItem(this.storageKey, JSON.stringify(data));

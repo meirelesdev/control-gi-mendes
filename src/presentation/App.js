@@ -135,7 +135,7 @@ class App {
         await dashboardView.render();
       }
     } else if (this.currentView === 'monthly-report') {
-      const monthlyReportView = new MonthlyReportView(generateMonthlyReport);
+      const monthlyReportView = new MonthlyReportView(generateMonthlyReport, settingsRepository);
       const content = document.getElementById('monthly-report-content');
       if (content) {
         content.classList.add('active');

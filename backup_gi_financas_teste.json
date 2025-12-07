@@ -393,6 +393,13 @@
     "maxHotelRate": 280.00,
     "standardDailyRate": 300.00,
     "overtimeRate": 75.00,
+    "contractorName": "28.065.604 GISELE MENDES",
+    "contractorCNPJ": "28.065.604/0001-35",
+    "contractorAddress": "Rua Nicarágua, n° : 17, Casa, Monte Cristo, Florianópolis - SC, CEP: 88095-572",
+    "contractorRepresentative": "GISELE MENDES",
+    "contractorCPF": "010.360.519-35",
+    "contractorPixKey": "48988321351",
+    "contractorEmails": "fiscal@bomprincipioalimentos.com.br, fiscal1@bomprincipioalimentos.com.br",
     "updatedAt": "2025-12-06T10:00:00.000Z"
   }
 }

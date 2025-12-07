@@ -5,21 +5,26 @@
  * Separa as transações conforme exigências do contrato:
  * - Serviços Prestados (honorários): Diárias e Horas Extras
  * - Custos de Insumos: Todas as despesas reembolsáveis
- * - Deslocamentos: KM e Tempo de Viagem
+ * - Deslocamentos: KM Rodados (combustível)
  */
 import { DEFAULT_VALUES } from '../../domain/constants/DefaultValues.js';
+import { Settings } from '../../domain/entities/Settings.js';
 
 class GenerateEventReport {
-  constructor(eventRepository, transactionRepository) {
+  constructor(eventRepository, transactionRepository, settingsRepository) {
     if (!eventRepository) {
       throw new Error('EventRepository é obrigatório');
     }
     if (!transactionRepository) {
       throw new Error('TransactionRepository é obrigatório');
     }
+    if (!settingsRepository) {
+      throw new Error('SettingsRepository é obrigatório');
+    }
     
     this.eventRepository = eventRepository;
     this.transactionRepository = transactionRepository;
+    this.settingsRepository = settingsRepository;
   }
 
   /**
@@ -54,6 +59,12 @@ class GenerateEventReport {
       const totalTravel = travel.reduce((sum, t) => sum + t.amount, 0);
       const grandTotal = totalServices + totalExpenses + totalTravel;
 
+      // Busca configurações para obter dados da CONTRATADA
+      let settings = await this.settingsRepository.find();
+      if (!settings) {
+        settings = Settings.createDefault();
+      }
+
       return {
         success: true,
         data: {
@@ -64,10 +75,18 @@ class GenerateEventReport {
             eventDescription: event.description || '',
             generatedAt: new Date().toISOString()
           },
+          contractorInfo: {
+            name: settings.contractorName,
+            cnpj: settings.contractorCNPJ,
+            address: settings.contractorAddress,
+            representative: settings.contractorRepresentative,
+            cpf: settings.contractorCPF
+          },
           paymentInfo: {
-            pixKey: '48988321351',
-            beneficiary: 'Gisele Mendes',
-            paymentDays: DEFAULT_VALUES.DEFAULT_REIMBURSEMENT_DAYS
+            pixKey: settings.contractorPixKey,
+            beneficiary: settings.contractorRepresentative,
+            paymentDays: settings.defaultReimbursementDays,
+            emails: settings.contractorEmails
           },
           services: {
             items: services,
@@ -148,7 +167,9 @@ class GenerateEventReport {
       .map(t => ({
         id: t.id,
         description: t.description,
-        category: t.metadata.category === 'km' ? 'KM Rodado' : 'Tempo de Viagem',
+        distance: t.metadata.distance || 0,
+        origin: t.metadata.origin || null,
+        destination: t.metadata.destination || null,
         amount: t.amount,
         createdAt: t.createdAt
       }))

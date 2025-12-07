@@ -72,6 +72,66 @@ class SettingsView {
               <small class="text-muted">Valor por hora extra (trabalho adicional e tempo de viagem)</small>
             </div>
 
+            <hr style="margin: var(--spacing-xl) 0; border: none; border-top: 2px solid var(--color-border);">
+
+            <h3 style="margin-bottom: var(--spacing-md); color: var(--color-text); font-size: 1.1em;">
+              📋 Dados da CONTRATADA (para Relatórios)
+            </h3>
+            <p class="text-muted" style="margin-bottom: var(--spacing-lg); font-size: 0.9em;">
+              Informações que aparecerão nos relatórios de prestação de contas
+            </p>
+
+            <div class="form-group">
+              <label class="form-label">Razão Social</label>
+              <input type="text" class="form-input" id="settings-contractor-name" 
+                     value="${settings.contractorName || DEFAULT_VALUES.CONTRACTOR_NAME}" required>
+              <small class="text-muted">Nome completo da empresa (CNPJ)</small>
+            </div>
+
+            <div class="form-group">
+              <label class="form-label">CNPJ</label>
+              <input type="text" class="form-input" id="settings-contractor-cnpj" 
+                     placeholder="XX.XXX.XXX/XXXX-XX" 
+                     value="${settings.contractorCNPJ || DEFAULT_VALUES.CONTRACTOR_CNPJ}" required>
+              <small class="text-muted">CNPJ no formato XX.XXX.XXX/XXXX-XX</small>
+            </div>
+
+            <div class="form-group">
+              <label class="form-label">Endereço Completo</label>
+              <textarea class="form-input" id="settings-contractor-address" rows="3" required>${settings.contractorAddress || DEFAULT_VALUES.CONTRACTOR_ADDRESS}</textarea>
+              <small class="text-muted">Endereço completo da empresa</small>
+            </div>
+
+            <div class="form-group">
+              <label class="form-label">Representante</label>
+              <input type="text" class="form-input" id="settings-contractor-representative" 
+                     value="${settings.contractorRepresentative || DEFAULT_VALUES.CONTRACTOR_REPRESENTATIVE}" required>
+              <small class="text-muted">Nome do representante legal</small>
+            </div>
+
+            <div class="form-group">
+              <label class="form-label">CPF do Representante</label>
+              <input type="text" class="form-input" id="settings-contractor-cpf" 
+                     placeholder="XXX.XXX.XXX-XX" 
+                     value="${settings.contractorCPF || DEFAULT_VALUES.CONTRACTOR_CPF}" required>
+              <small class="text-muted">CPF no formato XXX.XXX.XXX-XX</small>
+            </div>
+
+            <div class="form-group">
+              <label class="form-label">Chave PIX</label>
+              <input type="text" class="form-input" id="settings-contractor-pix-key" 
+                     value="${settings.contractorPixKey || DEFAULT_VALUES.CONTRACTOR_PIX_KEY}" required>
+              <small class="text-muted">Chave PIX para recebimento (celular, e-mail ou chave aleatória)</small>
+            </div>
+
+            <div class="form-group">
+              <label class="form-label">E-mails para Envio de NF</label>
+              <input type="text" class="form-input" id="settings-contractor-emails" 
+                     placeholder="email1@exemplo.com, email2@exemplo.com" 
+                     value="${settings.contractorEmails || DEFAULT_VALUES.CONTRACTOR_EMAILS}" required>
+              <small class="text-muted">E-mails separados por vírgula para envio de notas fiscais</small>
+            </div>
+
             <div class="modal-footer" style="margin-top: var(--spacing-xl);">
               <button type="submit" class="btn btn-primary btn-lg" style="width: 100%;">
                 Salvar Configurações
@@ -146,13 +206,27 @@ class SettingsView {
     const maxHotelRate = parseFloat(document.getElementById('settings-max-hotel-rate').value);
     const standardDailyRate = parseFloat(document.getElementById('settings-standard-daily-rate').value);
     const overtimeRate = parseFloat(document.getElementById('settings-overtime-rate').value);
+    const contractorName = document.getElementById('settings-contractor-name').value.trim();
+    const contractorCNPJ = document.getElementById('settings-contractor-cnpj').value.trim();
+    const contractorAddress = document.getElementById('settings-contractor-address').value.trim();
+    const contractorRepresentative = document.getElementById('settings-contractor-representative').value.trim();
+    const contractorCPF = document.getElementById('settings-contractor-cpf').value.trim();
+    const contractorPixKey = document.getElementById('settings-contractor-pix-key').value.trim();
+    const contractorEmails = document.getElementById('settings-contractor-emails').value.trim();
 
     const result = await this.updateSettingsUseCase.execute({
       rateKm,
       defaultReimbursementDays,
       maxHotelRate,
       standardDailyRate,
-      overtimeRate
+      overtimeRate,
+      contractorName,
+      contractorCNPJ,
+      contractorAddress,
+      contractorRepresentative,
+      contractorCPF,
+      contractorPixKey,
+      contractorEmails
     });
 
     if (result.success) {

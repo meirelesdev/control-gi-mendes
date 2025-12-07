@@ -6,18 +6,23 @@
  * Agrupa todos os eventos do mês em um único relatório.
  */
 import { DEFAULT_VALUES } from '../../domain/constants/DefaultValues.js';
+import { Settings } from '../../domain/entities/Settings.js';
 
 class GenerateMonthlyReport {
-  constructor(eventRepository, transactionRepository) {
+  constructor(eventRepository, transactionRepository, settingsRepository) {
     if (!eventRepository) {
       throw new Error('EventRepository é obrigatório');
     }
     if (!transactionRepository) {
       throw new Error('TransactionRepository é obrigatório');
     }
+    if (!settingsRepository) {
+      throw new Error('SettingsRepository é obrigatório');
+    }
     
     this.eventRepository = eventRepository;
     this.transactionRepository = transactionRepository;
+    this.settingsRepository = settingsRepository;
   }
 
   /**
@@ -78,6 +83,12 @@ class GenerateMonthlyReport {
       const totalTravel = allTravel.reduce((sum, t) => sum + t.amount, 0);
       const grandTotal = totalServices + totalExpenses + totalTravel;
 
+      // Busca configurações para obter dados da CONTRATADA
+      let settings = await this.settingsRepository.find();
+      if (!settings) {
+        settings = Settings.createDefault();
+      }
+
       // Nome do mês em português
       const monthNames = [
         'Janeiro', 'Fevereiro', 'Março', 'Abril', 'Maio', 'Junho',
@@ -95,10 +106,18 @@ class GenerateMonthlyReport {
             eventsCount: monthEvents.length,
             generatedAt: new Date().toISOString()
           },
+          contractorInfo: {
+            name: settings.contractorName,
+            cnpj: settings.contractorCNPJ,
+            address: settings.contractorAddress,
+            representative: settings.contractorRepresentative,
+            cpf: settings.contractorCPF
+          },
           paymentInfo: {
-            pixKey: '48988321351',
-            beneficiary: 'Gisele Mendes',
-            paymentDays: DEFAULT_VALUES.DEFAULT_REIMBURSEMENT_DAYS
+            pixKey: settings.contractorPixKey,
+            beneficiary: settings.contractorRepresentative,
+            paymentDays: settings.defaultReimbursementDays,
+            emails: settings.contractorEmails
           },
           events: monthEvents.map(event => ({
             id: event.id,
@@ -193,10 +212,10 @@ class GenerateMonthlyReport {
         eventName: event.name,
         eventDate: event.date,
         description: t.description,
-        category: t.metadata.category === 'km' ? 'KM Rodado' : 'Tempo de Viagem',
-        amount: t.amount,
+        distance: t.metadata.distance || 0,
         origin: t.metadata.origin || null,
         destination: t.metadata.destination || null,
+        amount: t.amount,
         createdAt: t.createdAt
       }))
       .sort((a, b) => new Date(a.createdAt) - new Date(b.createdAt));

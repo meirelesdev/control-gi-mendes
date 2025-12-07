@@ -318,6 +318,19 @@ class ReportView {
         <div class="generated-at">Relatório gerado em: ${formatDateTime(data.header.generatedAt)}</div>
     </div>
 
+    ${data.contractorInfo ? `
+    <div class="section" style="background-color: #f9f9f9; padding: 15px; border: 1px solid #ddd; border-radius: 4px; margin-bottom: 20px;">
+        <div class="section-title" style="font-size: 12pt; margin-bottom: 10px;">Identificação da CONTRATADA</div>
+        <div style="font-size: 10pt; color: #333; line-height: 1.8;">
+            <div style="margin-bottom: 5px;"><strong>Razão Social:</strong> ${this._escapeHtml(data.contractorInfo.name)}</div>
+            <div style="margin-bottom: 5px;"><strong>CNPJ:</strong> ${this._escapeHtml(data.contractorInfo.cnpj)}</div>
+            <div style="margin-bottom: 5px;"><strong>Endereço:</strong> ${this._escapeHtml(data.contractorInfo.address)}</div>
+            <div style="margin-bottom: 5px;"><strong>Representante:</strong> ${this._escapeHtml(data.contractorInfo.representative)}</div>
+            <div><strong>CPF:</strong> ${this._escapeHtml(data.contractorInfo.cpf)}</div>
+        </div>
+    </div>
+    ` : ''}
+
     ${!isMonthly && data.header.eventDescription ? `
     <div class="section">
         <div style="font-size: 11pt; color: #333; line-height: 1.8;">
@@ -410,13 +423,13 @@ class ReportView {
     </div>
 
     <div class="section">
-        <div class="section-title">3. Deslocamentos</div>
+        <div class="section-title">3. Deslocamentos (KM Rodados)</div>
         ${data.travel.items.length > 0 ? `
         <table>
             <thead>
                 <tr>
                     <th style="width: 50%;">Descrição</th>
-                    <th style="width: 25%;">Tipo</th>
+                    <th style="width: 25%;">KM Rodados</th>
                     <th style="width: 25%;">Valor (R$)</th>
                 </tr>
             </thead>
@@ -424,7 +437,7 @@ class ReportView {
                 ${data.travel.items.map(item => `
                 <tr>
                     <td>${this._escapeHtml(item.description)}${isMonthly && item.eventName ? ` <small style="color: #666;">(${this._escapeHtml(item.eventName)})</small>` : ''}${item.origin && item.destination ? ` <br><small style="color: #666;">${this._escapeHtml(item.origin)} → ${this._escapeHtml(item.destination)}</small>` : ''}</td>
-                    <td>${this._escapeHtml(item.category)}</td>
+                    <td style="text-align: center;">${item.distance} km</td>
                     <td>${formatCurrency(item.amount)}</td>
                 </tr>
                 `).join('')}
@@ -462,16 +475,16 @@ class ReportView {
     <div class="summary payment-info" style="margin-top: 30px; border-top: 2px solid #000; padding-top: 20px;">
         <div class="summary-title">Dados para Pagamento</div>
         <div class="summary-row" style="padding: 10px 0;">
-            <span><strong>Chave PIX (Celular):</strong></span>
-            <span><strong>48988321351</strong></span>
+            <span><strong>Chave PIX:</strong></span>
+            <span><strong>${data.paymentInfo.pixKey || '48988321351'}</strong></span>
         </div>
         <div class="summary-row" style="padding: 5px 0;">
             <span><strong>Favorecido:</strong></span>
-            <span><strong>Gisele Mendes</strong></span>
+            <span><strong>${this._escapeHtml(data.paymentInfo.beneficiary || 'Gisele Mendes')}</strong></span>
         </div>
         <div style="margin-top: 15px; padding-top: 15px; border-top: 1px solid #ccc; font-size: 10pt; color: #666; text-align: center;">
             <p style="margin: 5px 0;">Pagamento mediante apresentação de Nota Fiscal</p>
-            <p style="margin: 5px 0;">Prazo: ${DEFAULT_VALUES.DEFAULT_REIMBURSEMENT_DAYS} dias após apresentação da NF</p>
+            <p style="margin: 5px 0;">Prazo: ${data.paymentInfo.paymentDays || DEFAULT_VALUES.DEFAULT_REIMBURSEMENT_DAYS} dias após apresentação da NF</p>
         </div>
     </div>
 

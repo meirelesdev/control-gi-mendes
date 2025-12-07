@@ -20,6 +20,13 @@ class UpdateSettings {
    * @param {number} [input.maxHotelRate] - Novo teto de hospedagem
    * @param {number} [input.standardDailyRate] - Nova diária técnica padrão
    * @param {number} [input.overtimeRate] - Nova taxa de hora extra
+   * @param {string} [input.contractorName] - Razão Social da CONTRATADA
+   * @param {string} [input.contractorCNPJ] - CNPJ da CONTRATADA
+   * @param {string} [input.contractorAddress] - Endereço da CONTRATADA
+   * @param {string} [input.contractorRepresentative] - Nome do representante da CONTRATADA
+   * @param {string} [input.contractorCPF] - CPF do representante da CONTRATADA
+   * @param {string} [input.contractorPixKey] - Chave PIX da CONTRATADA
+   * @param {string} [input.contractorEmails] - E-mails para envio de NF
    * @returns {Promise<Object>} - Resultado com configurações atualizadas ou erro
    */
   async execute(input) {
@@ -39,7 +46,14 @@ class UpdateSettings {
         input.defaultReimbursementDays,
         input.maxHotelRate,
         input.standardDailyRate,
-        input.overtimeRate
+        input.overtimeRate,
+        input.contractorName,
+        input.contractorCNPJ,
+        input.contractorAddress,
+        input.contractorRepresentative,
+        input.contractorCPF,
+        input.contractorPixKey,
+        input.contractorEmails
       );
 
       // Salva as configurações atualizadas
@@ -71,7 +85,14 @@ class UpdateSettings {
         input.defaultReimbursementDays === undefined &&
         input.maxHotelRate === undefined &&
         input.standardDailyRate === undefined &&
-        input.overtimeRate === undefined) {
+        input.overtimeRate === undefined &&
+        input.contractorName === undefined &&
+        input.contractorCNPJ === undefined &&
+        input.contractorAddress === undefined &&
+        input.contractorRepresentative === undefined &&
+        input.contractorCPF === undefined &&
+        input.contractorPixKey === undefined &&
+        input.contractorEmails === undefined) {
       throw new Error('Pelo menos um campo deve ser informado para atualização');
     }
 

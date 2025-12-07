@@ -95,13 +95,15 @@ const updateSettings = new UpdateSettings(settingsRepository);
 // Use Case: Gerar Relatório de Fechamento
 const generateEventReport = new GenerateEventReport(
   eventRepository,
-  transactionRepository
+  transactionRepository,
+  settingsRepository
 );
 
 // Use Case: Gerar Relatório Mensal
 const generateMonthlyReport = new GenerateMonthlyReport(
   eventRepository,
-  transactionRepository
+  transactionRepository,
+  settingsRepository
 );
 
 // Use Case: Atualizar Status do Evento

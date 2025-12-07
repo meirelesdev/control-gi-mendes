@@ -5,8 +5,9 @@
 import { ReportView } from './ReportView.js';
 
 class MonthlyReportView {
-  constructor(generateMonthlyReportUseCase) {
+  constructor(generateMonthlyReportUseCase, settingsRepository = null) {
     this.generateMonthlyReportUseCase = generateMonthlyReportUseCase;
+    this.settingsRepository = settingsRepository;
     this.currentMonth = new Date().getMonth() + 1; // 1-12
     this.currentYear = new Date().getFullYear();
   }
@@ -18,6 +19,15 @@ class MonthlyReportView {
     container.innerHTML = '<div class="loading">Carregando...</div>';
 
     try {
+      // Busca configurações para obter e-mails
+      let contractorEmails = '';
+      if (this.settingsRepository) {
+        const settings = await this.settingsRepository.find();
+        if (settings && settings.contractorEmails) {
+          contractorEmails = settings.contractorEmails;
+        }
+      }
+
       // Renderiza interface de seleção de mês/ano
       container.innerHTML = `
         <div class="card">
@@ -26,6 +36,16 @@ class MonthlyReportView {
             Gere o relatório mensal de prestação de contas conforme exigido no contrato.
             O relatório agrupa todos os eventos do mês selecionado.
           </p>
+          ${contractorEmails ? `
+          <div style="background-color: #e3f2fd; border-left: 4px solid #2196f3; padding: 12px; margin-top: var(--spacing-md); border-radius: 4px;">
+            <div style="font-size: 0.9em; color: #1976d2; font-weight: 500; margin-bottom: 4px;">
+              📧 E-mails para envio de Notas Fiscais:
+            </div>
+            <div style="font-size: 0.85em; color: #424242;">
+              ${contractorEmails}
+            </div>
+          </div>
+          ` : ''}
         </div>
 
         <div class="card">
@@ -124,7 +144,13 @@ class MonthlyReportView {
         const reportView = new ReportView();
         reportView.render(result, true); // true = relatório mensal
         
-        window.toast?.success('Relatório mensal gerado com sucesso!');
+        // Busca e-mails para mostrar informação
+        let emailInfo = '';
+        if (result.data && result.data.paymentInfo && result.data.paymentInfo.emails) {
+          emailInfo = `\n\n📧 Envie as Notas Fiscais para:\n${result.data.paymentInfo.emails}`;
+        }
+        
+        window.toast?.success(`Relatório mensal gerado com sucesso!${emailInfo}`, 5000);
       } else {
         window.toast?.error(`Erro ao gerar relatório: ${result.error}`);
       }

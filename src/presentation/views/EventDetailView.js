@@ -1552,7 +1552,13 @@ class EventDetailView {
         const reportView = new ReportView();
         reportView.render(result);
         
-        window.toast?.success('Relatório gerado com sucesso!');
+        // Busca e-mails para mostrar informação
+        let emailInfo = '';
+        if (this.settingsRepository && result.data && result.data.paymentInfo && result.data.paymentInfo.emails) {
+          emailInfo = `\n\n📧 Envie as Notas Fiscais para:\n${result.data.paymentInfo.emails}`;
+        }
+        
+        window.toast?.success(`Relatório gerado com sucesso!${emailInfo}`, 5000);
       } else {
         window.toast?.error(`Erro ao gerar relatório: ${result.error}`);
       }

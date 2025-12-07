@@ -5,18 +5,45 @@
 import { DEFAULT_VALUES } from '../constants/DefaultValues.js';
 
 class Settings {
-  constructor(rateKm = DEFAULT_VALUES.KM_RATE, defaultReimbursementDays = DEFAULT_VALUES.DEFAULT_REIMBURSEMENT_DAYS, maxHotelRate = DEFAULT_VALUES.MAX_HOTEL_RATE, standardDailyRate = DEFAULT_VALUES.DAILY_RATE, overtimeRate = DEFAULT_VALUES.OVERTIME_RATE) {
+  constructor(
+    rateKm = DEFAULT_VALUES.KM_RATE,
+    defaultReimbursementDays = DEFAULT_VALUES.DEFAULT_REIMBURSEMENT_DAYS,
+    maxHotelRate = DEFAULT_VALUES.MAX_HOTEL_RATE,
+    standardDailyRate = DEFAULT_VALUES.DAILY_RATE,
+    overtimeRate = DEFAULT_VALUES.OVERTIME_RATE,
+    contractorName = DEFAULT_VALUES.CONTRACTOR_NAME,
+    contractorCNPJ = DEFAULT_VALUES.CONTRACTOR_CNPJ,
+    contractorAddress = DEFAULT_VALUES.CONTRACTOR_ADDRESS,
+    contractorRepresentative = DEFAULT_VALUES.CONTRACTOR_REPRESENTATIVE,
+    contractorCPF = DEFAULT_VALUES.CONTRACTOR_CPF,
+    contractorPixKey = DEFAULT_VALUES.CONTRACTOR_PIX_KEY,
+    contractorEmails = DEFAULT_VALUES.CONTRACTOR_EMAILS
+  ) {
     this._validateRateKm(rateKm);
     this._validateDefaultReimbursementDays(defaultReimbursementDays);
     this._validateMaxHotelRate(maxHotelRate);
     this._validateStandardDailyRate(standardDailyRate);
     this._validateOvertimeRate(overtimeRate);
+    this._validateContractorName(contractorName);
+    this._validateContractorCNPJ(contractorCNPJ);
+    this._validateContractorAddress(contractorAddress);
+    this._validateContractorRepresentative(contractorRepresentative);
+    this._validateContractorCPF(contractorCPF);
+    this._validateContractorPixKey(contractorPixKey);
+    this._validateContractorEmails(contractorEmails);
 
     this.rateKm = rateKm;
     this.defaultReimbursementDays = defaultReimbursementDays;
     this.maxHotelRate = maxHotelRate;
     this.standardDailyRate = standardDailyRate;
     this.overtimeRate = overtimeRate;
+    this.contractorName = contractorName;
+    this.contractorCNPJ = contractorCNPJ;
+    this.contractorAddress = contractorAddress;
+    this.contractorRepresentative = contractorRepresentative;
+    this.contractorCPF = contractorCPF;
+    this.contractorPixKey = contractorPixKey;
+    this.contractorEmails = contractorEmails;
     this.updatedAt = new Date().toISOString();
   }
 
@@ -116,9 +143,119 @@ class Settings {
   }
 
   /**
+   * Valida o nome/razão social da CONTRATADA
+   * @private
+   */
+  _validateContractorName(contractorName) {
+    if (!contractorName || typeof contractorName !== 'string' || contractorName.trim() === '') {
+      throw new Error('Razão Social da CONTRATADA é obrigatória');
+    }
+    if (contractorName.length > 200) {
+      throw new Error('Razão Social não pode ter mais de 200 caracteres');
+    }
+  }
+
+  /**
+   * Valida o CNPJ da CONTRATADA
+   * @private
+   */
+  _validateContractorCNPJ(contractorCNPJ) {
+    if (!contractorCNPJ || typeof contractorCNPJ !== 'string' || contractorCNPJ.trim() === '') {
+      throw new Error('CNPJ da CONTRATADA é obrigatório');
+    }
+    // Validação básica de formato CNPJ (XX.XXX.XXX/XXXX-XX)
+    const cnpjRegex = /^\d{2}\.\d{3}\.\d{3}\/\d{4}-\d{2}$/;
+    if (!cnpjRegex.test(contractorCNPJ)) {
+      throw new Error('CNPJ deve estar no formato XX.XXX.XXX/XXXX-XX');
+    }
+  }
+
+  /**
+   * Valida o endereço da CONTRATADA
+   * @private
+   */
+  _validateContractorAddress(contractorAddress) {
+    if (!contractorAddress || typeof contractorAddress !== 'string' || contractorAddress.trim() === '') {
+      throw new Error('Endereço da CONTRATADA é obrigatório');
+    }
+    if (contractorAddress.length > 500) {
+      throw new Error('Endereço não pode ter mais de 500 caracteres');
+    }
+  }
+
+  /**
+   * Valida o nome do representante da CONTRATADA
+   * @private
+   */
+  _validateContractorRepresentative(contractorRepresentative) {
+    if (!contractorRepresentative || typeof contractorRepresentative !== 'string' || contractorRepresentative.trim() === '') {
+      throw new Error('Nome do representante da CONTRATADA é obrigatório');
+    }
+    if (contractorRepresentative.length > 200) {
+      throw new Error('Nome do representante não pode ter mais de 200 caracteres');
+    }
+  }
+
+  /**
+   * Valida o CPF do representante da CONTRATADA
+   * @private
+   */
+  _validateContractorCPF(contractorCPF) {
+    if (!contractorCPF || typeof contractorCPF !== 'string' || contractorCPF.trim() === '') {
+      throw new Error('CPF do representante da CONTRATADA é obrigatório');
+    }
+    // Validação básica de formato CPF (XXX.XXX.XXX-XX)
+    const cpfRegex = /^\d{3}\.\d{3}\.\d{3}-\d{2}$/;
+    if (!cpfRegex.test(contractorCPF)) {
+      throw new Error('CPF deve estar no formato XXX.XXX.XXX-XX');
+    }
+  }
+
+  /**
+   * Valida a chave PIX da CONTRATADA
+   * @private
+   */
+  _validateContractorPixKey(contractorPixKey) {
+    if (!contractorPixKey || typeof contractorPixKey !== 'string' || contractorPixKey.trim() === '') {
+      throw new Error('Chave PIX da CONTRATADA é obrigatória');
+    }
+    if (contractorPixKey.length > 100) {
+      throw new Error('Chave PIX não pode ter mais de 100 caracteres');
+    }
+  }
+
+  /**
+   * Valida os e-mails para envio de NF
+   * @private
+   */
+  _validateContractorEmails(contractorEmails) {
+    if (!contractorEmails || typeof contractorEmails !== 'string' || contractorEmails.trim() === '') {
+      throw new Error('E-mails para envio de NF são obrigatórios');
+    }
+    // Validação básica de formato de e-mail (permite múltiplos separados por vírgula)
+    const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+(,\s*[^\s@]+@[^\s@]+\.[^\s@]+)*$/;
+    if (!emailRegex.test(contractorEmails)) {
+      throw new Error('E-mails devem estar em formato válido (separados por vírgula se houver múltiplos)');
+    }
+  }
+
+  /**
    * Atualiza as configurações
    */
-  update(rateKm, defaultReimbursementDays, maxHotelRate, standardDailyRate, overtimeRate) {
+  update(
+    rateKm,
+    defaultReimbursementDays,
+    maxHotelRate,
+    standardDailyRate,
+    overtimeRate,
+    contractorName,
+    contractorCNPJ,
+    contractorAddress,
+    contractorRepresentative,
+    contractorCPF,
+    contractorPixKey,
+    contractorEmails
+  ) {
     if (rateKm !== undefined && rateKm !== null) {
       this._validateRateKm(rateKm);
       this.rateKm = rateKm;
@@ -138,6 +275,34 @@ class Settings {
     if (overtimeRate !== undefined && overtimeRate !== null) {
       this._validateOvertimeRate(overtimeRate);
       this.overtimeRate = overtimeRate;
+    }
+    if (contractorName !== undefined && contractorName !== null) {
+      this._validateContractorName(contractorName);
+      this.contractorName = contractorName;
+    }
+    if (contractorCNPJ !== undefined && contractorCNPJ !== null) {
+      this._validateContractorCNPJ(contractorCNPJ);
+      this.contractorCNPJ = contractorCNPJ;
+    }
+    if (contractorAddress !== undefined && contractorAddress !== null) {
+      this._validateContractorAddress(contractorAddress);
+      this.contractorAddress = contractorAddress;
+    }
+    if (contractorRepresentative !== undefined && contractorRepresentative !== null) {
+      this._validateContractorRepresentative(contractorRepresentative);
+      this.contractorRepresentative = contractorRepresentative;
+    }
+    if (contractorCPF !== undefined && contractorCPF !== null) {
+      this._validateContractorCPF(contractorCPF);
+      this.contractorCPF = contractorCPF;
+    }
+    if (contractorPixKey !== undefined && contractorPixKey !== null) {
+      this._validateContractorPixKey(contractorPixKey);
+      this.contractorPixKey = contractorPixKey;
+    }
+    if (contractorEmails !== undefined && contractorEmails !== null) {
+      this._validateContractorEmails(contractorEmails);
+      this.contractorEmails = contractorEmails;
     }
     this.updatedAt = new Date().toISOString();
   }
@@ -175,6 +340,7 @@ class Settings {
    * - maxHotelRate: R$ 280,00 teto para hospedagem
    * - standardDailyRate: R$ 300,00 diária técnica padrão
    * - overtimeRate: R$ 75,00 por hora extra (trabalho + tempo de viagem)
+   * - Dados da CONTRATADA conforme contrato
    */
   static createDefault() {
     return new Settings(
@@ -182,7 +348,14 @@ class Settings {
       DEFAULT_VALUES.DEFAULT_REIMBURSEMENT_DAYS,
       DEFAULT_VALUES.MAX_HOTEL_RATE,
       DEFAULT_VALUES.DAILY_RATE,
-      DEFAULT_VALUES.OVERTIME_RATE
+      DEFAULT_VALUES.OVERTIME_RATE,
+      DEFAULT_VALUES.CONTRACTOR_NAME,
+      DEFAULT_VALUES.CONTRACTOR_CNPJ,
+      DEFAULT_VALUES.CONTRACTOR_ADDRESS,
+      DEFAULT_VALUES.CONTRACTOR_REPRESENTATIVE,
+      DEFAULT_VALUES.CONTRACTOR_CPF,
+      DEFAULT_VALUES.CONTRACTOR_PIX_KEY,
+      DEFAULT_VALUES.CONTRACTOR_EMAILS
     );
   }
 
@@ -200,7 +373,14 @@ class Settings {
       data.defaultReimbursementDays !== undefined ? data.defaultReimbursementDays : DEFAULT_VALUES.DEFAULT_REIMBURSEMENT_DAYS,
       data.maxHotelRate !== undefined ? data.maxHotelRate : DEFAULT_VALUES.MAX_HOTEL_RATE,
       data.standardDailyRate !== undefined ? data.standardDailyRate : DEFAULT_VALUES.DAILY_RATE,
-      data.overtimeRate !== undefined ? data.overtimeRate : DEFAULT_VALUES.OVERTIME_RATE
+      data.overtimeRate !== undefined ? data.overtimeRate : DEFAULT_VALUES.OVERTIME_RATE,
+      data.contractorName !== undefined ? data.contractorName : DEFAULT_VALUES.CONTRACTOR_NAME,
+      data.contractorCNPJ !== undefined ? data.contractorCNPJ : DEFAULT_VALUES.CONTRACTOR_CNPJ,
+      data.contractorAddress !== undefined ? data.contractorAddress : DEFAULT_VALUES.CONTRACTOR_ADDRESS,
+      data.contractorRepresentative !== undefined ? data.contractorRepresentative : DEFAULT_VALUES.CONTRACTOR_REPRESENTATIVE,
+      data.contractorCPF !== undefined ? data.contractorCPF : DEFAULT_VALUES.CONTRACTOR_CPF,
+      data.contractorPixKey !== undefined ? data.contractorPixKey : DEFAULT_VALUES.CONTRACTOR_PIX_KEY,
+      data.contractorEmails !== undefined ? data.contractorEmails : DEFAULT_VALUES.CONTRACTOR_EMAILS
     );
   }
 }
