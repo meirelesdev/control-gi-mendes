@@ -61,7 +61,6 @@ Adiciona uma transação (gasto ou ganho) a um evento.
 
 **Características especiais:**
 - Para transações de **KM** (`category: 'km'`), calcula automaticamente o valor usando `distance * rateKm` das configurações
-- Para transações de **Tempo de Viagem** (`category: 'tempo_viagem'`), calcula automaticamente o valor usando `hours * rateTravelTime` das configurações
 - Busca automaticamente as configurações atuais (Settings) quando necessário
 
 **Dependências:**
@@ -105,19 +104,6 @@ Adiciona uma transação (gasto ou ganho) a um evento.
 }
 ```
 
-**Entrada para INCOME (Tempo de Viagem):**
-```javascript
-{
-  eventId: string,           // ID do evento (obrigatório)
-  type: 'INCOME',            // Tipo da transação
-  description: string,       // Descrição (obrigatório)
-  category: 'tempo_viagem',  // Categoria
-  hours: number,             // Horas de viagem (obrigatório)
-  isReimbursement?: boolean  // Se é reembolso (padrão: true)
-  // amount é calculado automaticamente: hours * rateTravelTime
-}
-```
-
 **Saída:**
 ```javascript
 {
@@ -145,23 +131,13 @@ await addTransaction.execute({
   hasReceipt: false
 });
 
-// Adicionar receita de KM (cálculo automático)
+// Adicionar KM rodado (cálculo automático)
 await addTransaction.execute({
   eventId: 'event_123',
   type: 'INCOME',
   description: 'Deslocamento até o evento',
   category: 'km',
   distance: 150,
-  isReimbursement: true
-});
-
-// Adicionar receita de tempo de viagem (cálculo automático)
-await addTransaction.execute({
-  eventId: 'event_123',
-  type: 'INCOME',
-  description: 'Tempo de deslocamento',
-  category: 'tempo_viagem',
-  hours: 3.5,
   isReimbursement: true
 });
 

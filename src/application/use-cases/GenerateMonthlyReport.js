@@ -178,14 +178,14 @@ class GenerateMonthlyReport {
   }
 
   /**
-   * Extrai deslocamentos: KM e Tempo de Viagem
+   * Extrai deslocamentos: KM Rodado (combustível)
    * @private
    */
   _extractTravel(transactions, event) {
     return transactions
       .filter(t => 
         t.type === 'INCOME' && 
-        (t.metadata.category === 'km' || t.metadata.category === 'tempo_viagem')
+        t.metadata.category === 'km'
       )
       .map(t => ({
         id: t.id,

@@ -34,9 +34,10 @@ class AddTransaction {
    * @param {number} [input.amount] - Valor monetário (obrigatório para EXPENSE e INCOME, exceto KM/Tempo)
    * @param {boolean} [input.hasReceipt] - Se tem nota fiscal (apenas para EXPENSE)
    * @param {boolean} [input.isReimbursement] - Se é reembolso (apenas para INCOME)
-   * @param {string} [input.category] - Categoria (apenas para INCOME: 'diaria', 'hora_extra', 'km', 'tempo_viagem')
+   * @param {string} [input.category] - Categoria (apenas para INCOME: 'diaria', 'hora_extra', 'km')
    * @param {number} [input.distance] - Distância em KM (apenas para category='km')
-   * @param {number} [input.hours] - Horas de viagem (apenas para category='tempo_viagem')
+   * @param {string} [input.origin] - Origem do deslocamento (opcional, apenas para category='km')
+   * @param {string} [input.destination] - Destino do deslocamento (opcional, apenas para category='km')
    * @returns {Promise<Object>} - Resultado com transação criada ou erro
    */
   async execute(input) {
@@ -84,19 +85,6 @@ class AddTransaction {
             input.isReimbursement !== undefined ? input.isReimbursement : true,
             input.origin || null,
             input.destination || null
-          );
-        } else if (input.category === 'tempo_viagem') {
-          // Transação de Tempo de Viagem - calcula valor automaticamente
-          if (!input.hours && input.hours !== 0) {
-            throw new Error('Horas de viagem são obrigatórias para transações de tempo de viagem');
-          }
-          const settings = await this._getSettings();
-          transaction = Transaction.createTravelTimeIncome(
-            input.eventId,
-            input.description,
-            input.hours,
-            settings.rateTravelTime,
-            input.isReimbursement !== undefined ? input.isReimbursement : true
           );
         } else {
           // Outras receitas (diária, hora extra) - valor deve ser informado
@@ -200,10 +188,9 @@ class AddTransaction {
     }
 
     if (input.type === 'INCOME') {
-      // Para KM e Tempo de Viagem, não precisa validar amount aqui
-      // pois será calculado automaticamente
-      if (input.category && !['diaria', 'hora_extra', 'km', 'tempo_viagem'].includes(input.category)) {
-        throw new Error('Categoria inválida. Deve ser: diaria, hora_extra, km ou tempo_viagem');
+      // Para KM, não precisa validar amount aqui pois será calculado automaticamente
+      if (input.category && !['diaria', 'hora_extra', 'km'].includes(input.category)) {
+        throw new Error('Categoria inválida. Deve ser: diaria, hora_extra ou km');
       }
     }
   }

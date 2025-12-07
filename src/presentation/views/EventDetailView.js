@@ -229,10 +229,10 @@ class EventDetailView {
             </button>
             <button class="btn btn-secondary" id="btn-add-km-travel" 
                     style="padding: var(--spacing-md); border-radius: var(--radius-lg); font-size: 24px; line-height: 1; display: flex; flex-direction: column; align-items: center; gap: 2px;"
-                    title="Adicionar Deslocamento (Reembolso)">
+                    title="Adicionar KM Rodado (Reembolso de Combustível)">
               <span>🚗</span>
-              <span style="font-size: 11px; font-weight: var(--font-weight-medium);">Deslocamento</span>
-              <span style="font-size: 9px; color: var(--color-text-secondary);">(Reembolso)</span>
+              <span style="font-size: 11px; font-weight: var(--font-weight-medium);">KM Rodado</span>
+              <span style="font-size: 9px; color: var(--color-text-secondary);">(Combustível)</span>
             </button>
           </div>
         </div>
@@ -297,7 +297,7 @@ class EventDetailView {
 
         <div class="card">
           <div class="card-header">
-            <h3 class="card-title">🚗 Deslocamentos (Reembolso)</h3>
+            <h3 class="card-title">🚗 KM Rodado (Reembolso de Combustível)</h3>
             <div style="display: flex; align-items: center; gap: var(--spacing-sm); flex-wrap: wrap;">
               ${reimbursements.length > 0 ? `
                 <span class="badge badge-info">Total: ${this.formatCurrency(totalReimbursements)}</span>
@@ -305,7 +305,7 @@ class EventDetailView {
               ${event.status !== 'PAID' ? `
                 <button class="btn btn-sm btn-secondary" id="btn-add-km-travel-header" 
                         style="padding: 6px 12px; border-radius: var(--radius-full); font-size: 18px; line-height: 1; min-width: 32px; height: 32px; display: flex; align-items: center; justify-content: center;"
-                        title="Adicionar Deslocamento">
+                        title="Adicionar KM Rodado">
                   ➕
                 </button>
               ` : ''}
@@ -313,7 +313,7 @@ class EventDetailView {
           </div>
           ${reimbursements.length === 0 ? `
             <div class="empty-state">
-              <p class="text-muted">Nenhum deslocamento cadastrado ainda.</p>
+              <p class="text-muted">Nenhum KM rodado cadastrado ainda.</p>
             </div>
           ` : `
             <div class="expense-list">
@@ -597,7 +597,6 @@ class EventDetailView {
     const category = income.metadata.category || '';
     const categoryLabels = {
       'km': 'KM Rodado',
-      'tempo_viagem': 'Tempo de Viagem',
       'diaria': 'Diária',
       'hora_extra': 'Hora Extra'
     };
@@ -905,9 +904,8 @@ class EventDetailView {
           </form>
         `;
       } else if (transactionType === 'income' || transaction.type === 'INCOME') {
-        // Modal para editar receita (KM/Viagem)
+        // Modal para editar receita (KM)
         const isKm = transactionCategory === 'km' || transaction.metadata.category === 'km';
-        const isTravelTime = transactionCategory === 'tempo_viagem' || transaction.metadata.category === 'tempo_viagem';
         
         if (isKm) {
           // Editar KM Rodado
@@ -968,29 +966,6 @@ class EventDetailView {
                 <input type="text" class="form-input" id="edit-km-description" 
                        value="${this.escapeHtml(additionalDescription)}" 
                        placeholder="Informações adicionais">
-              </div>
-              <div class="modal-footer">
-                <button type="button" class="btn btn-secondary" onclick="this.closest('.modal-backdrop').remove()">
-                  Cancelar
-                </button>
-                <button type="submit" class="btn btn-primary">Salvar</button>
-              </div>
-            </form>
-          `;
-        } else if (isTravelTime) {
-          // Editar Tempo de Viagem
-          const hours = transaction.metadata.hours || (transaction.amount / (await this.settingsRepository.find())?.rateTravelTime || DEFAULT_VALUES.TRAVEL_TIME_RATE);
-          modalContent = `
-            <form id="form-edit-travel-time">
-              <div class="form-group">
-                <label class="form-label">Descrição *</label>
-                <input type="text" class="form-input" id="edit-travel-description" 
-                       value="${this.escapeHtml(transaction.description)}" required>
-              </div>
-              <div class="form-group">
-                <label class="form-label">Horas de Viagem *</label>
-                <input type="number" class="form-input" id="edit-travel-hours" 
-                       value="${hours.toFixed(2)}" step="0.25" min="0.25" required>
               </div>
               <div class="modal-footer">
                 <button type="button" class="btn btn-secondary" onclick="this.closest('.modal-backdrop').remove()">
@@ -1144,7 +1119,6 @@ class EventDetailView {
         };
       } else if (transactionType === 'income' || transaction.type === 'INCOME') {
         const isKm = transactionCategory === 'km' || transaction.metadata.category === 'km';
-        const isTravelTime = transactionCategory === 'tempo_viagem' || transaction.metadata.category === 'tempo_viagem';
 
         if (isKm) {
           // Editar KM Rodado
@@ -1212,31 +1186,6 @@ class EventDetailView {
               isReimbursement: true,
               origin: origin || null,
               destination: destination || null
-            }
-          };
-        } else if (isTravelTime) {
-          // Editar Tempo de Viagem
-          const description = document.getElementById('edit-travel-description').value.trim();
-          const hours = parseFloat(document.getElementById('edit-travel-hours').value);
-          const settings = await this.settingsRepository.find();
-          const rateTravelTime = settings?.rateTravelTime || DEFAULT_VALUES.TRAVEL_TIME_RATE;
-          const amount = hours * rateTravelTime;
-
-          if (!description || !hours || hours <= 0) {
-            if (window.toast) {
-              window.toast.error('Descrição e horas são obrigatórios');
-            }
-            return false;
-          }
-
-          updateData = {
-            description,
-            amount,
-            metadata: {
-              ...transaction.metadata,
-              category: 'tempo_viagem',
-              hours,
-              isReimbursement: true
             }
           };
         } else {

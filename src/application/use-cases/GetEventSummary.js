@@ -68,9 +68,9 @@ class GetEventSummary {
       // Separa transações por tipo para as views
       const expenses = transactions.filter(t => t.type === 'EXPENSE');
       const incomes = transactions.filter(t => t.type === 'INCOME');
+      // Reembolsos: KM ou marcados explicitamente como reembolso
       const reimbursements = incomes.filter(i => 
         i.metadata.category === 'km' || 
-        i.metadata.category === 'tempo_viagem' ||
         i.metadata.isReimbursement === true
       );
       const fees = incomes.filter(i => 
@@ -78,7 +78,6 @@ class GetEventSummary {
         i.metadata.isReimbursement !== true
       );
       const kmTransactions = reimbursements.filter(r => r.metadata.category === 'km');
-      const travelTimeTransactions = reimbursements.filter(r => r.metadata.category === 'tempo_viagem');
 
       // Monta o resumo
       const summary = {
@@ -111,15 +110,14 @@ class GetEventSummary {
           totalSpent: totals.totalExpenses,
           netBalance: totals.totalIncome - totals.totalExpenses
         },
-        transactions: {
-          all: transactions,
-          expenses: expenses,
-          incomes: incomes,
-          reimbursements: reimbursements,
-          fees: fees,
-          kmTransactions: kmTransactions,
-          travelTimeTransactions: travelTimeTransactions
-        },
+          transactions: {
+            all: transactions,
+            expenses: expenses,
+            incomes: incomes,
+            reimbursements: reimbursements,
+            fees: fees,
+            kmTransactions: kmTransactions
+          },
         breakdown: {
           expenses: totals.expenses,
           income: totals.income,
@@ -200,15 +198,13 @@ class GetEventSummary {
 
         const category = transaction.metadata.category;
         
-        // Separa KM e Tempo de Viagem para cálculo de custo inicial
+        // Separa KM para cálculo de custo inicial
         if (category === 'km') {
           totalKmCost += transaction.amount; // Gasolina paga hoje
-        } else if (category === 'tempo_viagem') {
-          totalTravelTimeCost += transaction.amount; // Tempo de viagem (reembolso)
         }
 
         if (transaction.metadata.isReimbursement !== false) {
-          // Considera KM e tempo_viagem como reembolso
+          // Considera KM como reembolso
           totalReimbursements += transaction.amount;
           reimbursements.push({
             id: transaction.id,

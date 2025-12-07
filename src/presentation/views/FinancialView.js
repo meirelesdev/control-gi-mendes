@@ -49,29 +49,26 @@ class FinancialView {
           t.metadata.isReimbursement !== true
         );
         
-        // Reembolsos: KM e Tempo de Viagem
+        // Reembolsos: KM ou marcados explicitamente como reembolso
         const reimbursements = incomes.filter(t => 
           t.metadata.category === 'km' || 
-          t.metadata.category === 'tempo_viagem' ||
           t.metadata.isReimbursement === true
         );
         
         // KM (gasolina paga hoje)
         const kmTransactions = reimbursements.filter(r => r.metadata.category === 'km');
-        const travelTimeTransactions = reimbursements.filter(r => r.metadata.category === 'tempo_viagem');
         
-        // Calcula valores do evento (mesma lógica do EventDetailView)
+        // Calcula valores do evento
         const eventExpenses = expenses.reduce((sum, e) => sum + e.amount, 0);
         const eventKmCost = kmTransactions.reduce((sum, k) => sum + k.amount, 0);
-        const eventTravelTimeCost = travelTimeTransactions.reduce((sum, t) => sum + t.amount, 0);
         const eventFees = fees.reduce((sum, f) => sum + f.amount, 0);
         
         // Acumula totais (mesma lógica do EventDetailView)
         totalUpfrontCost += eventExpenses + eventKmCost; // Investimento: Insumos + Gasolina
         totalNetProfit += eventFees; // Lucro: Apenas Honorários
         
-        // Valor de reembolso = Insumos + KM + Tempo de Viagem
-        const eventReimbursementValue = eventExpenses + eventKmCost + eventTravelTimeCost;
+        // Valor de reembolso = Insumos + KM
+        const eventReimbursementValue = eventExpenses + eventKmCost;
         totalReimbursements += eventReimbursementValue;
       }
       

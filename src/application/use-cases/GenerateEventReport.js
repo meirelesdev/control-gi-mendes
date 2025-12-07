@@ -135,7 +135,7 @@ class GenerateEventReport {
   }
 
   /**
-   * Extrai deslocamentos: KM e Tempo de Viagem
+   * Extrai deslocamentos: KM Rodado (combustível)
    * Conforme contrato: "Relatório de custos de deslocamentos"
    * @private
    */
@@ -143,7 +143,7 @@ class GenerateEventReport {
     return transactions
       .filter(t => 
         t.type === 'INCOME' && 
-        (t.metadata.category === 'km' || t.metadata.category === 'tempo_viagem')
+        t.metadata.category === 'km'
       )
       .map(t => ({
         id: t.id,

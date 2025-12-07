@@ -79,10 +79,7 @@ export class ExportTransactionsToCSV {
       const isReimbursement = transaction.metadata?.isReimbursement;
 
       if (category === 'km') {
-        return 'Deslocamento - KM';
-      }
-      if (category === 'tempo_viagem') {
-        return 'Deslocamento - Tempo';
+        return 'KM Rodado';
       }
       if (category === 'diaria') {
         return 'Honorário - Diária';

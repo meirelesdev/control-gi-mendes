@@ -115,9 +115,9 @@ class Transaction {
         this.metadata.isReimbursement = false;
       }
       
-      // Para INCOME, pode ter category (diaria, hora_extra, km, tempo_viagem)
+      // Para INCOME, pode ter category (diaria, hora_extra, km)
       if (metadata.category) {
-        const validCategories = ['diaria', 'hora_extra', 'km', 'tempo_viagem'];
+        const validCategories = ['diaria', 'hora_extra', 'km'];
         if (!validCategories.includes(metadata.category)) {
           throw new Error(`Categoria inválida. Deve ser uma das: ${validCategories.join(', ')}`);
         }
@@ -298,14 +298,6 @@ class Transaction {
     
     const id = `income_${Date.now()}_${Math.random().toString(36).substr(2, 9)}`;
     return new Transaction(id, eventId, 'INCOME', finalDescription, amount, metadata);
-  }
-
-  /**
-   * Cria uma transação de tempo de viagem (INCOME - geralmente reembolso)
-   */
-  static createTravelTimeIncome(eventId, description, hours, rateTravelTime, isReimbursement = true) {
-    const amount = hours * rateTravelTime;
-    return Transaction.createIncome(eventId, description, amount, isReimbursement, 'tempo_viagem');
   }
 
   /**

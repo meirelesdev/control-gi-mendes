@@ -157,20 +157,6 @@
       "updatedAt": "2025-11-14T06:00:00.000Z"
     },
     {
-      "id": "income_1733491202004_tempo1",
-      "eventId": "event_1733491200000_abc123",
-      "type": "INCOME",
-      "description": "Tempo de Viagem - Ida e Volta",
-      "amount": 150.00,
-      "metadata": {
-        "category": "tempo_viagem",
-        "hours": 2,
-        "isReimbursement": true
-      },
-      "createdAt": "2025-11-14T06:00:00.000Z",
-      "updatedAt": "2025-11-14T06:00:00.000Z"
-    },
-    {
       "id": "expense_1733491201003_insumo4",
       "eventId": "event_1733491200001_def456",
       "type": "EXPENSE",
@@ -396,20 +382,6 @@
         "isReimbursement": true,
         "origin": "Florianópolis",
         "destination": "Belo Horizonte"
-      },
-      "createdAt": "2025-11-27T04:00:00.000Z",
-      "updatedAt": "2025-11-27T04:00:00.000Z"
-    },
-    {
-      "id": "income_1733491202017_tempo2",
-      "eventId": "event_1733491200005_pqr678",
-      "type": "INCOME",
-      "description": "Tempo de Viagem - Longa Distância",
-      "amount": 300.00,
-      "metadata": {
-        "category": "tempo_viagem",
-        "hours": 4,
-        "isReimbursement": true
       },
       "createdAt": "2025-11-27T04:00:00.000Z",
       "updatedAt": "2025-11-27T04:00:00.000Z"

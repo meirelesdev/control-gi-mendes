@@ -76,7 +76,7 @@ Representa uma transação financeira relacionada a um evento:
 
 **Para INCOME:**
 - `metadata.isReimbursement`: Boolean diferenciando reembolso de honorário
-- `metadata.category`: Categoria opcional ('diaria', 'hora_extra', 'km', 'tempo_viagem')
+- `metadata.category`: Categoria opcional ('diaria', 'hora_extra', 'km')
 
 **Validações:**
 - Descrição obrigatória, mínimo 3 caracteres
