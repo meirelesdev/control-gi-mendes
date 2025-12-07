@@ -2,6 +2,8 @@
  * Caso de Uso: Obter Resumo do Evento
  * Retorna o resumo financeiro completo de um evento
  */
+import { Settings } from '../../domain/entities/Settings.js';
+
 class GetEventSummary {
   constructor(eventRepository, transactionRepository, settingsRepository) {
     if (!eventRepository) {
@@ -59,6 +61,24 @@ class GetEventSummary {
       
       // 3. Lucro Líquido Real: Apenas Diárias + Horas Extras (único dinheiro realmente ganho)
       const netProfit = totals.totalFees;
+      
+      // 4. Total a Receber: Reembolso + Lucro
+      const totalToReceive = reimbursementValue + netProfit;
+
+      // Separa transações por tipo para as views
+      const expenses = transactions.filter(t => t.type === 'EXPENSE');
+      const incomes = transactions.filter(t => t.type === 'INCOME');
+      const reimbursements = incomes.filter(i => 
+        i.metadata.category === 'km' || 
+        i.metadata.category === 'tempo_viagem' ||
+        i.metadata.isReimbursement === true
+      );
+      const fees = incomes.filter(i => 
+        (i.metadata.category === 'diaria' || i.metadata.category === 'hora_extra') &&
+        i.metadata.isReimbursement !== true
+      );
+      const kmTransactions = reimbursements.filter(r => r.metadata.category === 'km');
+      const travelTimeTransactions = reimbursements.filter(r => r.metadata.category === 'tempo_viagem');
 
       // Monta o resumo
       const summary = {
@@ -66,7 +86,10 @@ class GetEventSummary {
           id: event.id,
           name: event.name,
           date: event.date,
-          status: event.status
+          status: event.status,
+          description: event.description,
+          expectedPaymentDate: event.expectedPaymentDate,
+          isEditable: event.isEditable
         },
         totals: {
           // Investimento Inicial (o que ela pagou do próprio bolso)
@@ -76,12 +99,26 @@ class GetEventSummary {
           // Lucro Líquido Real (apenas honorários - único dinheiro realmente ganho)
           netProfit: netProfit,
           // Total a Receber (Reembolso + Lucro)
-          totalToReceive: reimbursementValue + netProfit,
+          totalToReceive: totalToReceive,
+          // Totais individuais
+          totalExpenses: totals.totalExpenses,
+          totalKmCost: totals.totalKmCost,
+          totalTravelTimeCost: totals.totalTravelTimeCost,
+          totalReimbursements: totals.totalReimbursements,
+          totalFees: totals.totalFees,
+          totalIncomes: totals.totalIncome,
           // Mantém campos antigos para compatibilidade
           totalSpent: totals.totalExpenses,
-          totalReimbursements: totals.totalExpenses + totals.totalReimbursements,
-          totalFees: totals.totalFees,
           netBalance: totals.totalIncome - totals.totalExpenses
+        },
+        transactions: {
+          all: transactions,
+          expenses: expenses,
+          incomes: incomes,
+          reimbursements: reimbursements,
+          fees: fees,
+          kmTransactions: kmTransactions,
+          travelTimeTransactions: travelTimeTransactions
         },
         breakdown: {
           expenses: totals.expenses,
@@ -217,7 +254,6 @@ class GetEventSummary {
   async _getSettings() {
     let settings = await this.settingsRepository.find();
     if (!settings) {
-      const { Settings } = await import('../../domain/entities/Settings.js');
       settings = Settings.createDefault();
       await this.settingsRepository.save(settings);
     }

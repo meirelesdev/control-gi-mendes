@@ -3,6 +3,7 @@
  * Permite alterar valores de KM e Hora de Viagem
  */
 import { Settings } from '../../domain/entities/Settings.js';
+import { DEFAULT_VALUES } from '../../domain/constants/DefaultValues.js';
 
 class SettingsView {
   constructor(settingsRepository, updateSettingsUseCase, exportDataUseCase = null, importDataUseCase = null, exportTransactionsToCSVUseCase = null, eventRepository = null, transactionRepository = null) {
@@ -60,21 +61,21 @@ class SettingsView {
             <div class="form-group">
               <label class="form-label">Teto de Hospedagem (R$)</label>
               <input type="number" class="form-input" id="settings-max-hotel-rate" 
-                     step="0.01" min="0" value="${settings.maxHotelRate || 280.00}" required>
+                     step="0.01" min="0" value="${settings.maxHotelRate || DEFAULT_VALUES.MAX_HOTEL_RATE}" required>
               <small class="text-muted">Valor máximo permitido para despesas de hospedagem conforme contrato</small>
             </div>
 
             <div class="form-group">
               <label class="form-label">Diária Técnica Padrão (R$)</label>
               <input type="number" class="form-input" id="settings-standard-daily-rate" 
-                     step="0.01" min="0" value="${settings.standardDailyRate || 300.00}" required>
+                     step="0.01" min="0" value="${settings.standardDailyRate || DEFAULT_VALUES.DAILY_RATE}" required>
               <small class="text-muted">Valor padrão da diária técnica lançada automaticamente ao criar evento</small>
             </div>
 
             <div class="form-group">
               <label class="form-label">Taxa de Hora Extra (R$)</label>
               <input type="number" class="form-input" id="settings-overtime-rate" 
-                     step="0.01" min="0" value="${settings.overtimeRate || 75.00}" required>
+                     step="0.01" min="0" value="${settings.overtimeRate || DEFAULT_VALUES.OVERTIME_RATE}" required>
               <small class="text-muted">Valor por hora extra trabalhada</small>
             </div>
 

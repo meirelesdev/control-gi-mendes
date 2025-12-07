@@ -2,13 +2,17 @@
  * View: Dashboard
  * Exibe lista de eventos ativos e card com total a receber
  */
+import { Formatters } from '../utils/Formatters.js';
+import { DEFAULT_VALUES } from '../../domain/constants/DefaultValues.js';
+
 class DashboardView {
-  constructor(eventRepository, transactionRepository, settingsRepository, createEventUseCase = null, generateMonthlyReportUseCase = null) {
+  constructor(eventRepository, transactionRepository, settingsRepository, createEventUseCase = null, generateMonthlyReportUseCase = null, getEventSummaryUseCase = null) {
     this.eventRepository = eventRepository;
     this.transactionRepository = transactionRepository;
     this.settingsRepository = settingsRepository;
     this.createEventUseCase = createEventUseCase;
     this.generateMonthlyReportUseCase = generateMonthlyReportUseCase;
+    this.getEventSummaryUseCase = getEventSummaryUseCase;
     this.currentFilter = 'all'; // 'all', 'pending', 'paid'
     this._handleCreateNewEvent = null; // Referência para o handler do evento
   }
@@ -44,6 +48,7 @@ class DashboardView {
       // 'all' não filtra nada
 
       // Calcula resumo financeiro consolidado apenas de eventos PENDENTES (não pagos e não cancelados)
+      // Usa GetEventSummary para garantir que a lógica de cálculo está centralizada no Use Case
       let totalUpfrontCost = 0; // Investimento realizado
       let totalNetProfit = 0; // Lucro líquido
       let totalReimbursements = 0; // Reembolsos
@@ -54,43 +59,43 @@ class DashboardView {
         e.status !== 'PAID' // Exclui eventos pagos do resumo financeiro
       );
       
-      for (const event of eventsForCalculation) {
-        const transactions = await this.transactionRepository.findByEventId(event.id);
-        
-        // Separa transações
-        const expenses = transactions.filter(t => t.type === 'EXPENSE');
-        const incomes = transactions.filter(t => t.type === 'INCOME');
-        
-        // Honorários (Lucro): Diárias e Horas Extras
-        const fees = incomes.filter(t => 
-          (t.metadata.category === 'diaria' || t.metadata.category === 'hora_extra') &&
-          t.metadata.isReimbursement !== true
-        );
-        
-        // Reembolsos: KM e Tempo de Viagem
-        const reimbursements = incomes.filter(t => 
-          t.metadata.category === 'km' || 
-          t.metadata.category === 'tempo_viagem' ||
-          t.metadata.isReimbursement === true
-        );
-        
-        // KM (gasolina paga hoje)
-        const kmTransactions = reimbursements.filter(r => r.metadata.category === 'km');
-        const travelTimeTransactions = reimbursements.filter(r => r.metadata.category === 'tempo_viagem');
-        
-        // Calcula valores do evento (mesma lógica do EventDetailView)
-        const eventExpenses = expenses.reduce((sum, e) => sum + e.amount, 0);
-        const eventKmCost = kmTransactions.reduce((sum, k) => sum + k.amount, 0);
-        const eventTravelTimeCost = travelTimeTransactions.reduce((sum, t) => sum + t.amount, 0);
-        const eventFees = fees.reduce((sum, f) => sum + f.amount, 0);
-        
-        // Acumula totais (mesma lógica do EventDetailView)
-        totalUpfrontCost += eventExpenses + eventKmCost; // Investimento: Insumos + Gasolina
-        totalNetProfit += eventFees; // Lucro: Apenas Honorários
-        
-        // Valor de reembolso = Insumos + KM + Tempo de Viagem
-        const eventReimbursementValue = eventExpenses + eventKmCost + eventTravelTimeCost;
-        totalReimbursements += eventReimbursementValue;
+      if (this.getEventSummaryUseCase) {
+        // Usa GetEventSummary para cada evento (lógica de negócio centralizada)
+        for (const event of eventsForCalculation) {
+          const summaryResult = await this.getEventSummaryUseCase.execute({ eventId: event.id });
+          if (summaryResult.success && summaryResult.data) {
+            const summary = summaryResult.data;
+            totalUpfrontCost += summary.totals.upfrontCost;
+            totalNetProfit += summary.totals.netProfit;
+            totalReimbursements += summary.totals.reimbursementValue;
+          }
+        }
+      } else {
+        // Fallback: cálculo manual se GetEventSummary não estiver disponível
+        for (const event of eventsForCalculation) {
+          const transactions = await this.transactionRepository.findByEventId(event.id);
+          const expenses = transactions.filter(t => t.type === 'EXPENSE');
+          const incomes = transactions.filter(t => t.type === 'INCOME');
+          const fees = incomes.filter(t => 
+            (t.metadata.category === 'diaria' || t.metadata.category === 'hora_extra') &&
+            t.metadata.isReimbursement !== true
+          );
+          const reimbursements = incomes.filter(t => 
+            t.metadata.category === 'km' || 
+            t.metadata.category === 'tempo_viagem' ||
+            t.metadata.isReimbursement === true
+          );
+          const kmTransactions = reimbursements.filter(r => r.metadata.category === 'km');
+          const travelTimeTransactions = reimbursements.filter(r => r.metadata.category === 'tempo_viagem');
+          const eventExpenses = expenses.reduce((sum, e) => sum + e.amount, 0);
+          const eventKmCost = kmTransactions.reduce((sum, k) => sum + k.amount, 0);
+          const eventTravelTimeCost = travelTimeTransactions.reduce((sum, t) => sum + t.amount, 0);
+          const eventFees = fees.reduce((sum, f) => sum + f.amount, 0);
+          totalUpfrontCost += eventExpenses + eventKmCost;
+          totalNetProfit += eventFees;
+          const eventReimbursementValue = eventExpenses + eventKmCost + eventTravelTimeCost;
+          totalReimbursements += eventReimbursementValue;
+        }
       }
       
       // Total a receber = Reembolsos + Lucro
@@ -338,25 +343,15 @@ class DashboardView {
   }
 
   formatCurrency(value) {
-    return new Intl.NumberFormat('pt-BR', {
-      style: 'currency',
-      currency: 'BRL'
-    }).format(value);
+    return Formatters.currency(value);
   }
 
   formatDate(dateString) {
-    const date = new Date(dateString);
-    return new Intl.DateTimeFormat('pt-BR', {
-      day: '2-digit',
-      month: 'short',
-      year: 'numeric'
-    }).format(date);
+    return Formatters.dateShort(dateString);
   }
 
   escapeHtml(text) {
-    const div = document.createElement('div');
-    div.textContent = text;
-    return div.innerHTML;
+    return Formatters.escapeHtml(text);
   }
 
   async showCreateEventModal() {
@@ -367,14 +362,14 @@ class DashboardView {
     }
 
     // Busca o valor da diária padrão das configurações
-    let dailyRate = 300.00; // Valor padrão
+    let dailyRate = DEFAULT_VALUES.DAILY_RATE; // Valor padrão
     try {
       const settings = await this.settingsRepository.find();
       if (settings && settings.standardDailyRate) {
         dailyRate = settings.standardDailyRate;
       }
     } catch (error) {
-      console.warn('Erro ao buscar configurações, usando valor padrão:', error);
+      // Usa valor padrão em caso de erro
     }
 
     const modal = document.createElement('div');

@@ -150,7 +150,7 @@ class Event {
    * @param {Date|string} reportSentDate - Data em que o relatório foi enviado (padrão: hoje)
    * @param {number} reimbursementDays - Número de dias para reembolso (padrão: 21)
    */
-  markAsReportSent(reportSentDate = new Date(), reimbursementDays = 21) {
+  markAsReportSent(reportSentDate = new Date(), reimbursementDays = null) {
     const sentDate = reportSentDate instanceof Date ? reportSentDate : new Date(reportSentDate);
     
     if (isNaN(sentDate.getTime())) {

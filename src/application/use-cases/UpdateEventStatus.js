@@ -2,6 +2,8 @@
  * Caso de Uso: Atualizar Status do Evento
  * Atualiza o status do evento e calcula data prevista de pagamento quando necessário
  */
+import { DEFAULT_VALUES } from '../../domain/constants/DefaultValues.js';
+
 class UpdateEventStatus {
   constructor(eventRepository, settingsRepository, transactionRepository = null) {
     if (!eventRepository) {
@@ -86,7 +88,7 @@ class UpdateEventStatus {
       // Se o novo status for REPORT_SENT, calcula a data prevista de pagamento
       if (newStatus === 'REPORT_SENT') {
         const settings = await this.settingsRepository.find();
-        const reimbursementDays = settings?.defaultReimbursementDays || 21;
+        const reimbursementDays = settings?.defaultReimbursementDays || DEFAULT_VALUES.DEFAULT_REIMBURSEMENT_DAYS;
         const sentDate = reportSentDate || new Date();
         
         event.markAsReportSent(sentDate, reimbursementDays);

@@ -51,7 +51,6 @@ class DeleteEvent {
         try {
           await this.transactionRepository.delete(transaction.id);
         } catch (error) {
-          console.warn(`Erro ao excluir transação ${transaction.id}:`, error);
           // Continua mesmo se houver erro ao excluir uma transação
         }
       }

@@ -2,8 +2,10 @@
  * Entidade de Domínio: Settings
  * Singleton que contém as configurações do sistema
  */
+import { DEFAULT_VALUES } from '../constants/DefaultValues.js';
+
 class Settings {
-  constructor(rateKm = 0.90, rateTravelTime = 75.00, defaultReimbursementDays = 21, maxHotelRate = 280.00, standardDailyRate = 300.00, overtimeRate = 75.00) {
+  constructor(rateKm = DEFAULT_VALUES.KM_RATE, rateTravelTime = DEFAULT_VALUES.TRAVEL_TIME_RATE, defaultReimbursementDays = DEFAULT_VALUES.DEFAULT_REIMBURSEMENT_DAYS, maxHotelRate = DEFAULT_VALUES.MAX_HOTEL_RATE, standardDailyRate = DEFAULT_VALUES.DAILY_RATE, overtimeRate = DEFAULT_VALUES.OVERTIME_RATE) {
     this._validateRateKm(rateKm);
     this._validateRateTravelTime(rateTravelTime);
     this._validateDefaultReimbursementDays(defaultReimbursementDays);
@@ -211,7 +213,14 @@ class Settings {
    * - overtimeRate: R$ 75,00 por hora extra
    */
   static createDefault() {
-    return new Settings(0.90, 75.00, 21, 280.00, 300.00, 75.00);
+    return new Settings(
+      DEFAULT_VALUES.KM_RATE,
+      DEFAULT_VALUES.TRAVEL_TIME_RATE,
+      DEFAULT_VALUES.DEFAULT_REIMBURSEMENT_DAYS,
+      DEFAULT_VALUES.MAX_HOTEL_RATE,
+      DEFAULT_VALUES.DAILY_RATE,
+      DEFAULT_VALUES.OVERTIME_RATE
+    );
   }
 
   /**
@@ -223,12 +232,12 @@ class Settings {
       return Settings.createDefault();
     }
     return new Settings(
-      data.rateKm !== undefined ? data.rateKm : 0.90,
-      data.rateTravelTime !== undefined ? data.rateTravelTime : 75.00,
-      data.defaultReimbursementDays !== undefined ? data.defaultReimbursementDays : 21,
-      data.maxHotelRate !== undefined ? data.maxHotelRate : 280.00,
-      data.standardDailyRate !== undefined ? data.standardDailyRate : 300.00,
-      data.overtimeRate !== undefined ? data.overtimeRate : 75.00
+      data.rateKm !== undefined ? data.rateKm : DEFAULT_VALUES.KM_RATE,
+      data.rateTravelTime !== undefined ? data.rateTravelTime : DEFAULT_VALUES.TRAVEL_TIME_RATE,
+      data.defaultReimbursementDays !== undefined ? data.defaultReimbursementDays : DEFAULT_VALUES.DEFAULT_REIMBURSEMENT_DAYS,
+      data.maxHotelRate !== undefined ? data.maxHotelRate : DEFAULT_VALUES.MAX_HOTEL_RATE,
+      data.standardDailyRate !== undefined ? data.standardDailyRate : DEFAULT_VALUES.DAILY_RATE,
+      data.overtimeRate !== undefined ? data.overtimeRate : DEFAULT_VALUES.OVERTIME_RATE
     );
   }
 }

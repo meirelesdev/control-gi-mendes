@@ -7,6 +7,8 @@
  * - Custos de Insumos: Todas as despesas reembolsáveis
  * - Deslocamentos: KM e Tempo de Viagem
  */
+import { DEFAULT_VALUES } from '../../domain/constants/DefaultValues.js';
+
 class GenerateEventReport {
   constructor(eventRepository, transactionRepository) {
     if (!eventRepository) {
@@ -65,7 +67,7 @@ class GenerateEventReport {
           paymentInfo: {
             pixKey: '48988321351',
             beneficiary: 'Gisele Mendes',
-            paymentDays: 21
+            paymentDays: DEFAULT_VALUES.DEFAULT_REIMBURSEMENT_DAYS
           },
           services: {
             items: services,

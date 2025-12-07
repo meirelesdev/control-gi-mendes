@@ -3,9 +3,11 @@
  * Exibe detalhes do evento, botões de ação e lista de insumos
  */
 import { ReportView } from './ReportView.js';
+import { Formatters } from '../utils/Formatters.js';
+import { DEFAULT_VALUES } from '../../domain/constants/DefaultValues.js';
 
 class EventDetailView {
-  constructor(eventRepository, transactionRepository, settingsRepository, addTransactionUseCase, deleteTransactionUseCase = null, generateEventReportUseCase = null, updateEventStatusUseCase = null, updateEventUseCase = null, updateTransactionUseCase = null, deleteEventUseCase = null) {
+  constructor(eventRepository, transactionRepository, settingsRepository, addTransactionUseCase, deleteTransactionUseCase = null, generateEventReportUseCase = null, updateEventStatusUseCase = null, updateEventUseCase = null, updateTransactionUseCase = null, deleteEventUseCase = null, getEventSummaryUseCase = null) {
     this.eventRepository = eventRepository;
     this.transactionRepository = transactionRepository;
     this.settingsRepository = settingsRepository;
@@ -16,6 +18,7 @@ class EventDetailView {
     this.updateEventUseCase = updateEventUseCase;
     this.updateTransactionUseCase = updateTransactionUseCase;
     this.deleteEventUseCase = deleteEventUseCase;
+    this.getEventSummaryUseCase = getEventSummaryUseCase;
     this.currentEventId = null;
   }
 
@@ -28,44 +31,67 @@ class EventDetailView {
     container.innerHTML = '<div class="loading">Carregando...</div>';
 
     try {
-      const event = await this.eventRepository.findById(eventId);
-      if (!event) {
-        container.innerHTML = '<div class="empty-state"><p>Evento não encontrado.</p></div>';
-        return;
+      // Usa GetEventSummary para obter todos os dados calculados (lógica de negócio no Use Case)
+      let event, summary;
+      if (this.getEventSummaryUseCase) {
+        const summaryResult = await this.getEventSummaryUseCase.execute({ eventId });
+        if (!summaryResult.success) {
+          container.innerHTML = `<div class="empty-state"><p>Erro ao carregar evento: ${summaryResult.error}</p></div>`;
+          return;
+        }
+        summary = summaryResult.data;
+        event = summary.event;
+      } else {
+        // Fallback: busca manualmente se GetEventSummary não estiver disponível
+        event = await this.eventRepository.findById(eventId);
+        if (!event) {
+          container.innerHTML = '<div class="empty-state"><p>Evento não encontrado.</p></div>';
+          return;
+        }
+        // Calcula manualmente (compatibilidade com código antigo)
+        const transactions = await this.transactionRepository.findByEventId(eventId);
+        const expenses = transactions.filter(t => t.type === 'EXPENSE');
+        const incomes = transactions.filter(t => t.type === 'INCOME');
+        const reimbursements = incomes.filter(i => 
+          i.metadata.category === 'km' || i.metadata.category === 'tempo_viagem'
+        );
+        const fees = incomes.filter(i => 
+          i.metadata.category === 'diaria' || i.metadata.category === 'hora_extra'
+        );
+        const kmTransactions = reimbursements.filter(r => r.metadata.category === 'km');
+        const totalExpenses = expenses.reduce((sum, e) => sum + e.amount, 0);
+        const totalKmCost = kmTransactions.reduce((sum, k) => sum + k.amount, 0);
+        summary = {
+          event: event,
+          totals: {
+            upfrontCost: totalExpenses + totalKmCost,
+            reimbursementValue: totalExpenses + totalKmCost,
+            netProfit: fees.reduce((sum, f) => sum + f.amount, 0),
+            totalToReceive: 0,
+            totalExpenses: totalExpenses,
+            totalKmCost: totalKmCost,
+            totalTravelTimeCost: 0,
+            totalReimbursements: reimbursements.reduce((sum, r) => sum + r.amount, 0),
+            totalFees: fees.reduce((sum, f) => sum + f.amount, 0),
+            totalIncomes: incomes.reduce((sum, i) => sum + i.amount, 0)
+          },
+          transactions: {
+            expenses: expenses,
+            reimbursements: reimbursements,
+            fees: fees,
+            kmTransactions: kmTransactions,
+            travelTimeTransactions: []
+          }
+        };
+        summary.totals.totalToReceive = summary.totals.reimbursementValue + summary.totals.netProfit;
       }
 
-      const transactions = await this.transactionRepository.findByEventId(eventId);
-      const expenses = transactions.filter(t => t.type === 'EXPENSE');
+      // Extrai dados do summary para facilitar uso no template
+      const { upfrontCost, reimbursementValue, netProfit, totalToReceive, totalExpenses, totalReimbursements, totalFees } = summary.totals;
+      const expenses = summary.transactions.expenses || [];
+      const reimbursements = summary.transactions.reimbursements || [];
+      const fees = summary.transactions.fees || [];
       const expensesWithoutReceipt = expenses.filter(e => !e.metadata.hasReceipt);
-      
-      // Separa receitas: reembolsos (KM/Viagem) vs honorários (Diária/Hora Extra)
-      const incomes = transactions.filter(t => t.type === 'INCOME');
-      // Reembolsos: KM e Tempo de Viagem
-      const reimbursements = incomes.filter(i => 
-        i.metadata.category === 'km' || i.metadata.category === 'tempo_viagem'
-      );
-      // Honorários: Diária e Hora Extra
-      const fees = incomes.filter(i => 
-        i.metadata.category === 'diaria' || i.metadata.category === 'hora_extra'
-      );
-      
-      // Separa KM do restante dos reembolsos para cálculo de investimento inicial
-      const kmTransactions = reimbursements.filter(r => r.metadata.category === 'km');
-      const travelTimeTransactions = reimbursements.filter(r => r.metadata.category === 'tempo_viagem');
-      
-      // Calcula totais
-      const totalExpenses = expenses.reduce((sum, e) => sum + e.amount, 0);
-      const totalKmCost = kmTransactions.reduce((sum, k) => sum + k.amount, 0); // Gasolina paga hoje
-      const totalTravelTimeCost = travelTimeTransactions.reduce((sum, t) => sum + t.amount, 0);
-      const totalReimbursements = reimbursements.reduce((sum, r) => sum + r.amount, 0);
-      const totalFees = fees.reduce((sum, f) => sum + f.amount, 0);
-      const totalIncomes = incomes.reduce((sum, i) => sum + i.amount, 0);
-      
-      // Calcula os novos totalizadores financeiros
-      const upfrontCost = totalExpenses + totalKmCost; // Investimento inicial (despesas + gasolina)
-      const reimbursementValue = totalExpenses + totalKmCost + totalTravelTimeCost; // Valor de reembolso
-      const netProfit = totalFees; // Lucro líquido (apenas honorários)
-      const totalToReceive = reimbursementValue + netProfit; // Total a receber
 
       // Define cores e labels por status
       const statusConfig = this._getStatusConfig(event.status);
@@ -699,16 +725,16 @@ class EventDetailView {
     }
 
     // Busca valores das configurações antes de criar o modal
-    let dailyRate = 300.00;
-    let overtimeRate = 75.00;
+    let dailyRate = DEFAULT_VALUES.DAILY_RATE;
+    let overtimeRate = DEFAULT_VALUES.OVERTIME_RATE;
     try {
       const settings = await this.settingsRepository.find();
       if (settings) {
-        dailyRate = settings.standardDailyRate || 300.00;
-        overtimeRate = settings.overtimeRate || 75.00;
+        dailyRate = settings.standardDailyRate || DEFAULT_VALUES.DAILY_RATE;
+        overtimeRate = settings.overtimeRate || DEFAULT_VALUES.OVERTIME_RATE;
       }
     } catch (error) {
-      console.warn('Erro ao buscar configurações, usando valores padrão:', error);
+      // Usa valores padrão em caso de erro
     }
 
     const modal = this.createModal('Adicionar Honorário', `
@@ -800,17 +826,17 @@ class EventDetailView {
         const diariaValue = modal.querySelector('#diaria-value');
         const horaExtraInfo = modal.querySelector('#hora-extra-info');
         if (diariaValue) {
-          diariaValue.textContent = `Valor: ${this.formatCurrency(settings.standardDailyRate || 300.00)}`;
+          diariaValue.textContent = `Valor: ${this.formatCurrency(settings.standardDailyRate || DEFAULT_VALUES.DAILY_RATE)}`;
         }
         if (horaExtraInfo) {
-          horaExtraInfo.textContent = `Taxa: ${this.formatCurrency(settings.overtimeRate || 75.00)} por hora`;
+          horaExtraInfo.textContent = `Taxa: ${this.formatCurrency(settings.overtimeRate || DEFAULT_VALUES.OVERTIME_RATE)} por hora`;
         }
         // Armazena valores no modal para uso posterior
-        modal.dataset.dailyRate = settings.standardDailyRate || 300.00;
-        modal.dataset.overtimeRate = settings.overtimeRate || 75.00;
+        modal.dataset.dailyRate = settings.standardDailyRate || DEFAULT_VALUES.DAILY_RATE;
+        modal.dataset.overtimeRate = settings.overtimeRate || DEFAULT_VALUES.OVERTIME_RATE;
       }
     } catch (error) {
-      console.warn('Erro ao carregar configurações:', error);
+      // Usa valores padrão em caso de erro
     }
   }
 
@@ -840,7 +866,7 @@ class EventDetailView {
       let category;
 
       if (feeType === 'diaria') {
-        const dailyRate = parseFloat(modal.dataset.dailyRate || 300.00);
+        const dailyRate = parseFloat(modal.dataset.dailyRate || DEFAULT_VALUES.DAILY_RATE);
         amount = dailyRate;
         category = 'diaria';
       } else if (feeType === 'hora_extra') {
@@ -849,7 +875,7 @@ class EventDetailView {
           window.toast?.error('Quantidade de horas deve ser maior que zero');
           return false;
         }
-        const overtimeRate = parseFloat(modal.dataset.overtimeRate || 75.00);
+        const overtimeRate = parseFloat(modal.dataset.overtimeRate || DEFAULT_VALUES.OVERTIME_RATE);
         amount = hours * overtimeRate;
         category = 'hora_extra';
       } else {
@@ -1012,8 +1038,6 @@ class EventDetailView {
       if (result && result.success) {
         if (window.toast && typeof window.toast.success === 'function') {
           window.toast.success('Insumo adicionado com sucesso!');
-        } else {
-          console.log('✅ Insumo adicionado com sucesso!');
         }
         await this.render(this.currentEventId);
         return true; // Retorna true para indicar sucesso
@@ -1100,8 +1124,6 @@ class EventDetailView {
       if (result && result.success) {
         if (window.toast && typeof window.toast.success === 'function') {
           window.toast.success('Transação adicionada com sucesso!');
-        } else {
-          console.log('✅ Transação adicionada com sucesso!');
         }
         await this.render(this.currentEventId);
         return true; // Retorna true para indicar sucesso
@@ -1372,7 +1394,7 @@ class EventDetailView {
         
         if (isKm) {
           // Editar KM Rodado
-          const distance = transaction.metadata.distance || (transaction.amount / (await this.settingsRepository.find())?.rateKm || 0.90);
+          const distance = transaction.metadata.distance || (transaction.amount / (await this.settingsRepository.find())?.rateKm || DEFAULT_VALUES.KM_RATE);
           const origin = transaction.metadata.origin || '';
           const destination = transaction.metadata.destination || '';
           
@@ -1429,7 +1451,6 @@ class EventDetailView {
                 <input type="text" class="form-input" id="edit-km-description" 
                        value="${this.escapeHtml(additionalDescription)}" 
                        placeholder="Informações adicionais">
-                <small class="text-muted">A descrição será gerada automaticamente como "Deslocamento: Origem → Destino"</small>
               </div>
               <div class="modal-footer">
                 <button type="button" class="btn btn-secondary" onclick="this.closest('.modal-backdrop').remove()">
@@ -1441,7 +1462,7 @@ class EventDetailView {
           `;
         } else if (isTravelTime) {
           // Editar Tempo de Viagem
-          const hours = transaction.metadata.hours || (transaction.amount / (await this.settingsRepository.find())?.rateTravelTime || 75.00);
+          const hours = transaction.metadata.hours || (transaction.amount / (await this.settingsRepository.find())?.rateTravelTime || DEFAULT_VALUES.TRAVEL_TIME_RATE);
           modalContent = `
             <form id="form-edit-travel-time">
               <div class="form-group">
@@ -1492,7 +1513,7 @@ class EventDetailView {
         
         if (isHoraExtra) {
           // Editar Hora Extra
-          const hours = transaction.metadata.hours || (transaction.amount / (await this.settingsRepository.find())?.overtimeRate || 75.00);
+          const hours = transaction.metadata.hours || (transaction.amount / (await this.settingsRepository.find())?.overtimeRate || DEFAULT_VALUES.OVERTIME_RATE);
           modalContent = `
             <form id="form-edit-hour-extra">
               <div class="form-group">
@@ -1615,7 +1636,7 @@ class EventDetailView {
           const description = document.getElementById('edit-km-description')?.value.trim() || '';
           const distance = parseFloat(document.getElementById('edit-km-distance').value);
           const settings = await this.settingsRepository.find();
-          const rateKm = settings?.rateKm || 0.90;
+          const rateKm = settings?.rateKm || DEFAULT_VALUES.KM_RATE;
           const amount = distance * rateKm;
 
           if (!distance || distance <= 0) {
@@ -1681,7 +1702,7 @@ class EventDetailView {
           const description = document.getElementById('edit-travel-description').value.trim();
           const hours = parseFloat(document.getElementById('edit-travel-hours').value);
           const settings = await this.settingsRepository.find();
-          const rateTravelTime = settings?.rateTravelTime || 75.00;
+          const rateTravelTime = settings?.rateTravelTime || DEFAULT_VALUES.TRAVEL_TIME_RATE;
           const amount = hours * rateTravelTime;
 
           if (!description || !hours || hours <= 0) {
@@ -1726,7 +1747,7 @@ class EventDetailView {
           const description = document.getElementById('edit-hour-extra-description').value.trim();
           const hours = parseFloat(document.getElementById('edit-hour-extra-hours').value);
           const settings = await this.settingsRepository.find();
-          const overtimeRate = settings?.overtimeRate || 75.00;
+          const overtimeRate = settings?.overtimeRate || DEFAULT_VALUES.OVERTIME_RATE;
           const amount = hours * overtimeRate;
 
           if (!description || !hours || hours <= 0) {
@@ -1955,25 +1976,15 @@ class EventDetailView {
   }
 
   formatCurrency(value) {
-    return new Intl.NumberFormat('pt-BR', {
-      style: 'currency',
-      currency: 'BRL'
-    }).format(value);
+    return Formatters.currency(value);
   }
 
   formatDate(dateString) {
-    const date = new Date(dateString);
-    return new Intl.DateTimeFormat('pt-BR', {
-      day: '2-digit',
-      month: 'long',
-      year: 'numeric'
-    }).format(date);
+    return Formatters.dateLong(dateString);
   }
 
   escapeHtml(text) {
-    const div = document.createElement('div');
-    div.textContent = text;
-    return div.innerHTML;
+    return Formatters.escapeHtml(text);
   }
 
   /**

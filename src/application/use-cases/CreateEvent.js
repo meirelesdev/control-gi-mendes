@@ -4,6 +4,7 @@
  * Pode criar automaticamente uma transação de diária padrão
  */
 import { Event } from '../../domain/entities/Event.js';
+import { DEFAULT_VALUES } from '../../domain/constants/DefaultValues.js';
 
 class CreateEvent {
   constructor(eventRepository, addTransactionUseCase = null, settingsRepository = null) {
@@ -60,8 +61,7 @@ class CreateEvent {
             isReimbursement: false
           });
         } catch (dailyError) {
-          // Log do erro mas não falha a criação do evento
-          console.warn('Erro ao criar diária padrão automaticamente:', dailyError);
+          // Erro ao criar diária padrão não falha a criação do evento
         }
       }
 

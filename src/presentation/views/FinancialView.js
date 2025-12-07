@@ -2,6 +2,8 @@
  * View: Financeiro
  * Exibe resumo financeiro consolidado e fechamento mensal
  */
+import { Formatters } from '../utils/Formatters.js';
+
 class FinancialView {
   constructor(eventRepository, transactionRepository, settingsRepository, generateMonthlyReportUseCase = null) {
     this.eventRepository = eventRepository;
@@ -196,10 +198,7 @@ class FinancialView {
   }
 
   formatCurrency(value) {
-    return new Intl.NumberFormat('pt-BR', {
-      style: 'currency',
-      currency: 'BRL'
-    }).format(value);
+    return Formatters.currency(value);
   }
 }
 

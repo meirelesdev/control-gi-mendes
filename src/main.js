@@ -16,8 +16,6 @@ import { Transaction } from './domain/entities/Transaction.js';
 // Verifica se Transaction foi carregado corretamente
 if (!Transaction) {
   console.error('⚠️ Transaction não foi importado corretamente');
-} else {
-  console.log('✅ Transaction importado com sucesso no main.js');
 }
 
 // Domain Repository Interfaces (necessárias para os repositórios estenderem)
@@ -172,8 +170,6 @@ document.addEventListener('DOMContentLoaded', () => {
     // Torna toast disponível globalmente
     window.toast = toast;
     
-    console.log('✅ Chef Finance inicializado com sucesso!');
-    
     // Registrar Service Worker para PWA
     if ('serviceWorker' in navigator) {
       window.addEventListener('load', () => {
@@ -184,21 +180,18 @@ document.addEventListener('DOMContentLoaded', () => {
         
         navigator.serviceWorker.register(basePath, { scope: '/control-gi-mendes/' })
           .then((registration) => {
-            console.log('✅ Service Worker registrado com sucesso:', registration.scope);
-            
             // Verifica atualizações do service worker
             registration.addEventListener('updatefound', () => {
               const newWorker = registration.installing;
               newWorker.addEventListener('statechange', () => {
                 if (newWorker.state === 'installed' && navigator.serviceWorker.controller) {
                   // Novo service worker disponível
-                  console.log('🔄 Nova versão disponível! Recarregue a página.');
                 }
               });
             });
           })
           .catch((error) => {
-            console.warn('⚠️ Service Worker não pôde ser registrado:', error);
+            // Service Worker não pôde ser registrado (não crítico)
           });
       });
     }

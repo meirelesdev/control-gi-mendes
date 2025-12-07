@@ -5,6 +5,8 @@
  * Conforme contrato, a entrega dos relatórios deve ser MENSAL.
  * Agrupa todos os eventos do mês em um único relatório.
  */
+import { DEFAULT_VALUES } from '../../domain/constants/DefaultValues.js';
+
 class GenerateMonthlyReport {
   constructor(eventRepository, transactionRepository) {
     if (!eventRepository) {
@@ -96,7 +98,7 @@ class GenerateMonthlyReport {
           paymentInfo: {
             pixKey: '48988321351',
             beneficiary: 'Gisele Mendes',
-            paymentDays: 21
+            paymentDays: DEFAULT_VALUES.DEFAULT_REIMBURSEMENT_DAYS
           },
           events: monthEvents.map(event => ({
             id: event.id,

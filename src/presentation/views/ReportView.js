@@ -2,6 +2,9 @@
  * View: Relatório de Fechamento
  * Renderiza um relatório HTML formatado para impressão
  */
+import { Formatters } from '../utils/Formatters.js';
+import { DEFAULT_VALUES } from '../../domain/constants/DefaultValues.js';
+
 class ReportView {
   constructor() {
     // Esta view não precisa de dependências, apenas renderiza dados
@@ -50,12 +53,7 @@ class ReportView {
    * @private
    */
   _generateHTML(data, isMonthly = false) {
-    const formatCurrency = (value) => {
-      return new Intl.NumberFormat('pt-BR', {
-        style: 'currency',
-        currency: 'BRL'
-      }).format(value);
-    };
+    const formatCurrency = (value) => Formatters.currency(value);
 
     const formatDate = (dateString) => {
       const date = new Date(dateString);
@@ -141,6 +139,7 @@ class ReportView {
         .section {
             margin-bottom: 25px;
             page-break-inside: avoid;
+            break-inside: avoid;
         }
 
         .section-title {
@@ -157,6 +156,8 @@ class ReportView {
             border-collapse: collapse;
             margin-bottom: 15px;
             font-size: 11pt;
+            page-break-inside: avoid;
+            break-inside: avoid;
         }
 
         table th {
@@ -186,6 +187,8 @@ class ReportView {
             border: 2px solid #000;
             padding: 15px;
             background-color: #fafafa;
+            page-break-inside: avoid;
+            break-inside: avoid;
         }
 
         .summary-title {
@@ -254,14 +257,43 @@ class ReportView {
 
             .section {
                 page-break-inside: avoid;
+                break-inside: avoid;
             }
 
             table {
-                page-break-inside: auto;
+                page-break-inside: avoid;
+                break-inside: avoid;
+            }
+
+            thead {
+                display: table-header-group;
+            }
+
+            tbody {
+                display: table-row-group;
             }
 
             tr {
                 page-break-inside: avoid;
+                break-inside: avoid;
+                page-break-after: auto;
+            }
+
+            .summary {
+                page-break-inside: avoid;
+                break-inside: avoid;
+            }
+
+            /* Evita quebra na seção de pagamento */
+            .summary.payment-info {
+                page-break-inside: avoid !important;
+                break-inside: avoid !important;
+                page-break-after: auto;
+            }
+
+            .summary:last-of-type {
+                page-break-inside: avoid;
+                break-inside: avoid;
                 page-break-after: auto;
             }
         }
@@ -427,7 +459,7 @@ class ReportView {
         </div>
     </div>
 
-    <div class="summary" style="margin-top: 30px; border-top: 2px solid #000; padding-top: 20px;">
+    <div class="summary payment-info" style="margin-top: 30px; border-top: 2px solid #000; padding-top: 20px;">
         <div class="summary-title">Dados para Pagamento</div>
         <div class="summary-row" style="padding: 10px 0;">
             <span><strong>Chave PIX (Celular):</strong></span>
@@ -439,7 +471,7 @@ class ReportView {
         </div>
         <div style="margin-top: 15px; padding-top: 15px; border-top: 1px solid #ccc; font-size: 10pt; color: #666; text-align: center;">
             <p style="margin: 5px 0;">Pagamento mediante apresentação de Nota Fiscal</p>
-            <p style="margin: 5px 0;">Prazo: 21 dias após apresentação da NF</p>
+            <p style="margin: 5px 0;">Prazo: ${DEFAULT_VALUES.DEFAULT_REIMBURSEMENT_DAYS} dias após apresentação da NF</p>
         </div>
     </div>
 

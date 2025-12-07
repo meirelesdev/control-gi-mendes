@@ -126,7 +126,8 @@ class App {
         transactionRepository,
         settingsRepository,
         this.dependencies.createEvent,
-        generateMonthlyReport
+        generateMonthlyReport,
+        this.dependencies.getEventSummary
       );
       const content = document.getElementById('dashboard-content');
       if (content) {
@@ -151,7 +152,8 @@ class App {
         updateEventStatus,
         updateEvent,
         updateTransaction,
-        deleteEvent
+        deleteEvent,
+        this.dependencies.getEventSummary
       );
       const content = document.getElementById('event-detail-content');
       if (content) {
