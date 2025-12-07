@@ -230,10 +230,14 @@ class DashboardView {
 
       // Event listener para criar evento (apenas via FAB)
       if (this.createEventUseCase) {
-        // Listener global para o FAB (botão flutuante)
-        // Remove listener anterior se existir para evitar duplicação
-        window.removeEventListener('create-new-event', this._handleCreateNewEvent);
-        this._handleCreateNewEvent = () => {
+        // Remove listener anterior se existir (pode ser de uma instância anterior)
+        if (DashboardView._globalCreateEventHandler) {
+          window.removeEventListener('create-new-event', DashboardView._globalCreateEventHandler);
+          DashboardView._globalCreateEventHandler = null;
+        }
+        
+        // Cria função handler que referencia esta instância
+        const handler = () => {
           // Verifica se já existe um modal aberto
           const existingModal = document.querySelector('.modal-backdrop.active');
           if (existingModal) {
@@ -246,7 +250,13 @@ class DashboardView {
             this.showCreateEventModal();
           }
         };
-        window.addEventListener('create-new-event', this._handleCreateNewEvent);
+        
+        // Armazena referência estática para poder remover depois
+        DashboardView._globalCreateEventHandler = handler;
+        this._handleCreateNewEvent = handler;
+        
+        // Adiciona o listener
+        window.addEventListener('create-new-event', handler);
       }
 
     } catch (error) {

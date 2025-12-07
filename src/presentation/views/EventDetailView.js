@@ -510,12 +510,13 @@ class EventDetailView {
       <div class="expense-item ${hasReceipt ? '' : 'no-receipt'}" style="border-left-color: var(--color-danger);">
         <div class="expense-item-info">
           <div class="expense-item-description">
-            📦 ${this.escapeHtml(expense.description)}
-            <span class="badge badge-secondary" style="margin-left: var(--spacing-xs); font-size: 10px;">Reembolso</span>
+            <span>📦</span>
+            <span>${this.escapeHtml(expense.description)}</span>
+            <span class="badge badge-secondary">Reembolso</span>
           </div>
           <div class="expense-item-value" style="color: var(--color-danger);">${this.formatCurrency(expense.amount)}</div>
         </div>
-        <div class="expense-item-actions" style="display: flex; align-items: center; gap: var(--spacing-sm); flex-wrap: nowrap;">
+        <div class="expense-item-actions">
           ${!hasReceipt && eventStatus !== 'PAID' ? `
             <button class="btn btn-sm btn-success btn-mark-receipt" 
                     data-transaction-id="${expense.id}"
@@ -563,9 +564,10 @@ class EventDetailView {
       <div class="expense-item">
         <div class="expense-item-info">
           <div class="expense-item-description">
-            🚗 ${this.escapeHtml(income.description)}
-            <span class="badge badge-info" style="margin-left: var(--spacing-sm);">${categoryLabel}</span>
-            <span class="badge badge-secondary" style="margin-left: var(--spacing-xs);">Reembolso</span>
+            <span>🚗</span>
+            <span>${this.escapeHtml(income.description)}</span>
+            <span class="badge badge-info">${categoryLabel}</span>
+            <span class="badge badge-secondary">Reembolso</span>
           </div>
           <div class="expense-item-value" style="color: var(--color-success);">${this.formatCurrency(income.amount)}</div>
         </div>
@@ -604,9 +606,10 @@ class EventDetailView {
       <div class="expense-item" style="border-left-color: var(--color-success); background-color: rgba(34, 197, 94, 0.05);">
         <div class="expense-item-info">
           <div class="expense-item-description">
-            💰 ${this.escapeHtml(fee.description)}
-            <span class="badge badge-success" style="margin-left: var(--spacing-sm);">${categoryLabel}</span>
-            <span class="badge badge-success" style="margin-left: var(--spacing-xs); font-weight: bold;">Lucro</span>
+            <span>💰</span>
+            <span>${this.escapeHtml(fee.description)}</span>
+            <span class="badge badge-success">${categoryLabel}</span>
+            <span class="badge badge-success" style="font-weight: bold;">Lucro</span>
           </div>
           <div class="expense-item-value" style="color: var(--color-success); font-weight: bold;">${this.formatCurrency(fee.amount)}</div>
         </div>
@@ -1372,6 +1375,34 @@ class EventDetailView {
           const distance = transaction.metadata.distance || (transaction.amount / (await this.settingsRepository.find())?.rateKm || 0.90);
           const origin = transaction.metadata.origin || '';
           const destination = transaction.metadata.destination || '';
+          
+          // Extrai apenas a descrição adicional (remove o prefixo "Deslocamento: Origem → Destino")
+          let additionalDescription = transaction.description || '';
+          
+          // Se tem origem e destino salvos, tenta remover o prefixo automático
+          if (origin && destination) {
+            const autoPrefix = `Deslocamento: ${origin} → ${destination}`;
+            if (additionalDescription.startsWith(autoPrefix)) {
+              // Remove o prefixo automático
+              additionalDescription = additionalDescription.substring(autoPrefix.length).trim();
+              // Remove o separador " - " ou " -" se existir
+              if (additionalDescription.startsWith('-')) {
+                additionalDescription = additionalDescription.substring(1).trim();
+              }
+            }
+          } else if (additionalDescription.startsWith('Deslocamento:')) {
+            // Se não tem origem/destino salvos mas a descrição começa com "Deslocamento:",
+            // tenta extrair a parte adicional procurando por " - " após o padrão
+            const separatorIndex = additionalDescription.indexOf(' - ');
+            if (separatorIndex > 0) {
+              // Pega tudo após o separador " - "
+              additionalDescription = additionalDescription.substring(separatorIndex + 3).trim();
+            } else {
+              // Se não tem separador, significa que não há descrição adicional
+              additionalDescription = '';
+            }
+          }
+          
           modalContent = `
             <form id="form-edit-km">
               <div class="form-group">
@@ -1396,7 +1427,7 @@ class EventDetailView {
               <div class="form-group">
                 <label class="form-label">Descrição Adicional (opcional)</label>
                 <input type="text" class="form-input" id="edit-km-description" 
-                       value="${this.escapeHtml(transaction.description)}" 
+                       value="${this.escapeHtml(additionalDescription)}" 
                        placeholder="Informações adicionais">
                 <small class="text-muted">A descrição será gerada automaticamente como "Deslocamento: Origem → Destino"</small>
               </div>
@@ -1595,17 +1626,42 @@ class EventDetailView {
           }
 
           // Gera descrição automaticamente se origem e destino forem fornecidos
-          let finalDescription = description;
+          let finalDescription = '';
           if (origin && destination) {
+            // Sempre gera a descrição base a partir de origem e destino (sempre limpa)
             finalDescription = `Deslocamento: ${origin} → ${destination}`;
-            if (description && description.trim() !== '') {
-              finalDescription += ` - ${description}`;
+            
+            // Processa a descrição adicional para remover qualquer duplicação
+            let additionalDesc = (description || '').trim();
+            if (additionalDesc !== '') {
+              // Remove qualquer ocorrência do padrão "Deslocamento: ..." da descrição adicional
+              // Isso previne duplicação mesmo se o campo já contiver o padrão completo
+              const autoPrefixPattern = /^Deslocamento:\s*[^→]+→\s*[^-]+/;
+              if (autoPrefixPattern.test(additionalDesc)) {
+                // Se a descrição adicional começa com o padrão automático, tenta extrair apenas a parte após " - "
+                const parts = additionalDesc.split(' - ');
+                if (parts.length > 1) {
+                  // Pega tudo após o primeiro " - " (pode haver múltiplos se já estava duplicado)
+                  additionalDesc = parts.slice(1).join(' - ').trim();
+                } else {
+                  // Se não tem " - ", significa que é só o padrão automático, então limpa
+                  additionalDesc = '';
+                }
+              }
+              
+              // Adiciona a descrição adicional limpa se ainda houver algo
+              if (additionalDesc !== '') {
+                finalDescription += ` - ${additionalDesc}`;
+              }
             }
           } else if (!description || description.trim() === '') {
             if (window.toast) {
               window.toast.error('Preencha Origem e Destino ou informe uma Descrição');
             }
             return false;
+          } else {
+            // Se não tem origem/destino, usa a descrição fornecida diretamente
+            finalDescription = description.trim();
           }
 
           updateData = {

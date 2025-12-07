@@ -284,8 +284,7 @@
   padding: var(--spacing-lg);
   border-left: 4px solid var(--color-border);
   display: flex;
-  justify-content: space-between;
-  align-items: flex-start; /* Alinha no topo para permitir múltiplas linhas */
+  flex-direction: column; /* Muda para coluna em telas pequenas */
   gap: var(--spacing-md);
   transition: all var(--transition-fast);
   box-shadow: var(--shadow-sm);
@@ -293,6 +292,14 @@
   border-top: none;
   border-bottom: none;
   min-width: 0; /* Permite que elementos filhos encolham */
+}
+
+@media (min-width: 480px) {
+  .expense-item {
+    flex-direction: row; /* Volta para linha em telas maiores */
+    justify-content: space-between;
+    align-items: flex-start;
+  }
 }
 
 .expense-item:active {
@@ -319,6 +326,13 @@
   flex: 1;
   min-width: 0; /* Permite que o conteúdo encolha se necessário */
   overflow: visible; /* Permite que o texto seja exibido completamente */
+  width: 100%; /* Garante largura total em layout coluna */
+}
+
+@media (min-width: 480px) {
+  .expense-item-info {
+    width: auto; /* Volta ao comportamento padrão em telas maiores */
+  }
 }
 
 .expense-item-description {
@@ -327,6 +341,12 @@
   margin-bottom: var(--spacing-xs);
   word-wrap: break-word; /* Permite quebra de palavras longas */
   overflow-wrap: break-word; /* Garante quebra adequada */
+  hyphens: auto; /* Adiciona hífens automáticos */
+  line-height: 1.5; /* Melhora legibilidade */
+  display: flex;
+  flex-wrap: wrap; /* Permite quebra de linha para badges */
+  align-items: center;
+  gap: var(--spacing-xs); /* Espaçamento consistente entre elementos */
 }
 
 .expense-item-value {
@@ -348,9 +368,18 @@
   display: flex;
   align-items: flex-start; /* Alinha no topo para combinar com o item-info */
   gap: var(--spacing-sm);
-  flex-wrap: nowrap;
+  flex-wrap: wrap; /* Permite quebra de linha em telas pequenas */
   flex-shrink: 0;
   padding-top: 2px; /* Pequeno ajuste para alinhar com o texto */
+  width: 100%; /* Garante largura total em layout coluna */
+  justify-content: flex-end; /* Alinha botões à direita */
+}
+
+@media (min-width: 480px) {
+  .expense-item-actions {
+    width: auto; /* Volta ao comportamento padrão em telas maiores */
+    flex-wrap: nowrap; /* Não quebra em telas maiores */
+  }
 }
 
 .btn-delete-transaction {
@@ -482,6 +511,8 @@
   border-radius: var(--radius-full);
   font-size: var(--font-size-xs);
   font-weight: var(--font-weight-semibold);
+  white-space: nowrap; /* Previne quebra de linha nos badges */
+  flex-shrink: 0; /* Não encolhe */
 }
 
 .badge-success {
