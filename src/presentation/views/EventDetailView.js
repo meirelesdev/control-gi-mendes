@@ -511,14 +511,6 @@ class EventDetailView {
         }
       }
 
-      // Event listeners para marcar nota fiscal
-      container.querySelectorAll('.btn-mark-receipt').forEach(btn => {
-        btn.addEventListener('click', async (e) => {
-          const transactionId = e.target.dataset.transactionId;
-          await this.markReceiptAsIssued(transactionId);
-        });
-      });
-
       // Event listeners para excluir transações
       container.querySelectorAll('.btn-delete-transaction').forEach(btn => {
         btn.addEventListener('click', async (e) => {
@@ -561,16 +553,11 @@ class EventDetailView {
           <div class="expense-item-value" style="color: var(--color-danger);">${this.formatCurrency(expense.amount)}</div>
         </div>
         <div class="expense-item-actions">
-          ${!hasReceipt && eventStatus !== 'PAID' ? `
-            <button class="btn btn-sm btn-success btn-mark-receipt" 
-                    data-transaction-id="${expense.id}"
-                    style="white-space: nowrap; padding: 6px 12px; display: flex; align-items: center; gap: 4px;">
-              <span>⚠️</span>
-              <span>Marcar NF</span>
-            </button>
-          ` : hasReceipt ? `
-            <span class="badge badge-success" style="white-space: nowrap;">NF OK</span>
-          ` : ''}
+          ${hasReceipt ? `
+            <span class="badge badge-success" style="white-space: nowrap;">✓ NF OK</span>
+          ` : `
+            <span class="badge badge-warning" style="white-space: nowrap; background-color: #ff9800; color: white;">⚠️ Sem NF</span>
+          `}
           ${this.updateTransactionUseCase && eventStatus !== 'PAID' ? `
             <button class="btn btn-sm btn-edit-transaction" 
                     data-transaction-id="${expense.id}"
@@ -680,31 +667,6 @@ class EventDetailView {
   }
 
   // Métodos de modais foram movidos para componentes separados em /components/modals/
-
-  async markReceiptAsIssued(transactionId) {
-    try {
-      // Valida se o evento não está finalizado
-      if (this.currentEventId) {
-        const event = await this.eventRepository.findById(this.currentEventId);
-        if (event && event.status === 'PAID') {
-          window.toast?.error('Não é possível alterar transações de eventos finalizados/pagos.');
-          return;
-        }
-      }
-
-      const transaction = await this.transactionRepository.findById(transactionId);
-      if (transaction) {
-        transaction.markReceiptAsIssued();
-        await this.transactionRepository.save(transaction);
-        window.toast.success('Nota fiscal marcada como emitida!');
-        await this.render(this.currentEventId);
-      } else {
-        window.toast.error('Transação não encontrada');
-      }
-    } catch (error) {
-      window.toast.error(`Erro ao marcar nota fiscal: ${error.message}`);
-    }
-  }
 
   async deleteTransaction(transactionId) {
     if (!this.deleteTransactionUseCase) {
