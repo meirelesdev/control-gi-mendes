@@ -152,7 +152,7 @@ class DashboardView {
         </div>
 
         <div style="margin-bottom: var(--spacing-md);">
-          <h2 style="margin: 0;">Eventos Ativos</h2>
+          <h2 style="margin: 0;">Eventos</h2>
         </div>
 
         <div class="card" style="margin-bottom: var(--spacing-md);">
@@ -175,7 +175,7 @@ class DashboardView {
         ${activeEvents.length === 0 ? `
           <div class="empty-state">
             <div class="empty-state-icon">📅</div>
-            <p>Nenhum evento ativo no momento.</p>
+            <p>Nenhum evento no momento.</p>
             <p class="text-muted" style="font-size: var(--font-size-sm); margin-top: var(--spacing-sm);">
               Use o botão ➕ abaixo para criar seu primeiro evento
             </p>

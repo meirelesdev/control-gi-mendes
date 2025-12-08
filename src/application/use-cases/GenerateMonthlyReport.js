@@ -160,6 +160,7 @@ class GenerateMonthlyReport {
               name: event.name,
               date: event.date,
               status: event.status,
+              city: event.city || '',
               totalHours: totalHours
             };
           })),
@@ -208,7 +209,8 @@ class GenerateMonthlyReport {
     return transactions
       .filter(t => 
         t.type === 'INCOME' && 
-        (t.metadata.category === 'diaria' || t.metadata.category === 'hora_extra' || t.metadata.category === 'tempo_viagem')
+        (t.metadata.category === 'diaria' || t.metadata.category === 'hora_extra')
+        // tempo_viagem NÃO é incluído aqui, vai para _extractTravel
       )
       .map(t => {
         const category = t.metadata.category;
@@ -218,12 +220,9 @@ class GenerateMonthlyReport {
         if (category === 'hora_extra') {
           hours = t.metadata.hours || (t.amount / (settings?.overtimeRate || DEFAULT_VALUES.OVERTIME_RATE));
           categoryLabel = 'Horas de Trabalho';
-        } else if (category === 'tempo_viagem') {
-          hours = t.metadata.hours || 0;
-          categoryLabel = 'Tempo de Viagem';
         } else if (category === 'diaria') {
-          // Diária = 4 horas (padrão)
-          hours = 4;
+          // Diária: usa horas do metadata se disponível, senão usa 4 horas padrão
+          hours = t.metadata.hours || 4;
           categoryLabel = 'Diária';
         }
         

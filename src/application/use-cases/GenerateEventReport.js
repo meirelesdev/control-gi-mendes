@@ -187,9 +187,9 @@ class GenerateEventReport {
           createdAt: t.createdAt
         };
         
-        // Para diárias: cada uma tem 4 horas
+        // Para diárias: usa horas do metadata se disponível, senão usa 4 horas padrão
         if (t.metadata.category === 'diaria') {
-          service.hours = 4;
+          service.hours = t.metadata.hours || 4;
         }
         // Para horas extras: tenta extrair do metadata, senão calcula baseado no valor
         else if (t.metadata.category === 'hora_extra') {

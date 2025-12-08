@@ -110,67 +110,83 @@ class ReportView {
 
         body {
             font-family: 'Times New Roman', serif;
-            font-size: 12pt;
-            line-height: 1.6;
+            font-size: 11pt;
+            line-height: 1.4;
             color: #000;
             background: #fff;
-            padding: 20mm;
+            padding: 10mm;
             max-width: 210mm;
             margin: 0 auto;
         }
 
         .header {
-            text-align: center;
-            margin-bottom: 30px;
+            margin-bottom: 12px;
             border-bottom: 2px solid #000;
-            padding-bottom: 15px;
+            padding-bottom: 8px;
         }
 
         .header h1 {
-            font-size: 18pt;
+            font-size: 16pt;
             font-weight: bold;
-            margin-bottom: 10px;
+            margin-bottom: 8px;
             text-transform: uppercase;
+            text-align: center;
         }
 
-        .header .event-name {
-            font-size: 14pt;
-            font-weight: bold;
-            margin-top: 10px;
-            color: #000;
+        .header-info {
+            display: flex;
+            justify-content: space-between;
+            align-items: flex-start;
+            flex-wrap: wrap;
+            gap: 15px;
+            font-size: 10pt;
         }
 
-        .header .event-date {
-            font-size: 11pt;
-            margin-top: 5px;
+        .header-info-left {
+            flex: 1;
+            min-width: 200px;
         }
 
-        .header .generated-at {
-            font-size: 9pt;
-            margin-top: 10px;
+        .header-info-right {
+            text-align: right;
             color: #666;
+            font-size: 9pt;
+        }
+
+        .header-info-row {
+            margin-bottom: 4px;
+            line-height: 1.4;
+        }
+
+        .header-info-row strong {
+            font-weight: bold;
+            margin-right: 5px;
+        }
+
+        .header-info-row:last-child {
+            margin-bottom: 0;
         }
 
         .section {
-            margin-bottom: 25px;
+            margin-bottom: 12px;
             page-break-inside: avoid;
             break-inside: avoid;
         }
 
         .section-title {
-            font-size: 14pt;
+            font-size: 12pt;
             font-weight: bold;
-            margin-bottom: 10px;
+            margin-bottom: 6px;
             border-bottom: 1px solid #000;
-            padding-bottom: 5px;
+            padding-bottom: 3px;
             text-transform: uppercase;
         }
 
         table {
             width: 100%;
             border-collapse: collapse;
-            margin-bottom: 15px;
-            font-size: 11pt;
+            margin-bottom: 10px;
+            font-size: 10pt;
             page-break-inside: avoid;
             break-inside: avoid;
         }
@@ -178,14 +194,14 @@ class ReportView {
         table th {
             background-color: #f0f0f0;
             border: 1px solid #000;
-            padding: 8px;
+            padding: 5px;
             text-align: left;
             font-weight: bold;
         }
 
         table td {
             border: 1px solid #000;
-            padding: 6px 8px;
+            padding: 4px 5px;
         }
 
         table td:last-child {
@@ -198,18 +214,18 @@ class ReportView {
         }
 
         .summary {
-            margin-top: 30px;
+            margin-top: 15px;
             border: 2px solid #000;
-            padding: 15px;
+            padding: 10px;
             background-color: #fafafa;
             page-break-inside: avoid;
             break-inside: avoid;
         }
 
         .summary-title {
-            font-size: 14pt;
+            font-size: 12pt;
             font-weight: bold;
-            margin-bottom: 15px;
+            margin-bottom: 8px;
             text-align: center;
             text-transform: uppercase;
         }
@@ -217,7 +233,7 @@ class ReportView {
         .summary-row {
             display: flex;
             justify-content: space-between;
-            padding: 5px 0;
+            padding: 3px 0;
             border-bottom: 1px solid #ccc;
         }
 
@@ -227,9 +243,9 @@ class ReportView {
 
         .summary-row.total {
             font-weight: bold;
-            font-size: 13pt;
-            margin-top: 10px;
-            padding-top: 10px;
+            font-size: 12pt;
+            margin-top: 6px;
+            padding-top: 6px;
             border-top: 2px solid #000;
         }
 
@@ -263,29 +279,29 @@ class ReportView {
         .summary-box {
             background-color: #f9f9f9;
             border: 2px solid #000;
-            padding: 20px;
-            margin-bottom: 30px;
+            padding: 12px;
+            margin-bottom: 12px;
             page-break-inside: avoid;
             break-inside: avoid;
         }
 
         .summary-box p {
-            margin: 8px 0;
-            font-size: 11pt;
-            line-height: 1.6;
+            margin: 4px 0;
+            font-size: 10pt;
+            line-height: 1.4;
         }
 
         .summary-box hr {
             border: none;
             border-top: 1px solid #ccc;
-            margin: 12px 0;
+            margin: 6px 0;
         }
 
         .summary-box .total-big {
-            font-size: 14pt;
+            font-size: 12pt;
             font-weight: bold;
-            margin-top: 15px;
-            padding-top: 15px;
+            margin-top: 8px;
+            padding-top: 8px;
             border-top: 2px solid #000;
             text-align: center;
         }
@@ -293,11 +309,20 @@ class ReportView {
         /* Estilos para impressão */
         @media print {
             body {
-                padding: 15mm;
+                padding: 8mm;
             }
 
             .print-button {
                 display: none;
+            }
+
+            .header-info {
+                display: flex !important;
+            }
+
+            .header-info-left,
+            .header-info-right {
+                display: block;
             }
 
             .section {
@@ -345,56 +370,75 @@ class ReportView {
 
         @page {
             size: A4;
-            margin: 15mm;
+            margin: 8mm;
         }
     </style>
 </head>
 <body>
     <div class="header">
         <h1>Relatório de Prestação de Contas</h1>
-        ${isMonthly ? `
-        <div class="event-name">${data.header.period}</div>
-        <div class="event-date">Período: ${data.header.monthName} de ${data.header.year}</div>
-        <div class="event-date" style="margin-top: 5px;">Total de Eventos: ${data.header.eventsCount}</div>
-        ` : `
-        <div class="event-name">${this._escapeHtml(data.header.eventName)}</div>
-        <div class="event-date">Data do Evento: ${formatDate(data.header.eventDate)}</div>
-        `}
-        <div class="generated-at">Relatório gerado em: ${formatDateTime(data.header.generatedAt)}</div>
+        <div class="header-info">
+            <div class="header-info-left">
+                ${isMonthly ? `
+                <div class="header-info-row">
+                    <strong>Período:</strong> ${this._escapeHtml(data.header.period)}
+                </div>
+                <div class="header-info-row">
+                    <strong>Total de Eventos:</strong> ${data.header.eventsCount}
+                </div>
+                ` : `
+                <div class="header-info-row">
+                    <strong>Evento:</strong> ${this._escapeHtml(data.header.eventName)}
+                </div>
+                ${data.header.startDate && data.header.endDate && data.header.startDate !== data.header.endDate ? `
+                <div class="header-info-row">
+                    <strong>Período:</strong> ${formatDate(data.header.startDate)} a ${formatDate(data.header.endDate)}
+                </div>
+                ` : `
+                <div class="header-info-row">
+                    <strong>Data:</strong> ${formatDate(data.header.startDate || data.header.eventDate)}
+                </div>
+                `}
+                ${data.header.client ? `
+                <div class="header-info-row">
+                    <strong>Cliente:</strong> ${this._escapeHtml(data.header.client)}
+                </div>
+                ` : ''}
+                ${data.header.city ? `
+                <div class="header-info-row">
+                    <strong>Cidade:</strong> ${this._escapeHtml(data.header.city)}
+                </div>
+                ` : ''}
+                `}
+            </div>
+            <div class="header-info-right">
+                <div class="header-info-row">
+                    Gerado em: ${formatDateTime(data.header.generatedAt)}
+                </div>
+            </div>
+        </div>
     </div>
 
     ${data.contractorInfo ? `
-    <div class="section" style="background-color: #f9f9f9; padding: 15px; border: 1px solid #ddd; border-radius: 4px; margin-bottom: 20px;">
-        <div class="section-title" style="font-size: 12pt; margin-bottom: 10px;">Identificação da CONTRATADA</div>
-        <div style="font-size: 10pt; color: #333; line-height: 1.8;">
-            <div style="margin-bottom: 5px;"><strong>Razão Social:</strong> ${this._escapeHtml(data.contractorInfo.name)}</div>
-            <div style="margin-bottom: 5px;"><strong>CNPJ:</strong> ${this._escapeHtml(data.contractorInfo.cnpj)}</div>
-            <div style="margin-bottom: 5px;"><strong>Endereço:</strong> ${this._escapeHtml(data.contractorInfo.address)}</div>
-            <div style="margin-bottom: 5px;"><strong>Representante:</strong> ${this._escapeHtml(data.contractorInfo.representative)}</div>
+    <div class="section" style="background-color: #f9f9f9; padding: 8px; border: 1px solid #ddd; border-radius: 4px; margin-bottom: 12px;">
+        <div class="section-title" style="font-size: 11pt; margin-bottom: 6px;">Identificação da CONTRATADA</div>
+        <div style="font-size: 9pt; color: #333; line-height: 1.4;">
+            <div style="margin-bottom: 3px;"><strong>Razão Social:</strong> ${this._escapeHtml(data.contractorInfo.name)}</div>
+            <div style="margin-bottom: 3px;"><strong>CNPJ:</strong> ${this._escapeHtml(data.contractorInfo.cnpj)}</div>
+            <div style="margin-bottom: 3px;"><strong>Endereço:</strong> ${this._escapeHtml(data.contractorInfo.address)}</div>
+            <div style="margin-bottom: 3px;"><strong>Representante:</strong> ${this._escapeHtml(data.contractorInfo.representative)}</div>
             <div><strong>CPF:</strong> ${this._escapeHtml(data.contractorInfo.cpf)}</div>
         </div>
     </div>
     ` : ''}
 
     <div class="summary-box">
-        ${!isMonthly ? `
-        ${data.header.startDate && data.header.endDate && data.header.startDate !== data.header.endDate ? `
-        <p><strong>Período:</strong> ${formatDate(data.header.startDate)} a ${formatDate(data.header.endDate)}</p>
-        ` : `
-        <p><strong>Data:</strong> ${formatDate(data.header.eventDate)}</p>
-        `}
-        <p><strong>Cliente:</strong> ${this._escapeHtml(data.header.client || '')}</p>
-        <p><strong>Cidade:</strong> ${this._escapeHtml(data.header.city || '')}</p>
-        ` : `
-        <p><strong>Período:</strong> ${this._escapeHtml(data.header.period || '')}</p>
-        <p><strong>Quantidade de Eventos:</strong> ${data.header.eventsCount || 0}</p>
-        `}
         <hr>
         <p><strong>Horas de trabalho:</strong> ${data.summary.totalWorkHours ? data.summary.totalWorkHours.toFixed(1) : '0'}h</p>
         <p><strong>Horas de deslocamento:</strong> ${data.summary.totalTravelHours ? data.summary.totalTravelHours.toFixed(1) : '0'}h</p>
         <p><strong>Total de horas:</strong> ${data.summary.totalHours ? data.summary.totalHours.toFixed(1) : '0'}h</p>
         <hr>
-        <p><strong>Valor total da diária (Honorários):</strong> ${formatCurrency(data.summary.totalDailyValue || 0)}</p>
+        <p><strong>Valor total da diária:</strong> ${formatCurrency(data.summary.totalDailyValue || 0)}</p>
         <p><strong>Combustível (KM):</strong> ${formatCurrency(data.summary.totalFuel || 0)}</p>
         <p><strong>Compras:</strong> ${formatCurrency(data.summary.totalPurchases || 0)}</p>
         <p><strong>Hotel:</strong> ${formatCurrency(data.summary.totalHotel || 0)}</p>
@@ -402,8 +446,8 @@ class ReportView {
     </div>
 
     ${!isMonthly && data.header.eventDescription ? `
-    <div class="section" style="margin-bottom: 30px;">
-        <div style="font-size: 11pt; color: #333; line-height: 1.8;">
+    <div class="section" style="margin-bottom: 12px;">
+        <div style="font-size: 10pt; color: #333; line-height: 1.4;">
             <strong>Descrição do Evento:</strong><br>
             ${this._escapeHtml(data.header.eventDescription)}
         </div>
@@ -411,20 +455,22 @@ class ReportView {
     ` : ''}
 
     ${isMonthly && data.events && data.events.length > 0 ? `
-    <div class="section" style="margin-bottom: 30px;">
+    <div class="section" style="margin-bottom: 12px;">
         <div class="section-title">Eventos do Mês</div>
         <table>
             <thead>
                 <tr>
-                    <th style="width: 50%;">Nome do Evento</th>
-                    <th style="width: 30%;">Data</th>
-                    <th style="width: 20%;">Total de Horas</th>
+                    <th style="width: 40%;">Nome do Evento</th>
+                    <th style="width: 25%;">Cidade</th>
+                    <th style="width: 20%;">Data</th>
+                    <th style="width: 15%;">Total de Horas</th>
                 </tr>
             </thead>
             <tbody>
                 ${data.events.map(event => `
                 <tr>
                     <td>${this._escapeHtml(event.name)}</td>
+                    <td>${this._escapeHtml(event.city || '')}</td>
                     <td>${formatDate(event.date)}</td>
                     <td>${event.totalHours ? event.totalHours.toFixed(1) : '0'}h</td>
                 </tr>
@@ -434,18 +480,18 @@ class ReportView {
     </div>
     ` : ''}
 
-    <div class="summary payment-info" style="margin-top: 30px; border-top: 2px solid #000; padding-top: 20px;">
+    <div class="summary payment-info" style="margin-top: 12px; border-top: 2px solid #000; padding-top: 10px;">
         <div class="summary-title">Dados para Pagamento</div>
-        <div class="summary-row" style="padding: 10px 0;">
+        <div class="summary-row" style="padding: 4px 0;">
             <span><strong>Chave PIX:</strong></span>
             <span><strong>${data.paymentInfo.pixKey || '48988321351'}</strong></span>
         </div>
-        <div class="summary-row" style="padding: 5px 0;">
+        <div class="summary-row" style="padding: 4px 0;">
             <span><strong>Favorecido:</strong></span>
             <span><strong>${this._escapeHtml(data.paymentInfo.beneficiary || 'Gisele Mendes')}</strong></span>
         </div>
-        <div style="margin-top: 15px; padding-top: 15px; border-top: 1px solid #ccc; font-size: 10pt; color: #666; text-align: center;">
-            <p style="margin: 5px 0;">Prazo: ${data.paymentInfo.paymentDays || DEFAULT_VALUES.DEFAULT_REIMBURSEMENT_DAYS} dias após apresentação da NF</p>
+        <div style="margin-top: 8px; padding-top: 8px; border-top: 1px solid #ccc; font-size: 9pt; color: #666; text-align: center;">
+            <p style="margin: 3px 0;">Prazo: ${data.paymentInfo.paymentDays || DEFAULT_VALUES.DEFAULT_REIMBURSEMENT_DAYS} dias após apresentação da NF</p>
         </div>
     </div>
 
