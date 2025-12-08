@@ -105,6 +105,41 @@ class Transaction {
       if (metadata.hasReceipt === undefined) {
         this.metadata.hasReceipt = false;
       }
+      
+      // Para EXPENSE, pode ter category (accommodation)
+      if (metadata.category) {
+        const validCategories = ['accommodation'];
+        if (!validCategories.includes(metadata.category)) {
+          throw new Error(`Categoria inválida. Deve ser uma das: ${validCategories.join(', ')}`);
+        }
+        
+        // Se for hospedagem, valida checkIn e checkOut
+        if (metadata.category === 'accommodation') {
+          if (metadata.checkIn && typeof metadata.checkIn !== 'string') {
+            throw new Error('checkIn deve ser uma string (data)');
+          }
+          if (metadata.checkOut && typeof metadata.checkOut !== 'string') {
+            throw new Error('checkOut deve ser uma string (data)');
+          }
+          
+          // Valida que checkOut não pode ser anterior ao checkIn
+          if (metadata.checkIn && metadata.checkOut) {
+            const checkInDate = new Date(metadata.checkIn);
+            const checkOutDate = new Date(metadata.checkOut);
+            
+            if (isNaN(checkInDate.getTime())) {
+              throw new Error('checkIn deve ser uma data válida');
+            }
+            if (isNaN(checkOutDate.getTime())) {
+              throw new Error('checkOut deve ser uma data válida');
+            }
+            
+            if (checkOutDate < checkInDate) {
+              throw new Error('Data de check-out não pode ser anterior à data de check-in');
+            }
+          }
+        }
+      }
     } else if (type === 'INCOME') {
       // Para INCOME, deve ter isReimbursement (boolean) para diferenciar reembolso de honorário
       if (metadata.isReimbursement !== undefined && typeof metadata.isReimbursement !== 'boolean') {
@@ -115,11 +150,21 @@ class Transaction {
         this.metadata.isReimbursement = false;
       }
       
-      // Para INCOME, pode ter category (diaria, hora_extra, km)
+      // Para INCOME, pode ter category (diaria, hora_extra, km, tempo_viagem)
       if (metadata.category) {
-        const validCategories = ['diaria', 'hora_extra', 'km'];
+        const validCategories = ['diaria', 'hora_extra', 'km', 'tempo_viagem'];
         if (!validCategories.includes(metadata.category)) {
           throw new Error(`Categoria inválida. Deve ser uma das: ${validCategories.join(', ')}`);
+        }
+        
+        // Para tempo_viagem, valida que tem hours no metadata
+        if (metadata.category === 'tempo_viagem') {
+          if (metadata.hours === undefined || metadata.hours === null) {
+            throw new Error('Horas são obrigatórias para tempo de viagem');
+          }
+          if (typeof metadata.hours !== 'number' || metadata.hours <= 0) {
+            throw new Error('Horas devem ser um número maior que zero');
+          }
         }
       }
     }
@@ -239,20 +284,27 @@ class Transaction {
 
   /**
    * Cria uma transação do tipo EXPENSE
+   * @param {string} eventId - ID do evento
+   * @param {string} description - Descrição da transação
+   * @param {number} amount - Valor da transação
+   * @param {boolean} [hasReceipt=false] - Se tem nota fiscal
+   * @param {Object} [metadata] - Metadados adicionais (ex: category, checkIn, checkOut)
    */
-  static createExpense(eventId, description, amount, hasReceipt = false) {
+  static createExpense(eventId, description, amount, hasReceipt = false, metadata = null) {
     const id = `expense_${Date.now()}_${Math.random().toString(36).substr(2, 9)}`;
-    return new Transaction(id, eventId, 'EXPENSE', description, amount, {
-      hasReceipt
-    });
+    const finalMetadata = {
+      hasReceipt,
+      ...(metadata || {})
+    };
+    return new Transaction(id, eventId, 'EXPENSE', description, amount, finalMetadata);
   }
 
   /**
    * Cria uma transação do tipo INCOME
    */
-  static createIncome(eventId, description, amount, isReimbursement = false, category = null) {
+  static createIncome(eventId, description, amount, isReimbursement = false, category = null, additionalMetadata = {}) {
     const id = `income_${Date.now()}_${Math.random().toString(36).substr(2, 9)}`;
-    const metadata = { isReimbursement };
+    const metadata = { isReimbursement, ...additionalMetadata };
     if (category) {
       metadata.category = category;
     }

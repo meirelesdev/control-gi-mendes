@@ -59,6 +59,12 @@ class GenerateMonthlyReport {
                event.status !== 'CANCELLED';
       });
 
+      // Busca configurações para obter dados da CONTRATADA e calcular horas
+      let settings = await this.settingsRepository.find();
+      if (!settings) {
+        settings = Settings.createDefault();
+      }
+
       // Agrupa todas as transações de todos os eventos do mês
       let allServices = [];
       let allExpenses = [];
@@ -68,7 +74,7 @@ class GenerateMonthlyReport {
         const transactions = await this.transactionRepository.findByEventId(event.id);
         
         // Extrai serviços, despesas e deslocamentos
-        const services = this._extractServices(transactions, event);
+        const services = this._extractServices(transactions, event, settings);
         const expenses = this._extractExpenses(transactions, event);
         const travel = this._extractTravel(transactions, event);
         
@@ -77,17 +83,26 @@ class GenerateMonthlyReport {
         allTravel = allTravel.concat(travel);
       }
 
-      // Calcula totais
+      // Calcula totais básicos
       const totalServices = allServices.reduce((sum, s) => sum + s.amount, 0);
       const totalExpenses = allExpenses.reduce((sum, e) => sum + e.amount, 0);
       const totalTravel = allTravel.reduce((sum, t) => sum + t.amount, 0);
       const grandTotal = totalServices + totalExpenses + totalTravel;
 
-      // Busca configurações para obter dados da CONTRATADA
-      let settings = await this.settingsRepository.find();
-      if (!settings) {
-        settings = Settings.createDefault();
-      }
+      // Calcula totais específicos para o resumo executivo (mesmo padrão do relatório de eventos)
+      const totalDailyValue = allServices.reduce((sum, s) => sum + s.amount, 0); // Honorários (horas de trabalho)
+      const totalFuel = allTravel.filter(t => t.category === 'km').reduce((sum, t) => sum + t.amount, 0); // KM Rodado
+      const totalPurchases = allExpenses.filter(e => e.category !== 'accommodation').reduce((sum, e) => sum + e.amount, 0); // Compras
+      const totalHotel = allExpenses.filter(e => e.category === 'accommodation').reduce((sum, e) => sum + e.amount, 0); // Hospedagem
+
+      // Calcula horas de trabalho a partir dos serviços
+      const totalWorkHours = allServices.reduce((sum, s) => sum + (s.hours || 0), 0);
+
+      // Horas de deslocamento (tempo_viagem)
+      const totalTravelHours = allTravel.filter(t => t.category === 'tempo_viagem').reduce((sum, t) => sum + (t.hours || 0), 0);
+
+      // Total de horas
+      const totalHours = totalWorkHours + totalTravelHours;
 
       // Nome do mês em português
       const monthNames = [
@@ -127,7 +142,8 @@ class GenerateMonthlyReport {
           })),
           services: {
             items: allServices,
-            total: totalServices
+            total: totalServices,
+            totalHours: totalWorkHours
           },
           expenses: {
             items: allExpenses,
@@ -141,7 +157,15 @@ class GenerateMonthlyReport {
             totalServices,
             totalExpenses,
             totalTravel,
-            grandTotal
+            grandTotal,
+            // Resumo executivo (mesmo padrão do relatório de eventos)
+            totalWorkHours,
+            totalTravelHours,
+            totalHours,
+            totalDailyValue,
+            totalFuel,
+            totalPurchases,
+            totalHotel
           }
         }
       };
@@ -154,70 +178,128 @@ class GenerateMonthlyReport {
   }
 
   /**
-   * Extrai serviços (honorários): Diárias e Horas Extras
+   * Extrai serviços (honorários): Horas de Trabalho e Tempo de Viagem
    * @private
    */
-  _extractServices(transactions, event) {
+  _extractServices(transactions, event, settings) {
     return transactions
       .filter(t => 
         t.type === 'INCOME' && 
-        (t.metadata.category === 'diaria' || t.metadata.category === 'hora_extra')
+        (t.metadata.category === 'diaria' || t.metadata.category === 'hora_extra' || t.metadata.category === 'tempo_viagem')
       )
-      .map(t => ({
-        id: t.id,
-        eventId: event.id,
-        eventName: event.name,
-        eventDate: event.date,
-        description: t.description,
-        category: t.metadata.category === 'diaria' ? 'Diária' : 'Hora Extra',
-        amount: t.amount,
-        createdAt: t.createdAt
-      }))
+      .map(t => {
+        const category = t.metadata.category;
+        let hours = 0;
+        let categoryLabel = 'Honorário';
+        
+        if (category === 'hora_extra') {
+          hours = t.metadata.hours || (t.amount / (settings?.overtimeRate || DEFAULT_VALUES.OVERTIME_RATE));
+          categoryLabel = 'Horas de Trabalho';
+        } else if (category === 'tempo_viagem') {
+          hours = t.metadata.hours || 0;
+          categoryLabel = 'Tempo de Viagem';
+        } else if (category === 'diaria') {
+          // Diária = 4 horas (padrão)
+          hours = 4;
+          categoryLabel = 'Diária';
+        }
+        
+        return {
+          id: t.id,
+          eventId: event.id,
+          eventName: event.name,
+          eventDate: event.date,
+          description: t.description,
+          category: categoryLabel,
+          hours: hours,
+          amount: t.amount,
+          createdAt: t.createdAt
+        };
+      })
       .sort((a, b) => new Date(a.createdAt) - new Date(b.createdAt));
   }
 
   /**
-   * Extrai despesas reembolsáveis (Insumos)
+   * Extrai despesas reembolsáveis (Compras e Hospedagem)
    * @private
    */
   _extractExpenses(transactions, event) {
     return transactions
       .filter(t => t.type === 'EXPENSE')
-      .map(t => ({
-        id: t.id,
-        eventId: event.id,
-        eventName: event.name,
-        eventDate: event.date,
-        description: t.description,
-        amount: t.amount,
-        hasReceipt: t.metadata.hasReceipt || false,
-        createdAt: t.createdAt
-      }))
+      .map(t => {
+        const expense = {
+          id: t.id,
+          eventId: event.id,
+          eventName: event.name,
+          eventDate: event.date,
+          description: t.description,
+          amount: t.amount,
+          hasReceipt: t.metadata.hasReceipt || false,
+          createdAt: t.createdAt
+        };
+        
+        // Adiciona categoria e informações de hospedagem se aplicável
+        if (t.metadata.category === 'accommodation') {
+          expense.category = 'accommodation';
+          expense.checkIn = t.metadata.checkIn || null;
+          expense.checkOut = t.metadata.checkOut || null;
+          
+          // Formata range de datas para exibição
+          if (expense.checkIn && expense.checkOut) {
+            const formatDateRange = (checkIn, checkOut) => {
+              const parseDate = (dateStr) => {
+                if (!dateStr) return null;
+                const parts = dateStr.split('-');
+                if (parts.length === 3) {
+                  return `${parts[2]}/${parts[1]}`;
+                }
+                return dateStr;
+              };
+              const inDate = parseDate(checkIn);
+              const outDate = parseDate(checkOut);
+              return inDate && outDate ? `${inDate} a ${outDate}` : null;
+            };
+            expense.dateRange = formatDateRange(expense.checkIn, expense.checkOut);
+          }
+        }
+        
+        return expense;
+      })
       .sort((a, b) => new Date(a.createdAt) - new Date(b.createdAt));
   }
 
   /**
-   * Extrai deslocamentos: KM Rodado (combustível)
+   * Extrai deslocamentos: KM Rodado (combustível) e Tempo de Viagem
    * @private
    */
   _extractTravel(transactions, event) {
     return transactions
       .filter(t => 
         t.type === 'INCOME' && 
-        t.metadata.category === 'km'
+        (t.metadata.category === 'km' || t.metadata.category === 'tempo_viagem')
       )
-      .map(t => ({
-        id: t.id,
-        eventId: event.id,
-        eventName: event.name,
-        eventDate: event.date,
-        description: t.description,
-        distance: t.metadata.distance || 0,
-        origin: t.metadata.origin || null,
-        destination: t.metadata.destination || null,
-        amount: t.amount,
-        createdAt: t.createdAt
-      }))
+      .map(t => {
+        const travel = {
+          id: t.id,
+          eventId: event.id,
+          eventName: event.name,
+          eventDate: event.date,
+          description: t.description,
+          amount: t.amount,
+          createdAt: t.createdAt,
+          category: t.metadata.category
+        };
+        
+        if (t.metadata.category === 'km') {
+          travel.distance = t.metadata.distance || 0;
+          travel.origin = t.metadata.origin || null;
+          travel.destination = t.metadata.destination || null;
+        } else if (t.metadata.category === 'tempo_viagem') {
+          travel.hours = t.metadata.hours || 0;
+        }
+        
+        return travel;
+      })
       .sort((a, b) => new Date(a.createdAt) - new Date(b.createdAt));
   }
 }

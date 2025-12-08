@@ -1,6 +1,6 @@
 /**
  * View: Detalhe do Evento
- * Exibe detalhes do evento, botões de ação e lista de insumos
+ * Exibe detalhes do evento, botões de ação e lista de compras/despesas
  */
 import { ReportView } from './ReportView.js';
 import { Formatters } from '../utils/Formatters.js';
@@ -8,6 +8,8 @@ import { DEFAULT_VALUES } from '../../domain/constants/DefaultValues.js';
 import { ExpenseModal } from '../components/modals/ExpenseModal.js';
 import { FeeModal } from '../components/modals/FeeModal.js';
 import { KmTravelModal } from '../components/modals/KmTravelModal.js';
+import { AccommodationModal } from '../components/modals/AccommodationModal.js';
+import { TravelTimeModal } from '../components/modals/TravelTimeModal.js';
 
 class EventDetailView {
   constructor(eventRepository, transactionRepository, settingsRepository, addTransactionUseCase, deleteTransactionUseCase = null, generateEventReportUseCase = null, updateEventStatusUseCase = null, updateEventUseCase = null, updateTransactionUseCase = null, deleteEventUseCase = null, getEventSummaryUseCase = null) {
@@ -66,6 +68,7 @@ class EventDetailView {
       const expenses = summary.transactions.expenses || [];
       const reimbursements = summary.transactions.reimbursements || [];
       const fees = summary.transactions.fees || [];
+      const kmTransactions = summary.transactions.kmTransactions || [];
       const expensesWithoutReceipt = expenses.filter(e => !e.metadata.hasReceipt);
 
       // Define cores e labels por status
@@ -170,7 +173,7 @@ class EventDetailView {
                 💸 Investimento Realizado
               </div>
               <div style="font-size: var(--font-size-xs); color: #757575;">
-                Valor que você pagou do próprio bolso (Custos de Insumos + Gasolina)
+                Valor que você pagou do próprio bolso (Compras + Gasolina)
               </div>
             </div>
             <div style="font-size: var(--font-size-xl); font-weight: var(--font-weight-bold); color: #C62828;">
@@ -185,7 +188,7 @@ class EventDetailView {
                 📥 Total a Receber
               </div>
               <div style="font-size: var(--font-size-xs); color: #757575;">
-                Reembolsos (Insumos + Deslocamentos) + Lucro (Honorários)
+                Reembolsos (Compras + Deslocamentos) + Lucro (Honorários)
               </div>
             </div>
             <div style="font-size: var(--font-size-xl); font-weight: var(--font-weight-bold); color: #1565C0;">
@@ -212,12 +215,12 @@ class EventDetailView {
         ${event.status !== 'PAID' ? `
         <div class="card">
           <h3 style="margin-bottom: var(--spacing-md);">Ações Rápidas</h3>
-          <div style="display: grid; grid-template-columns: repeat(3, 1fr); gap: var(--spacing-sm);">
+          <div style="display: grid; grid-template-columns: repeat(2, 1fr); gap: var(--spacing-sm); margin-bottom: var(--spacing-sm);">
             <button class="btn btn-primary" id="btn-add-expense" 
                     style="padding: var(--spacing-md); border-radius: var(--radius-lg); font-size: 24px; line-height: 1; display: flex; flex-direction: column; align-items: center; gap: 2px;"
-                    title="Adicionar Insumo (Reembolso)">
+                    title="Adicionar Compra (Reembolso)">
               <span>📦</span>
-              <span style="font-size: 11px; font-weight: var(--font-weight-medium);">Insumo</span>
+              <span style="font-size: 11px; font-weight: var(--font-weight-medium);">Compra</span>
               <span style="font-size: 9px; color: var(--color-text-secondary);">(Reembolso)</span>
             </button>
             <button class="btn btn-success" id="btn-add-fee" 
@@ -227,6 +230,8 @@ class EventDetailView {
               <span style="font-size: 11px; font-weight: var(--font-weight-medium);">Honorário</span>
               <span style="font-size: 9px; color: var(--color-success);">(Lucro)</span>
             </button>
+          </div>
+          <div style="display: grid; grid-template-columns: repeat(2, 1fr); gap: var(--spacing-sm); margin-bottom: var(--spacing-sm);">
             <button class="btn btn-secondary" id="btn-add-km-travel" 
                     style="padding: var(--spacing-md); border-radius: var(--radius-lg); font-size: 24px; line-height: 1; display: flex; flex-direction: column; align-items: center; gap: 2px;"
                     title="Adicionar KM Rodado (Reembolso de Combustível)">
@@ -234,13 +239,29 @@ class EventDetailView {
               <span style="font-size: 11px; font-weight: var(--font-weight-medium);">KM Rodado</span>
               <span style="font-size: 9px; color: var(--color-text-secondary);">(Combustível)</span>
             </button>
+            <button class="btn btn-primary" id="btn-add-accommodation" 
+                    style="padding: var(--spacing-md); border-radius: var(--radius-lg); font-size: 24px; line-height: 1; display: flex; flex-direction: column; align-items: center; gap: 2px; background: linear-gradient(135deg, #667eea 0%, #764ba2 100%); border: none;"
+                    title="Adicionar Hospedagem (Reembolso)">
+              <span>🏨</span>
+              <span style="font-size: 11px; font-weight: var(--font-weight-medium);">Hospedagem</span>
+              <span style="font-size: 9px; color: rgba(255,255,255,0.8);">(Reembolso)</span>
+            </button>
+          </div>
+          <div style="display: grid; grid-template-columns: repeat(2, 1fr); gap: var(--spacing-sm);">
+            <button class="btn btn-info" id="btn-add-travel-time" 
+                    style="padding: var(--spacing-md); border-radius: var(--radius-lg); font-size: 24px; line-height: 1; display: flex; flex-direction: column; align-items: center; gap: 2px; background: linear-gradient(135deg, #4facfe 0%, #00f2fe 100%); border: none; color: white;"
+                    title="Adicionar Tempo de Viagem (Horas de Deslocamento)">
+              <span>⏱️</span>
+              <span style="font-size: 11px; font-weight: var(--font-weight-medium);">Tempo Viagem</span>
+              <span style="font-size: 9px; color: rgba(255,255,255,0.8);">(Horas)</span>
+            </button>
           </div>
         </div>
         ` : ''}
 
         <div class="card">
           <div class="card-header">
-            <h3 class="card-title">📦 Insumos (Reembolso)</h3>
+            <h3 class="card-title">📦 Compras (Reembolso)</h3>
             <div style="display: flex; align-items: center; gap: var(--spacing-sm); flex-wrap: wrap;">
               ${expensesWithoutReceipt.length > 0 ? `
                 <span class="badge badge-warning">${expensesWithoutReceipt.length} sem NF</span>
@@ -251,7 +272,7 @@ class EventDetailView {
               ${event.status !== 'PAID' ? `
                 <button class="btn btn-sm btn-primary" id="btn-add-expense-header" 
                         style="padding: 6px 12px; border-radius: var(--radius-full); font-size: 18px; line-height: 1; min-width: 32px; height: 32px; display: flex; align-items: center; justify-content: center;"
-                        title="Adicionar Insumo">
+                        title="Adicionar Compra">
                   ➕
                 </button>
               ` : ''}
@@ -259,7 +280,7 @@ class EventDetailView {
           </div>
           ${expenses.length === 0 ? `
             <div class="empty-state">
-              <p class="text-muted">Nenhum insumo cadastrado ainda.</p>
+              <p class="text-muted">Nenhuma compra cadastrada ainda.</p>
             </div>
           ` : `
             <div class="expense-list">
@@ -299,8 +320,8 @@ class EventDetailView {
           <div class="card-header">
             <h3 class="card-title">🚗 KM Rodado (Reembolso de Combustível)</h3>
             <div style="display: flex; align-items: center; gap: var(--spacing-sm); flex-wrap: wrap;">
-              ${reimbursements.length > 0 ? `
-                <span class="badge badge-info">Total: ${this.formatCurrency(totalReimbursements)}</span>
+              ${kmTransactions.length > 0 ? `
+                <span class="badge badge-info">Total: ${this.formatCurrency(kmTransactions.reduce((sum, t) => sum + t.amount, 0))}</span>
               ` : ''}
               ${event.status !== 'PAID' ? `
                 <button class="btn btn-sm btn-secondary" id="btn-add-km-travel-header" 
@@ -311,13 +332,13 @@ class EventDetailView {
               ` : ''}
             </div>
           </div>
-          ${reimbursements.length === 0 ? `
+          ${kmTransactions.length === 0 ? `
             <div class="empty-state">
               <p class="text-muted">Nenhum KM rodado cadastrado ainda.</p>
             </div>
           ` : `
             <div class="expense-list">
-              ${reimbursements.map(reimbursement => this.renderIncomeItem(reimbursement, event.status)).join('')}
+              ${kmTransactions.map(km => this.renderIncomeItem(km, event.status)).join('')}
             </div>
           `}
         </div>
@@ -371,17 +392,39 @@ class EventDetailView {
           });
         }
 
-        // Botões nos headers das seções
-        const btnAddExpenseHeader = document.getElementById('btn-add-expense-header');
-        if (btnAddExpenseHeader) {
-          btnAddExpenseHeader.addEventListener('click', () => {
-            const modal = new ExpenseModal(
+        const btnAddAccommodation = document.getElementById('btn-add-accommodation');
+        if (btnAddAccommodation) {
+          btnAddAccommodation.addEventListener('click', () => {
+            const modal = new AccommodationModal(
               this.addTransactionUseCase,
               this.eventRepository,
               this.currentEventId,
               reloadView
             );
             modal.show();
+          });
+        }
+
+        const btnAddTravelTime = document.getElementById('btn-add-travel-time');
+        if (btnAddTravelTime) {
+          btnAddTravelTime.addEventListener('click', () => {
+            const modal = new TravelTimeModal(
+              this.addTransactionUseCase,
+              this.eventRepository,
+              this.settingsRepository,
+              this.currentEventId,
+              reloadView
+            );
+            modal.show();
+          });
+        }
+
+        // Botões nos headers das seções
+        const btnAddExpenseHeader = document.getElementById('btn-add-expense-header');
+        if (btnAddExpenseHeader) {
+          btnAddExpenseHeader.addEventListener('click', (e) => {
+            e.stopPropagation();
+            this._showPurchaseTypeMenu(btnAddExpenseHeader, reloadView);
           });
         }
 
@@ -541,13 +584,29 @@ class EventDetailView {
 
   renderExpenseItem(expense, eventStatus) {
     const hasReceipt = expense.metadata.hasReceipt;
+    const isAccommodation = expense.metadata.category === 'accommodation';
+    
+    // Formata datas de hospedagem para exibição
+    let dateInfo = '';
+    if (isAccommodation && expense.metadata.checkIn && expense.metadata.checkOut) {
+      const formatDate = (dateString) => {
+        // Parse direto do formato YYYY-MM-DD sem problemas de timezone
+        if (!dateString || typeof dateString !== 'string') return dateString;
+        const parts = dateString.split('T')[0].split('-');
+        if (parts.length !== 3) return dateString;
+        const [, month, day] = parts;
+        return `${day}/${month}`;
+      };
+      dateInfo = `<br><small style="color: var(--color-text-secondary); font-size: 11px;">🏨 ${formatDate(expense.metadata.checkIn)} a ${formatDate(expense.metadata.checkOut)}</small>`;
+    }
     
     return `
       <div class="expense-item ${hasReceipt ? '' : 'no-receipt'}" style="border-left-color: var(--color-danger);">
         <div class="expense-item-info">
           <div class="expense-item-description">
-            <span>📦</span>
+            <span>${isAccommodation ? '🏨' : '📦'}</span>
             <span>${this.escapeHtml(expense.description)}</span>
+            ${dateInfo}
             <span class="badge badge-secondary">Reembolso</span>
           </div>
           <div class="expense-item-value" style="color: var(--color-danger);">${this.formatCurrency(expense.amount)}</div>
@@ -562,7 +621,8 @@ class EventDetailView {
             <button class="btn btn-sm btn-edit-transaction" 
                     data-transaction-id="${expense.id}"
                     data-transaction-type="expense"
-                    title="Editar insumo"
+                    data-transaction-category="${isAccommodation ? 'accommodation' : ''}"
+                    title="Editar ${isAccommodation ? 'hospedagem' : 'compra'}"
                     style="background: transparent; color: var(--color-primary); padding: 6px 8px; border-radius: var(--radius-full); border: 1px solid var(--color-border); flex-shrink: 0;">
               ✏️
             </button>
@@ -570,7 +630,7 @@ class EventDetailView {
           ${eventStatus !== 'PAID' ? `
             <button class="btn btn-sm btn-delete-transaction" 
                     data-transaction-id="${expense.id}"
-                    title="Excluir insumo"
+                    title="Excluir compra"
                     style="flex-shrink: 0;">
               🗑️
             </button>
@@ -625,10 +685,12 @@ class EventDetailView {
   }
 
   renderFeeItem(fee, eventStatus) {
-    const category = fee.metadata.category || '';
+    // O objeto fee vem do GetEventSummary que já extrai category diretamente
+    const category = fee.category || fee.metadata?.category || '';
     const categoryLabels = {
       'diaria': 'Diária',
-      'hora_extra': 'Hora Extra'
+      'hora_extra': 'Horas de Trabalho',
+      'tempo_viagem': 'Tempo de Viagem'
     };
     const categoryLabel = categoryLabels[category] || 'Honorário';
     
@@ -636,8 +698,9 @@ class EventDetailView {
       <div class="expense-item" style="border-left-color: var(--color-success); background-color: rgba(34, 197, 94, 0.05);">
         <div class="expense-item-info">
           <div class="expense-item-description">
-            <span>💰</span>
+            <span>${category === 'tempo_viagem' ? '⏱️' : '💰'}</span>
             <span>${this.escapeHtml(fee.description)}</span>
+            ${(category === 'tempo_viagem' || category === 'hora_extra') && fee.metadata?.hours ? `<small style="color: var(--color-text-secondary); margin-left: var(--spacing-xs);">(${fee.metadata.hours}h)</small>` : ''}
             <span class="badge badge-success">${categoryLabel}</span>
             <span class="badge badge-success" style="font-weight: bold;">Lucro</span>
           </div>
@@ -716,10 +779,43 @@ class EventDetailView {
    * Exibe modal para editar evento
    */
   async showEditEventModal(event) {
-    // Formata a data para o input type="date" (YYYY-MM-DD)
-    const eventDate = event.date instanceof Date 
-      ? event.date.toISOString().split('T')[0]
-      : event.date.split('T')[0];
+    // Formata as datas para o input type="date" (YYYY-MM-DD)
+    const formatDateForInput = (dateValue) => {
+      if (!dateValue) return '';
+      
+      // Se já está no formato YYYY-MM-DD, retorna direto
+      if (typeof dateValue === 'string' && /^\d{4}-\d{2}-\d{2}/.test(dateValue)) {
+        return dateValue.split('T')[0];
+      }
+      
+      // Se é um objeto Date, converte
+      if (dateValue instanceof Date) {
+        return dateValue.toISOString().split('T')[0];
+      }
+      
+      // Tenta criar um Date e converter
+      try {
+        const date = new Date(dateValue);
+        if (!isNaN(date.getTime())) {
+          return date.toISOString().split('T')[0];
+        }
+      } catch (e) {
+        // Ignora erros
+      }
+      
+      // Se não conseguiu converter, retorna string vazia
+      return '';
+    };
+    
+    // Usa startDate se disponível, senão usa date (compatibilidade com eventos antigos)
+    // Garante que sempre tenha uma data de início
+    const startDateValue = event.startDate || event.date;
+    const startDate = formatDateForInput(startDateValue);
+    
+    // Para endDate, só usa se existir e for diferente de null/undefined
+    // Se não existir, deixa vazio (não usa startDate como fallback)
+    const endDateValue = event.endDate && event.endDate !== 'null' && event.endDate !== null ? event.endDate : null;
+    const endDate = endDateValue ? formatDateForInput(endDateValue) : '';
 
     const modal = this.createModal('Editar Evento', `
       <form id="form-edit-event">
@@ -730,9 +826,27 @@ class EventDetailView {
                  placeholder="Ex: Evento Corporativo - Empresa XYZ">
         </div>
         <div class="form-group">
-          <label class="form-label">Data do Evento *</label>
-          <input type="date" class="form-input" id="edit-event-date" 
-                 value="${eventDate}" required>
+          <label class="form-label">Data de Início *</label>
+          <input type="date" class="form-input" id="edit-event-start-date" 
+                 value="${startDate}" required>
+        </div>
+        <div class="form-group">
+          <label class="form-label">Data de Fim (opcional)</label>
+          <input type="date" class="form-input" id="edit-event-end-date" 
+                 value="${endDate}">
+          <small class="text-muted">Se não informada, usa a data de início</small>
+        </div>
+        <div class="form-group">
+          <label class="form-label">Cliente *</label>
+          <input type="text" class="form-input" id="edit-event-client" 
+                 value="${this.escapeHtml(event.client || '')}" required 
+                 placeholder="Ex: Bom Princípio">
+        </div>
+        <div class="form-group">
+          <label class="form-label">Cidade *</label>
+          <input type="text" class="form-input" id="edit-event-city" 
+                 value="${this.escapeHtml(event.city || '')}" required 
+                 placeholder="Ex: Tupandi - RS">
         </div>
         <div class="form-group">
           <label class="form-label">Descrição (opcional)</label>
@@ -751,6 +865,28 @@ class EventDetailView {
     document.body.appendChild(modal);
     modal.classList.add('active');
     this._addModalOpenClass();
+
+    // Validação: endDate não pode ser anterior a startDate
+    const startDateInput = modal.querySelector('#edit-event-start-date');
+    const endDateInput = modal.querySelector('#edit-event-end-date');
+    
+    if (startDateInput && endDateInput) {
+      const validateDates = () => {
+        const startDate = startDateInput.value;
+        const endDate = endDateInput.value;
+        
+        if (startDate && endDate && endDate < startDate) {
+          endDateInput.setCustomValidity('Data de fim não pode ser anterior à data de início');
+          endDateInput.reportValidity();
+        } else {
+          endDateInput.setCustomValidity('');
+        }
+        // Não sincroniza automaticamente - deixa o usuário escolher
+      };
+      
+      startDateInput.addEventListener('change', validateDates);
+      endDateInput.addEventListener('change', validateDates);
+    }
 
     document.getElementById('form-edit-event').addEventListener('submit', async (e) => {
       e.preventDefault();
@@ -775,20 +911,35 @@ class EventDetailView {
       }
 
       const name = document.getElementById('edit-event-name').value.trim();
-      const date = document.getElementById('edit-event-date').value;
+      const startDate = document.getElementById('edit-event-start-date')?.value.trim();
+      const endDate = document.getElementById('edit-event-end-date')?.value.trim() || null;
+      const client = document.getElementById('edit-event-client').value.trim();
+      const city = document.getElementById('edit-event-city').value.trim();
       const description = document.getElementById('edit-event-description').value.trim();
 
-      if (!name || !date) {
+      if (!name || !startDate || !client || !city) {
         if (window.toast) {
-          window.toast.error('Nome e data são obrigatórios');
+          window.toast.error('Nome, data de início, cliente e cidade são obrigatórios');
+        }
+        return false;
+      }
+
+      // Validação de datas
+      if (endDate && endDate < startDate) {
+        if (window.toast) {
+          window.toast.error('Data de fim não pode ser anterior à data de início');
         }
         return false;
       }
 
       const result = await this.updateEventUseCase.execute(this.currentEventId, {
         name,
-        date,
-        description: description || ''
+        date: startDate, // Mantém compatibilidade com o use case
+        client,
+        city,
+        description: description || '',
+        startDate: startDate,
+        endDate: endDate || null
       });
 
       if (result.success) {
@@ -837,34 +988,89 @@ class EventDetailView {
       let modalContent = '';
 
       if (transactionType === 'expense' || transaction.type === 'EXPENSE') {
-        // Modal para editar insumo
-        modalContent = `
-          <form id="form-edit-expense">
-            <div class="form-group">
-              <label class="form-label">Descrição *</label>
-              <input type="text" class="form-input" id="edit-expense-description" 
-                     value="${this.escapeHtml(transaction.description)}" required 
-                     placeholder="Ex: Compra de ingredientes">
-            </div>
-            <div class="form-group">
-              <label class="form-label">Valor (R$) *</label>
-              <input type="number" class="form-input" id="edit-expense-amount" 
-                     value="${transaction.amount}" step="0.01" min="0.01" required>
-            </div>
-            <div class="form-group">
-              <label style="display: flex; align-items: center; gap: var(--spacing-sm);">
-                <input type="checkbox" id="edit-expense-has-receipt" ${transaction.metadata.hasReceipt ? 'checked' : ''}>
-                <span>Nota fiscal já emitida/arquivada</span>
-              </label>
-            </div>
-            <div class="modal-footer">
-              <button type="button" class="btn btn-secondary" onclick="this.closest('.modal-backdrop').remove()">
-                Cancelar
-              </button>
-              <button type="submit" class="btn btn-primary">Salvar</button>
-            </div>
-          </form>
-        `;
+        // Verifica se é hospedagem
+        const isAccommodation = transaction.metadata.category === 'accommodation';
+        
+        if (isAccommodation) {
+          // Modal para editar hospedagem
+          const checkIn = transaction.metadata.checkIn || '';
+          const checkOut = transaction.metadata.checkOut || '';
+          
+          // Extrai apenas a descrição base (remove o padrão de datas se existir)
+          let baseDescription = transaction.description || 'Hospedagem';
+          const datePattern = /^Hospedagem\s*\([^)]+\)\s*$/;
+          if (datePattern.test(baseDescription)) {
+            baseDescription = 'Hospedagem';
+          }
+          
+          modalContent = `
+            <form id="form-edit-accommodation">
+              <div class="form-group">
+                <label class="form-label">Valor Total (R$) *</label>
+                <input type="number" class="form-input" id="edit-accommodation-amount" 
+                       value="${transaction.amount}" step="0.01" min="0.01" required>
+              </div>
+              <div class="form-group">
+                <label class="form-label">Data Check-in</label>
+                <input type="date" class="form-input" id="edit-accommodation-checkin" 
+                       value="${checkIn}" required>
+              </div>
+              <div class="form-group">
+                <label class="form-label">Data Check-out</label>
+                <input type="date" class="form-input" id="edit-accommodation-checkout" 
+                       value="${checkOut}" required>
+              </div>
+              <div class="form-group">
+                <label class="form-label">Descrição</label>
+                <input type="text" class="form-input" id="edit-accommodation-description" 
+                       value="${this.escapeHtml(baseDescription)}" 
+                       placeholder="Ex: Hospedagem">
+                <small class="text-muted">Será formatada automaticamente com as datas se deixar "Hospedagem"</small>
+              </div>
+              <div class="form-group">
+                <label style="display: flex; align-items: center; gap: var(--spacing-sm);">
+                  <input type="checkbox" id="edit-accommodation-has-receipt" ${transaction.metadata.hasReceipt ? 'checked' : ''}>
+                  <span>Nota fiscal já emitida/arquivada</span>
+                </label>
+              </div>
+              <div class="modal-footer">
+                <button type="button" class="btn btn-secondary" onclick="this.closest('.modal-backdrop').remove()">
+                  Cancelar
+                </button>
+                <button type="submit" class="btn btn-primary">Salvar</button>
+              </div>
+            </form>
+          `;
+        } else {
+          // Modal para editar compra genérica
+          modalContent = `
+            <form id="form-edit-expense">
+              <div class="form-group">
+                <label class="form-label">Descrição *</label>
+                <input type="text" class="form-input" id="edit-expense-description" 
+                       value="${this.escapeHtml(transaction.description)}" required 
+                       placeholder="Ex: Compra de ingredientes">
+              </div>
+              <div class="form-group">
+                <label class="form-label">Valor (R$) *</label>
+                <input type="number" class="form-input" id="edit-expense-amount" 
+                       value="${transaction.amount}" step="0.01" min="0.01" required>
+              </div>
+              <div class="form-group">
+                <label style="display: flex; align-items: center; gap: var(--spacing-sm);">
+                  <input type="checkbox" id="edit-expense-has-receipt" ${transaction.metadata.hasReceipt ? 'checked' : ''}>
+                  <span>Nota fiscal já emitida/arquivada</span>
+                </label>
+              </div>
+              <div class="modal-footer">
+                <button type="button" class="btn btn-secondary" onclick="this.closest('.modal-backdrop').remove()">
+                  Cancelar
+                </button>
+                <button type="submit" class="btn btn-primary">Salvar</button>
+              </div>
+            </form>
+          `;
+        }
       } else if (transactionType === 'income' || transaction.type === 'INCOME') {
         // Modal para editar receita (KM)
         const isKm = transactionCategory === 'km' || transaction.metadata.category === 'km';
@@ -960,57 +1166,57 @@ class EventDetailView {
             </form>
           `;
         }
-      } else if (transactionType === 'fee' || (transaction.type === 'INCOME' && transaction.metadata.category === 'diaria' || transaction.metadata.category === 'hora_extra')) {
-        // Modal para editar honorário
-        const isDiaria = transactionCategory === 'diaria' || transaction.metadata.category === 'diaria';
-        const isHoraExtra = transactionCategory === 'hora_extra' || transaction.metadata.category === 'hora_extra';
+      } else if (transactionType === 'fee' || (transaction.type === 'INCOME' && (transaction.metadata.category === 'diaria' || transaction.metadata.category === 'hora_extra'))) {
+        // Modal para editar honorário (horas de trabalho)
+        const settings = await this.settingsRepository.find();
+        const overtimeRate = settings?.overtimeRate || DEFAULT_VALUES.OVERTIME_RATE;
+        const hours = transaction.metadata.hours || (transaction.amount / overtimeRate);
+        const calculatedTotal = hours * overtimeRate;
         
-        if (isHoraExtra) {
-          // Editar Hora Extra
-          const hours = transaction.metadata.hours || (transaction.amount / (await this.settingsRepository.find())?.overtimeRate || DEFAULT_VALUES.OVERTIME_RATE);
-          modalContent = `
-            <form id="form-edit-hour-extra">
-              <div class="form-group">
-                <label class="form-label">Descrição *</label>
-                <input type="text" class="form-input" id="edit-hour-extra-description" 
-                       value="${this.escapeHtml(transaction.description)}" required>
+        modalContent = `
+          <form id="form-edit-fee">
+            <div class="form-group">
+              <label class="form-label">Horas de Trabalho</label>
+              <div style="padding: var(--spacing-md); background: var(--color-surface); border-radius: var(--radius-md); margin-top: var(--spacing-xs); margin-bottom: var(--spacing-sm);">
+                <div style="font-size: var(--font-size-sm); color: var(--color-text-secondary); margin-bottom: var(--spacing-xs);">
+                  Taxa: ${Formatters.currency(overtimeRate)} por hora
+                </div>
               </div>
-              <div class="form-group">
-                <label class="form-label">Horas *</label>
-                <input type="number" class="form-input" id="edit-hour-extra-hours" 
-                       value="${hours.toFixed(2)}" step="0.25" min="0.25" required>
-              </div>
-              <div class="modal-footer">
-                <button type="button" class="btn btn-secondary" onclick="this.closest('.modal-backdrop').remove()">
-                  Cancelar
-                </button>
-                <button type="submit" class="btn btn-primary">Salvar</button>
-              </div>
-            </form>
-          `;
-        } else {
-          // Editar Diária (valor fixo, só descrição)
-          modalContent = `
-            <form id="form-edit-daily">
-              <div class="form-group">
-                <label class="form-label">Descrição *</label>
-                <input type="text" class="form-input" id="edit-daily-description" 
-                       value="${this.escapeHtml(transaction.description)}" required>
-              </div>
-              <div class="form-group">
-                <label class="form-label">Valor (R$) *</label>
-                <input type="number" class="form-input" id="edit-daily-amount" 
-                       value="${transaction.amount}" step="0.01" min="0.01" required>
-              </div>
-              <div class="modal-footer">
-                <button type="button" class="btn btn-secondary" onclick="this.closest('.modal-backdrop').remove()">
-                  Cancelar
-                </button>
-                <button type="submit" class="btn btn-primary">Salvar</button>
-              </div>
-            </form>
-          `;
-        }
+              <input type="number" class="form-input" id="edit-fee-hours" 
+                     value="${hours.toFixed(2)}" step="0.5" min="0.5" required>
+              <small class="text-muted" id="edit-fee-total" style="display: block; margin-top: var(--spacing-xs); font-weight: var(--font-weight-bold); color: var(--color-success);">Total: ${Formatters.currency(calculatedTotal)}</small>
+            </div>
+            <div class="form-group">
+              <label class="form-label">Descrição *</label>
+              <input type="text" class="form-input" id="edit-fee-description" 
+                     value="${this.escapeHtml(transaction.description)}" required
+                     placeholder="Ex: Horas de trabalho do evento">
+            </div>
+            <div class="modal-footer">
+              <button type="button" class="btn btn-secondary" onclick="this.closest('.modal-backdrop').remove()">
+                Cancelar
+              </button>
+              <button type="submit" class="btn btn-success">Salvar</button>
+            </div>
+          </form>
+        `;
+        
+        // Adiciona event listener para calcular total em tempo real
+        setTimeout(() => {
+          const hoursInput = modal.querySelector('#edit-fee-hours');
+          const totalDisplay = modal.querySelector('#edit-fee-total');
+          
+          if (hoursInput && totalDisplay) {
+            const updateTotal = () => {
+              const hoursValue = parseFloat(hoursInput.value) || 0;
+              const total = hoursValue * overtimeRate;
+              totalDisplay.textContent = `Total: ${Formatters.currency(total)}`;
+            };
+            
+            hoursInput.addEventListener('input', updateTotal);
+            hoursInput.addEventListener('change', updateTotal);
+          }
+        }, 100);
       }
 
       const modal = this.createModal('Editar Transação', modalContent);
@@ -1019,8 +1225,31 @@ class EventDetailView {
       this._addModalOpenClass();
 
       // Event listener para salvar
-      const formId = modal.querySelector('form').id;
-      modal.querySelector(`#${formId}`).addEventListener('submit', async (e) => {
+      const formId = modal.querySelector('form')?.id;
+      const form = modal.querySelector(`#${formId}`);
+      
+      // Validação de datas para hospedagem
+      if (formId === 'form-edit-accommodation') {
+        const checkInInput = form.querySelector('#edit-accommodation-checkin');
+        const checkOutInput = form.querySelector('#edit-accommodation-checkout');
+        
+        const validateDates = () => {
+          const checkIn = new Date(checkInInput.value);
+          const checkOut = new Date(checkOutInput.value);
+          
+          if (checkIn && checkOut && checkOut < checkIn) {
+            checkOutInput.setCustomValidity('Data de check-out não pode ser anterior à data de check-in');
+            checkOutInput.reportValidity();
+          } else {
+            checkOutInput.setCustomValidity('');
+          }
+        };
+        
+        checkInInput.addEventListener('change', validateDates);
+        checkOutInput.addEventListener('change', validateDates);
+      }
+      
+      form.addEventListener('submit', async (e) => {
         e.preventDefault();
         const result = await this.saveTransactionEdit(transactionId, transactionType, transactionCategory);
         if (result !== false) {
@@ -1059,26 +1288,72 @@ class EventDetailView {
       let updateData = {};
 
       if (transactionType === 'expense' || transaction.type === 'EXPENSE') {
-        // Editar insumo
-        const description = document.getElementById('edit-expense-description').value.trim();
-        const amount = parseFloat(document.getElementById('edit-expense-amount').value);
-        const hasReceipt = document.getElementById('edit-expense-has-receipt').checked;
+        // Verifica se é hospedagem
+        const isAccommodation = transaction.metadata.category === 'accommodation';
+        
+        if (isAccommodation) {
+          // Editar hospedagem
+          const amount = parseFloat(document.getElementById('edit-accommodation-amount').value);
+          const checkIn = document.getElementById('edit-accommodation-checkin').value;
+          const checkOut = document.getElementById('edit-accommodation-checkout').value;
+          let description = document.getElementById('edit-accommodation-description').value.trim() || 'Hospedagem';
+          const hasReceipt = document.getElementById('edit-accommodation-has-receipt').checked;
 
-        if (!description || !amount || amount <= 0) {
-          if (window.toast) {
-            window.toast.error('Descrição e valor são obrigatórios');
+          // Validação de datas
+          if (checkIn && checkOut) {
+            const checkInDate = new Date(checkIn);
+            const checkOutDate = new Date(checkOut);
+            
+            if (checkOutDate < checkInDate) {
+              if (window.toast) {
+                window.toast.error('Data de check-out não pode ser anterior à data de check-in');
+              }
+              return false;
+            }
           }
-          return false;
+
+          if (!amount || amount <= 0) {
+            if (window.toast) {
+              window.toast.error('Valor é obrigatório e deve ser maior que zero');
+            }
+            return false;
+          }
+
+          // Mantém a descrição como informada pelo usuário, sem formatação automática
+
+          updateData = {
+            description,
+            amount,
+            metadata: {
+              ...transaction.metadata,
+              category: 'accommodation',
+              checkIn,
+              checkOut,
+              hasReceipt
+            }
+          };
+        } else {
+          // Editar compra genérica
+          const description = document.getElementById('edit-expense-description').value.trim();
+          const amount = parseFloat(document.getElementById('edit-expense-amount').value);
+          const hasReceipt = document.getElementById('edit-expense-has-receipt').checked;
+
+          if (!description || !amount || amount <= 0) {
+            if (window.toast) {
+              window.toast.error('Descrição e valor são obrigatórios');
+            }
+            return false;
+          }
+
+          updateData = {
+            description,
+            amount,
+            metadata: {
+              ...transaction.metadata,
+              hasReceipt
+            }
+          };
         }
-
-        updateData = {
-          description,
-          amount,
-          metadata: {
-            ...transaction.metadata,
-            hasReceipt
-          }
-        };
       } else if (transactionType === 'income' || transaction.type === 'INCOME') {
         const isKm = transactionCategory === 'km' || transaction.metadata.category === 'km';
 
@@ -1168,55 +1443,30 @@ class EventDetailView {
           };
         }
       } else if (transactionType === 'fee' || transaction.metadata.category === 'diaria' || transaction.metadata.category === 'hora_extra') {
-        const isHoraExtra = transactionCategory === 'hora_extra' || transaction.metadata.category === 'hora_extra';
+        // Editar Honorário (Horas de Trabalho)
+        const description = document.getElementById('edit-fee-description').value.trim();
+        const hours = parseFloat(document.getElementById('edit-fee-hours').value);
+        const settings = await this.settingsRepository.find();
+        const overtimeRate = settings?.overtimeRate || DEFAULT_VALUES.OVERTIME_RATE;
+        const amount = hours * overtimeRate;
 
-        if (isHoraExtra) {
-          // Editar Hora Extra
-          const description = document.getElementById('edit-hour-extra-description').value.trim();
-          const hours = parseFloat(document.getElementById('edit-hour-extra-hours').value);
-          const settings = await this.settingsRepository.find();
-          const overtimeRate = settings?.overtimeRate || DEFAULT_VALUES.OVERTIME_RATE;
-          const amount = hours * overtimeRate;
-
-          if (!description || !hours || hours <= 0) {
-            if (window.toast) {
-              window.toast.error('Descrição e horas são obrigatórios');
-            }
-            return false;
+        if (!description || !hours || hours <= 0) {
+          if (window.toast) {
+            window.toast.error('Descrição e horas são obrigatórios');
           }
-
-          updateData = {
-            description,
-            amount,
-            metadata: {
-              ...transaction.metadata,
-              category: 'hora_extra',
-              hours,
-              isReimbursement: false
-            }
-          };
-        } else {
-          // Editar Diária
-          const description = document.getElementById('edit-daily-description').value.trim();
-          const amount = parseFloat(document.getElementById('edit-daily-amount').value);
-
-          if (!description || !amount || amount <= 0) {
-            if (window.toast) {
-              window.toast.error('Descrição e valor são obrigatórios');
-            }
-            return false;
-          }
-
-          updateData = {
-            description,
-            amount,
-            metadata: {
-              ...transaction.metadata,
-              category: 'diaria',
-              isReimbursement: false
-            }
-          };
+          return false;
         }
+
+        updateData = {
+          description,
+          amount,
+          metadata: {
+            ...transaction.metadata,
+            category: 'hora_extra', // Mantém como hora_extra internamente
+            hours,
+            isReimbursement: false
+          }
+        };
       }
 
       const result = await this.updateTransactionUseCase.execute(transactionId, updateData);
@@ -1634,6 +1884,142 @@ class EventDetailView {
         window.toast.error(`Erro ao excluir evento: ${error.message || 'Erro desconhecido'}`);
       }
     }
+  }
+
+  /**
+   * Mostra menu de escolha entre Compra e Hospedagem
+   * @private
+   */
+  _showPurchaseTypeMenu(buttonElement, reloadView) {
+    // Remove menu anterior se existir
+    const existingMenu = document.getElementById('purchase-type-menu');
+    if (existingMenu) {
+      existingMenu.remove();
+      return;
+    }
+
+    // Cria o menu dropdown usando position fixed para garantir visibilidade
+    const menu = document.createElement('div');
+    menu.id = 'purchase-type-menu';
+    
+    // Calcula posição do botão na tela
+    const rect = buttonElement.getBoundingClientRect();
+    
+    menu.style.cssText = `
+      position: fixed;
+      background: white;
+      border-radius: 8px;
+      box-shadow: 0 4px 12px rgba(0, 0, 0, 0.15);
+      padding: 4px;
+      z-index: 10000;
+      min-width: 200px;
+      border: 1px solid #e0e0e0;
+      top: ${rect.bottom + 8}px;
+      right: ${window.innerWidth - rect.right}px;
+    `;
+    
+    // Ajusta se o menu sair da tela
+    const menuWidth = 200;
+    if (rect.right - menuWidth < 10) {
+      menu.style.right = '10px';
+    }
+    if (rect.bottom + 150 > window.innerHeight) {
+      menu.style.top = `${rect.top - 150}px`;
+    }
+
+    menu.innerHTML = `
+      <button class="menu-item-btn" data-type="purchase" style="
+        width: 100%;
+        padding: var(--spacing-md);
+        border: none;
+        background: transparent;
+        text-align: left;
+        cursor: pointer;
+        border-radius: var(--radius-sm);
+        display: flex;
+        align-items: center;
+        gap: var(--spacing-sm);
+        transition: background-color 0.2s;
+      ">
+        <span style="font-size: 20px;">📦</span>
+        <div>
+          <div style="font-weight: var(--font-weight-semibold); font-size: var(--font-size-sm);">Compra</div>
+          <div style="font-size: var(--font-size-xs); color: var(--color-text-secondary);">Insumos, materiais</div>
+        </div>
+      </button>
+      <button class="menu-item-btn" data-type="accommodation" style="
+        width: 100%;
+        padding: var(--spacing-md);
+        border: none;
+        background: transparent;
+        text-align: left;
+        cursor: pointer;
+        border-radius: var(--radius-sm);
+        display: flex;
+        align-items: center;
+        gap: var(--spacing-sm);
+        transition: background-color 0.2s;
+      ">
+        <span style="font-size: 20px;">🏨</span>
+        <div>
+          <div style="font-weight: var(--font-weight-semibold); font-size: var(--font-size-sm);">Hospedagem</div>
+          <div style="font-size: var(--font-size-xs); color: var(--color-text-secondary);">Hotel, pousada</div>
+        </div>
+      </button>
+    `;
+
+    // Adiciona estilos hover
+    const style = document.createElement('style');
+    style.textContent = `
+      .menu-item-btn:hover {
+        background-color: var(--color-surface) !important;
+      }
+    `;
+    document.head.appendChild(style);
+
+    // Adiciona listeners
+    menu.querySelectorAll('.menu-item-btn').forEach(btn => {
+      btn.addEventListener('click', (e) => {
+        e.stopPropagation();
+        const type = btn.dataset.type;
+        menu.remove();
+        style.remove();
+
+        if (type === 'purchase') {
+          const modal = new ExpenseModal(
+            this.addTransactionUseCase,
+            this.eventRepository,
+            this.currentEventId,
+            reloadView
+          );
+          modal.show();
+        } else if (type === 'accommodation') {
+          const modal = new AccommodationModal(
+            this.addTransactionUseCase,
+            this.eventRepository,
+            this.currentEventId,
+            reloadView
+          );
+          modal.show();
+        }
+      });
+    });
+
+    // Fecha o menu ao clicar fora
+    const closeMenu = (e) => {
+      if (!menu.contains(e.target) && e.target !== buttonElement && !buttonElement.contains(e.target)) {
+        menu.remove();
+        style.remove();
+        document.removeEventListener('click', closeMenu);
+      }
+    };
+
+    setTimeout(() => {
+      document.addEventListener('click', closeMenu);
+    }, 0);
+
+    // Adiciona o menu ao body para garantir que apareça
+    document.body.appendChild(menu);
   }
 }
 

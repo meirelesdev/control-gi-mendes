@@ -20,6 +20,10 @@ class UpdateEvent {
    * @param {string} [input.name] - Novo nome do evento
    * @param {string|Date} [input.date] - Nova data do evento
    * @param {string} [input.description] - Nova descrição do evento
+   * @param {string} [input.client] - Novo cliente do evento
+   * @param {string} [input.city] - Nova cidade do evento
+   * @param {string|Date} [input.startDate] - Nova data de início do evento
+   * @param {string|Date} [input.endDate] - Nova data de fim do evento
    * @returns {Promise<Object>} - Resultado com evento atualizado ou erro
    */
   async execute(eventId, input) {
@@ -70,7 +74,11 @@ class UpdateEvent {
     // Verifica se pelo menos um campo foi informado
     if (input.name === undefined && 
         input.date === undefined && 
-        input.description === undefined) {
+        input.description === undefined &&
+        input.client === undefined &&
+        input.city === undefined &&
+        input.startDate === undefined &&
+        input.endDate === undefined) {
       throw new Error('Pelo menos um campo deve ser informado para atualização');
     }
   }

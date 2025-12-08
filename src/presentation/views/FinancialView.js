@@ -64,10 +64,10 @@ class FinancialView {
         const eventFees = fees.reduce((sum, f) => sum + f.amount, 0);
         
         // Acumula totais (mesma lógica do EventDetailView)
-        totalUpfrontCost += eventExpenses + eventKmCost; // Investimento: Insumos + Gasolina
+        totalUpfrontCost += eventExpenses + eventKmCost; // Investimento: Compras + Gasolina
         totalNetProfit += eventFees; // Lucro: Apenas Honorários
         
-        // Valor de reembolso = Insumos + KM
+        // Valor de reembolso = Compras + KM
         const eventReimbursementValue = eventExpenses + eventKmCost;
         totalReimbursements += eventReimbursementValue;
       }
@@ -90,7 +90,7 @@ class FinancialView {
                 💸 Investimento Realizado
               </div>
               <div style="font-size: var(--font-size-xs); color: #757575;">
-                Valor que você pagou do próprio bolso (Custos de Insumos + Gasolina)
+                Valor que você pagou do próprio bolso (Compras + Gasolina)
               </div>
             </div>
             <div style="font-size: var(--font-size-xl); font-weight: var(--font-weight-bold); color: #C62828;">
@@ -105,7 +105,7 @@ class FinancialView {
                 💳 Reembolsos a Receber
               </div>
               <div style="font-size: var(--font-size-xs); color: #757575;">
-                Valor que será devolvido (Custos de Insumos + Deslocamentos)
+                Valor que será devolvido (Compras + Deslocamentos)
               </div>
             </div>
             <div style="font-size: var(--font-size-xl); font-weight: var(--font-weight-bold); color: #7B1FA2;">

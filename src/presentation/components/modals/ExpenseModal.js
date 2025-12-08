@@ -1,5 +1,5 @@
 /**
- * Componente Modal: Adicionar Insumo (Despesa)
+ * Componente Modal: Adicionar Compra (Despesa)
  * Encapsula a lógica do modal de adicionar despesa
  */
 import { Formatters } from '../../utils/Formatters.js';
@@ -25,12 +25,12 @@ class ExpenseModal {
       }
     }
 
-    const modal = this._createModal('Adicionar Insumo', `
+    const modal = this._createModal('Adicionar Compra', `
       <form id="form-add-expense">
         <div class="form-group">
           <label class="form-label">Descrição</label>
           <input type="text" class="form-input" id="expense-description" 
-                 placeholder="Ex: Compra de ingredientes" required>
+                     placeholder="Ex: Compra de ingredientes, materiais, etc." required>
         </div>
         <div class="form-group">
           <label class="form-label">Valor (R$)</label>
@@ -95,22 +95,22 @@ class ExpenseModal {
 
       if (result && result.success) {
         if (window.toast && typeof window.toast.success === 'function') {
-          window.toast.success('Insumo adicionado com sucesso!');
+          window.toast.success('Compra adicionada com sucesso!');
         }
         if (this.onSuccess) {
           await this.onSuccess();
         }
         return true;
       } else {
-        const errorMsg = (result && result.error) || 'Erro desconhecido ao adicionar insumo';
-        console.error('Erro ao adicionar insumo:', errorMsg);
+        const errorMsg = (result && result.error) || 'Erro desconhecido ao adicionar compra';
+        console.error('Erro ao adicionar compra:', errorMsg);
         if (window.toast && typeof window.toast.error === 'function') {
           window.toast.error(errorMsg);
         }
         return false;
       }
     } catch (error) {
-      const errorMsg = `Erro ao adicionar insumo: ${error?.message || 'Erro desconhecido'}`;
+      const errorMsg = `Erro ao adicionar compra: ${error?.message || 'Erro desconhecido'}`;
       console.error('Erro em saveExpense:', error);
       if (window.toast && typeof window.toast.error === 'function') {
         window.toast.error(errorMsg);

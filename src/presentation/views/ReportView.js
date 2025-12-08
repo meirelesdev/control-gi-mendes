@@ -245,6 +245,36 @@ class ReportView {
             font-style: italic;
         }
 
+        .summary-box {
+            background-color: #f9f9f9;
+            border: 2px solid #000;
+            padding: 20px;
+            margin-bottom: 30px;
+            page-break-inside: avoid;
+            break-inside: avoid;
+        }
+
+        .summary-box p {
+            margin: 8px 0;
+            font-size: 11pt;
+            line-height: 1.6;
+        }
+
+        .summary-box hr {
+            border: none;
+            border-top: 1px solid #ccc;
+            margin: 12px 0;
+        }
+
+        .summary-box .total-big {
+            font-size: 14pt;
+            font-weight: bold;
+            margin-top: 15px;
+            padding-top: 15px;
+            border-top: 2px solid #000;
+            text-align: center;
+        }
+
         /* Estilos para impressão */
         @media print {
             body {
@@ -331,6 +361,31 @@ class ReportView {
     </div>
     ` : ''}
 
+    <div class="summary-box">
+        ${!isMonthly ? `
+        ${data.header.startDate && data.header.endDate && data.header.startDate !== data.header.endDate ? `
+        <p><strong>Período:</strong> ${formatDate(data.header.startDate)} a ${formatDate(data.header.endDate)}</p>
+        ` : `
+        <p><strong>Data:</strong> ${formatDate(data.header.eventDate)}</p>
+        `}
+        <p><strong>Cliente:</strong> ${this._escapeHtml(data.header.client || '')}</p>
+        <p><strong>Cidade:</strong> ${this._escapeHtml(data.header.city || '')}</p>
+        ` : `
+        <p><strong>Período:</strong> ${this._escapeHtml(data.header.period || '')}</p>
+        <p><strong>Quantidade de Eventos:</strong> ${data.header.eventsCount || 0}</p>
+        `}
+        <hr>
+        <p><strong>Horas de trabalho:</strong> ${data.summary.totalWorkHours ? data.summary.totalWorkHours.toFixed(1) : '0'}h</p>
+        <p><strong>Horas de deslocamento:</strong> ${data.summary.totalTravelHours ? data.summary.totalTravelHours.toFixed(1) : '0'}h</p>
+        <p><strong>Total de horas:</strong> ${data.summary.totalHours ? data.summary.totalHours.toFixed(1) : '0'}h</p>
+        <hr>
+        <p><strong>Valor total da diária (Honorários):</strong> ${formatCurrency(data.summary.totalDailyValue || 0)}</p>
+        <p><strong>Combustível (KM):</strong> ${formatCurrency(data.summary.totalFuel || 0)}</p>
+        <p><strong>Compras:</strong> ${formatCurrency(data.summary.totalPurchases || 0)}</p>
+        <p><strong>Hotel:</strong> ${formatCurrency(data.summary.totalHotel || 0)}</p>
+        <p class="total-big"><strong>TOTAL GERAL: ${formatCurrency(data.summary.grandTotal || 0)}</strong></p>
+    </div>
+
     ${!isMonthly && data.header.eventDescription ? `
     <div class="section">
         <div style="font-size: 11pt; color: #333; line-height: 1.8;">
@@ -368,9 +423,10 @@ class ReportView {
         <table>
             <thead>
                 <tr>
-                    <th style="width: 50%;">Descrição</th>
-                    <th style="width: 25%;">Categoria</th>
-                    <th style="width: 25%;">Valor (R$)</th>
+                    <th style="width: 40%;">Descrição</th>
+                    <th style="width: 20%;">Categoria</th>
+                    <th style="width: 20%;">Horas</th>
+                    <th style="width: 20%;">Valor (R$)</th>
                 </tr>
             </thead>
             <tbody>
@@ -378,11 +434,13 @@ class ReportView {
                 <tr>
                     <td>${this._escapeHtml(item.description)}${isMonthly && item.eventName ? ` <small style="color: #666;">(${this._escapeHtml(item.eventName)})</small>` : ''}</td>
                     <td>${this._escapeHtml(item.category)}</td>
+                    <td>${item.hours ? item.hours.toFixed(1) : '-'}h</td>
                     <td>${formatCurrency(item.amount)}</td>
                 </tr>
                 `).join('')}
                 <tr class="total-row">
                     <td colspan="2"><strong>Total de Serviços</strong></td>
+                    <td><strong>${data.services.totalHours ? data.services.totalHours.toFixed(1) : '0'}h</strong></td>
                     <td><strong>${formatCurrency(data.services.total)}</strong></td>
                 </tr>
             </tbody>
@@ -393,7 +451,7 @@ class ReportView {
     </div>
 
     <div class="section">
-        <div class="section-title">2. Custos de Insumos</div>
+        <div class="section-title">2. Compras</div>
         ${data.expenses.items.length > 0 ? `
         <table>
             <thead>
@@ -406,43 +464,48 @@ class ReportView {
             <tbody>
                 ${data.expenses.items.map(item => `
                 <tr>
-                    <td>${this._escapeHtml(item.description)}${isMonthly && item.eventName ? ` <small style="color: #666;">(${this._escapeHtml(item.eventName)})</small>` : ''}</td>
+                    <td>
+                        ${this._escapeHtml(item.description)}${isMonthly && item.eventName ? ` <small style="color: #666;">(${this._escapeHtml(item.eventName)})</small>` : ''}
+                        ${item.category === 'accommodation' && item.dateRange ? `<br><small style="color: #666; font-style: italic;">Check-in/out: ${this._escapeHtml(item.dateRange)}</small>` : ''}
+                    </td>
                     <td>${item.hasReceipt ? '✓ Sim' : '✗ Não'}</td>
                     <td>${formatCurrency(item.amount)}</td>
                 </tr>
                 `).join('')}
                 <tr class="total-row">
-                    <td colspan="2"><strong>Total de Custos de Insumos</strong></td>
+                    <td colspan="2"><strong>Total de Compras</strong></td>
                     <td><strong>${formatCurrency(data.expenses.total)}</strong></td>
                 </tr>
             </tbody>
         </table>
         ` : `
-        <div class="no-data">Nenhum insumo registrado</div>
+        <div class="no-data">Nenhuma compra registrada</div>
         `}
     </div>
 
     <div class="section">
-        <div class="section-title">3. Deslocamentos (KM Rodados)</div>
+        <div class="section-title">3. Deslocamentos</div>
         ${data.travel.items.length > 0 ? `
         <table>
             <thead>
                 <tr>
-                    <th style="width: 50%;">Descrição</th>
-                    <th style="width: 25%;">KM Rodados</th>
-                    <th style="width: 25%;">Valor (R$)</th>
+                    <th style="width: 40%;">Descrição</th>
+                    <th style="width: 20%;">Tipo</th>
+                    <th style="width: 20%;">KM/Horas</th>
+                    <th style="width: 20%;">Valor (R$)</th>
                 </tr>
             </thead>
             <tbody>
                 ${data.travel.items.map(item => `
                 <tr>
                     <td>${this._escapeHtml(item.description)}${isMonthly && item.eventName ? ` <small style="color: #666;">(${this._escapeHtml(item.eventName)})</small>` : ''}${item.origin && item.destination ? ` <br><small style="color: #666;">${this._escapeHtml(item.origin)} → ${this._escapeHtml(item.destination)}</small>` : ''}</td>
-                    <td style="text-align: center;">${item.distance} km</td>
+                    <td style="text-align: center;">${item.category === 'tempo_viagem' ? '⏱️ Tempo' : '🚗 KM'}</td>
+                    <td style="text-align: center;">${item.category === 'tempo_viagem' ? `${item.hours || 0}h` : `${item.distance || 0} km`}</td>
                     <td>${formatCurrency(item.amount)}</td>
                 </tr>
                 `).join('')}
                 <tr class="total-row">
-                    <td colspan="2"><strong>Total de Deslocamentos</strong></td>
+                    <td colspan="3"><strong>Total de Deslocamentos</strong></td>
                     <td><strong>${formatCurrency(data.travel.total)}</strong></td>
                 </tr>
             </tbody>
@@ -459,7 +522,7 @@ class ReportView {
             <span><strong>${formatCurrency(data.summary.totalServices)}</strong></span>
         </div>
         <div class="summary-row">
-            <span>Total de Custos de Insumos:</span>
+            <span>Total de Compras:</span>
             <span><strong>${formatCurrency(data.summary.totalExpenses)}</strong></span>
         </div>
         <div class="summary-row">

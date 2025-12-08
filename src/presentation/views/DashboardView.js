@@ -366,8 +366,23 @@ class DashboardView {
                      placeholder="Ex: Evento Corporativo - Empresa XYZ">
             </div>
             <div class="form-group">
-              <label class="form-label">Data do Evento *</label>
-              <input type="date" class="form-input" id="event-date" required>
+              <label class="form-label">Data de Início *</label>
+              <input type="date" class="form-input" id="event-start-date" required>
+            </div>
+            <div class="form-group">
+              <label class="form-label">Data de Fim (opcional)</label>
+              <input type="date" class="form-input" id="event-end-date">
+              <small class="text-muted">Se não informada, usa a data de início</small>
+            </div>
+            <div class="form-group">
+              <label class="form-label">Cliente *</label>
+              <input type="text" class="form-input" id="event-client" required 
+                     placeholder="Ex: Bom Princípio">
+            </div>
+            <div class="form-group">
+              <label class="form-label">Cidade *</label>
+              <input type="text" class="form-input" id="event-city" required 
+                     placeholder="Ex: Tupandi - RS">
             </div>
             <div class="form-group">
               <label class="form-label">Descrição (opcional)</label>
@@ -397,10 +412,40 @@ class DashboardView {
     // Aguarda o DOM estar pronto antes de adicionar listeners
     setTimeout(() => {
       // Preenche data de hoje como padrão
-      const dateInput = modal.querySelector('#event-date');
-      if (dateInput) {
+      const startDateInput = modal.querySelector('#event-start-date');
+      const endDateInput = modal.querySelector('#event-end-date');
+      
+      if (startDateInput) {
         const today = new Date().toISOString().split('T')[0];
-        dateInput.value = today;
+        startDateInput.value = today;
+        
+        // Sincroniza endDate com startDate inicialmente
+        if (endDateInput) {
+          endDateInput.value = today;
+        }
+      }
+      
+      // Validação: endDate não pode ser anterior a startDate
+      if (startDateInput && endDateInput) {
+        const validateDates = () => {
+          const startDate = startDateInput.value;
+          const endDate = endDateInput.value;
+          
+          if (startDate && endDate && endDate < startDate) {
+            endDateInput.setCustomValidity('Data de fim não pode ser anterior à data de início');
+            endDateInput.reportValidity();
+          } else {
+            endDateInput.setCustomValidity('');
+          }
+          
+          // Se endDate estiver vazia, sincroniza com startDate
+          if (startDate && !endDate) {
+            endDateInput.value = startDate;
+          }
+        };
+        
+        startDateInput.addEventListener('change', validateDates);
+        endDateInput.addEventListener('change', validateDates);
       }
 
       // Adiciona classe para bloquear scroll do body
@@ -483,20 +528,39 @@ class DashboardView {
   async createEvent(modal) {
     // Busca os elementos dentro do modal para evitar conflitos
     const nameInput = modal.querySelector('#event-name');
-    const dateInput = modal.querySelector('#event-date');
+    const startDateInput = modal.querySelector('#event-start-date');
+    const endDateInput = modal.querySelector('#event-end-date');
+    const clientInput = modal.querySelector('#event-client');
+    const cityInput = modal.querySelector('#event-city');
     const descriptionInput = modal.querySelector('#event-description');
     const autoCreateDailyInput = modal.querySelector('#auto-create-daily');
 
-    if (!nameInput || !dateInput) {
+    if (!nameInput || !startDateInput || !clientInput || !cityInput) {
       console.error('Campos do formulário não encontrados');
       window.toast.error('Erro ao processar formulário. Tente novamente.');
       return;
     }
 
     const name = nameInput.value.trim();
-    const date = dateInput.value.trim();
+    const startDate = startDateInput.value.trim();
+    const endDate = endDateInput?.value.trim() || null;
+    const client = clientInput.value.trim();
+    const city = cityInput.value.trim();
     const description = descriptionInput ? descriptionInput.value.trim() : '';
     const autoCreateDaily = autoCreateDailyInput ? autoCreateDailyInput.checked : false;
+    
+    // Validação de datas
+    if (!startDate) {
+      window.toast.warning('Data de início é obrigatória.');
+      startDateInput.focus();
+      return;
+    }
+    
+    if (endDate && endDate < startDate) {
+      window.toast.warning('Data de fim não pode ser anterior à data de início.');
+      endDateInput.focus();
+      return;
+    }
 
     // Validação mais robusta
     if (!name || name.length < 3) {
@@ -505,25 +569,41 @@ class DashboardView {
       return;
     }
 
-    if (!date) {
-      window.toast.warning('Por favor, selecione uma data para o evento.');
-      dateInput.focus();
+    if (!client || client.length < 3) {
+      window.toast.warning('O cliente deve ter pelo menos 3 caracteres.');
+      clientInput.focus();
+      return;
+    }
+
+    if (!city || city.length < 3) {
+      window.toast.warning('A cidade deve ter pelo menos 3 caracteres.');
+      cityInput.focus();
       return;
     }
 
     // Valida formato da data (YYYY-MM-DD)
     const dateRegex = /^\d{4}-\d{2}-\d{2}$/;
-    if (!dateRegex.test(date)) {
-      window.toast.warning('Data inválida. Por favor, selecione uma data válida.');
-      dateInput.focus();
+    if (!dateRegex.test(startDate)) {
+      window.toast.warning('Data de início inválida. Por favor, selecione uma data válida.');
+      startDateInput.focus();
+      return;
+    }
+    
+    if (endDate && !dateRegex.test(endDate)) {
+      window.toast.warning('Data de fim inválida. Por favor, selecione uma data válida.');
+      endDateInput.focus();
       return;
     }
 
     try {
       const result = await this.createEventUseCase.execute({
         name,
-        date,
+        date: startDate, // Mantém compatibilidade com o use case
+        client,
+        city,
         description: description || null,
+        startDate: startDate,
+        endDate: endDate || null,
         autoCreateDaily
       });
 

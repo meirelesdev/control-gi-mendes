@@ -1,6 +1,6 @@
 /**
  * Componente Modal: Adicionar Honorário
- * Encapsula a lógica do modal de adicionar honorário (diária/hora extra)
+ * Encapsula a lógica do modal de adicionar horas de trabalho
  */
 import { DEFAULT_VALUES } from '../../../domain/constants/DefaultValues.js';
 import { Formatters } from '../../utils/Formatters.js';
@@ -28,12 +28,10 @@ class FeeModal {
     }
 
     // Busca valores das configurações
-    let dailyRate = DEFAULT_VALUES.DAILY_RATE;
     let overtimeRate = DEFAULT_VALUES.OVERTIME_RATE;
     try {
       const settings = await this.settingsRepository.find();
       if (settings) {
-        dailyRate = settings.standardDailyRate || DEFAULT_VALUES.DAILY_RATE;
         overtimeRate = settings.overtimeRate || DEFAULT_VALUES.OVERTIME_RATE;
       }
     } catch (error) {
@@ -43,34 +41,20 @@ class FeeModal {
     const modal = this._createModal('Adicionar Honorário', `
       <form id="form-add-fee">
         <div class="form-group">
-          <label class="form-label">Tipo de Honorário</label>
-          <div style="display: flex; flex-direction: column; gap: var(--spacing-sm); margin-top: var(--spacing-xs);">
-            <label style="display: flex; align-items: center; gap: var(--spacing-sm); cursor: pointer; padding: var(--spacing-sm); border: 1px solid var(--color-border); border-radius: var(--radius-md);">
-              <input type="radio" name="fee-type" value="diaria" id="fee-type-diaria" checked style="cursor: pointer;">
-              <div style="flex: 1;">
-                <strong>Diária Adicional</strong>
-                <div class="text-muted" style="font-size: 0.9em;" id="diaria-value">Valor: ${Formatters.currency(dailyRate)}</div>
-              </div>
-            </label>
-            <label style="display: flex; align-items: center; gap: var(--spacing-sm); cursor: pointer; padding: var(--spacing-sm); border: 1px solid var(--color-border); border-radius: var(--radius-md);">
-              <input type="radio" name="fee-type" value="hora_extra" id="fee-type-hora" style="cursor: pointer;">
-              <div style="flex: 1;">
-                <strong>Hora Extra</strong>
-                <div class="text-muted" style="font-size: 0.9em;" id="hora-extra-info">Taxa: ${Formatters.currency(overtimeRate)} por hora</div>
-              </div>
-            </label>
+          <label class="form-label">Horas de Trabalho</label>
+          <div style="padding: var(--spacing-md); background: var(--color-surface); border-radius: var(--radius-md); margin-top: var(--spacing-xs); margin-bottom: var(--spacing-sm);">
+            <div style="font-size: var(--font-size-sm); color: var(--color-text-secondary); margin-bottom: var(--spacing-xs);">
+              Taxa: ${Formatters.currency(overtimeRate)} por hora
+            </div>
           </div>
-        </div>
-        <div class="form-group" id="hours-group" style="display: none;">
-          <label class="form-label">Quantidade de Horas</label>
           <input type="number" class="form-input" id="fee-hours" 
-                 step="0.5" min="0.5" placeholder="0" value="1">
-          <small class="text-muted" id="hours-total" style="display: block; margin-top: var(--spacing-xs);">Total: R$ 0,00</small>
+                 step="0.5" min="0.5" placeholder="0" value="1" required>
+          <small class="text-muted" id="hours-total" style="display: block; margin-top: var(--spacing-xs); font-weight: var(--font-weight-bold); color: var(--color-success);">Total: R$ 0,00</small>
         </div>
         <div class="form-group">
           <label class="form-label">Descrição</label>
           <input type="text" class="form-input" id="fee-description" 
-                 placeholder="Ex: Diária técnica padrão" required>
+                 placeholder="Ex: Horas de trabalho do evento" required>
         </div>
         <div class="modal-footer">
           <button type="button" class="btn btn-secondary" id="btn-cancel-fee">
@@ -86,38 +70,27 @@ class FeeModal {
     this._addModalOpenClass();
 
     // Armazena valores no modal
-    modal.dataset.dailyRate = dailyRate;
     modal.dataset.overtimeRate = overtimeRate;
 
     // Event listeners
     const form = modal.querySelector('#form-add-fee');
     const cancelBtn = modal.querySelector('#btn-cancel-fee');
-    const feeTypeInputs = modal.querySelectorAll('input[name="fee-type"]');
     const hoursInput = modal.querySelector('#fee-hours');
     
     cancelBtn.addEventListener('click', () => {
       this._closeModal(modal);
     });
 
-    // Mostra/esconde campos baseado no tipo
-    feeTypeInputs.forEach(input => {
-      input.addEventListener('change', () => {
-        const type = input.value;
-        const hoursGroup = modal.querySelector('#hours-group');
-        if (type === 'hora_extra') {
-          hoursGroup.style.display = 'block';
-          modal.querySelector('#fee-hours').required = true;
-          this._updateHoursTotal(modal);
-        } else {
-          hoursGroup.style.display = 'none';
-          modal.querySelector('#fee-hours').required = false;
-        }
-      });
-    });
-
     // Atualiza total quando horas mudam
     if (hoursInput) {
+      // Atualiza total inicial
+      this._updateHoursTotal(modal);
+      
       hoursInput.addEventListener('input', () => {
+        this._updateHoursTotal(modal);
+      });
+      
+      hoursInput.addEventListener('change', () => {
         this._updateHoursTotal(modal);
       });
     }
@@ -150,39 +123,27 @@ class FeeModal {
   }
 
   /**
-   * Salva o honorário
+   * Salva o honorário (horas de trabalho)
    * @private
    */
   async _saveFee(modal) {
     try {
-      const feeType = modal.querySelector('input[name="fee-type"]:checked').value;
       const description = modal.querySelector('#fee-description').value.trim();
+      const hours = parseFloat(modal.querySelector('#fee-hours').value);
       
       if (!description) {
         window.toast?.error('Descrição é obrigatória');
         return false;
       }
 
-      let amount;
-      let category;
-
-      if (feeType === 'diaria') {
-        const dailyRate = parseFloat(modal.dataset.dailyRate || DEFAULT_VALUES.DAILY_RATE);
-        amount = dailyRate;
-        category = 'diaria';
-      } else if (feeType === 'hora_extra') {
-        const hours = parseFloat(modal.querySelector('#fee-hours').value);
-        if (!hours || hours <= 0) {
-          window.toast?.error('Quantidade de horas deve ser maior que zero');
-          return false;
-        }
-        const overtimeRate = parseFloat(modal.dataset.overtimeRate || DEFAULT_VALUES.OVERTIME_RATE);
-        amount = hours * overtimeRate;
-        category = 'hora_extra';
-      } else {
-        window.toast?.error('Tipo de honorário inválido');
+      if (!hours || hours <= 0) {
+        window.toast?.error('Quantidade de horas deve ser maior que zero');
         return false;
       }
+
+      const overtimeRate = parseFloat(modal.dataset.overtimeRate || DEFAULT_VALUES.OVERTIME_RATE);
+      const amount = hours * overtimeRate;
+      const category = 'hora_extra'; // Mantém categoria interna como hora_extra para compatibilidade
 
       const result = await this.addTransactionUseCase.execute({
         eventId: this.currentEventId,
@@ -190,7 +151,8 @@ class FeeModal {
         description,
         amount,
         category,
-        isReimbursement: false
+        isReimbursement: false,
+        hours: hours // Adiciona hours no input para ser salvo no metadata
       });
 
       if (result && result.success) {

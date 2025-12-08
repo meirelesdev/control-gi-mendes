@@ -21,7 +21,11 @@ class CreateEvent {
    * @param {Object} input - Dados de entrada
    * @param {string} input.name - Nome do evento
    * @param {string} input.date - Data do evento (formato ISO ou YYYY-MM-DD)
+   * @param {string} input.client - Cliente do evento (obrigatório)
+   * @param {string} input.city - Cidade do evento (obrigatório)
    * @param {string} [input.description] - Descrição opcional do evento
+   * @param {string} [input.startDate] - Data de início do evento (opcional, usa date se não informado)
+   * @param {string} [input.endDate] - Data de fim do evento (opcional, usa date se não informado)
    * @param {string} [input.status] - Status inicial (padrão: 'PLANNED')
    * @param {boolean} [input.autoCreateDaily] - Se true, cria automaticamente uma diária padrão
    * @returns {Promise<Object>} - Resultado com evento criado ou erro
@@ -35,7 +39,11 @@ class CreateEvent {
       const event = Event.create(
         input.name,
         input.date,
-        input.description || ''
+        input.description || '',
+        input.client || '',
+        input.city || '',
+        input.startDate || null,
+        input.endDate || null
       );
 
       // Se foi informado um status, atualiza
@@ -90,6 +98,12 @@ class CreateEvent {
     }
     if (!input.date) {
       throw new Error('Data do evento é obrigatória');
+    }
+    if (!input.client || typeof input.client !== 'string' || input.client.trim() === '') {
+      throw new Error('Cliente do evento é obrigatório');
+    }
+    if (!input.city || typeof input.city !== 'string' || input.city.trim() === '') {
+      throw new Error('Cidade do evento é obrigatória');
     }
     // A validação completa será feita pela entidade Event
   }

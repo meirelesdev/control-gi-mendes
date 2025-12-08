@@ -68,15 +68,22 @@ class GetEventSummary {
       // Separa transações por tipo para as views
       const expenses = transactions.filter(t => t.type === 'EXPENSE');
       const incomes = transactions.filter(t => t.type === 'INCOME');
-      // Reembolsos: KM ou marcados explicitamente como reembolso
+      // Reembolsos: Apenas KM (combustível) - tempo_viagem não é reembolso, é honorário
       const reimbursements = incomes.filter(i => 
-        i.metadata.category === 'km' || 
-        i.metadata.isReimbursement === true
+        i.metadata.category === 'km'
       );
-      const fees = incomes.filter(i => 
-        (i.metadata.category === 'diaria' || i.metadata.category === 'hora_extra') &&
-        i.metadata.isReimbursement !== true
-      );
+      // Honorários: Diárias, Horas Extras e Tempo de Viagem (todos são lucro)
+      // tempo_viagem sempre aparece em honorários, independente de isReimbursement
+      const fees = incomes.filter(i => {
+        const category = i.metadata.category;
+        if (category === 'tempo_viagem') {
+          return true; // tempo_viagem sempre é honorário
+        }
+        if (category === 'diaria' || category === 'hora_extra') {
+          return i.metadata.isReimbursement !== true;
+        }
+        return false;
+      });
       const kmTransactions = reimbursements.filter(r => r.metadata.category === 'km');
 
       // Monta o resumo
@@ -88,7 +95,11 @@ class GetEventSummary {
           status: event.status,
           description: event.description,
           expectedPaymentDate: event.expectedPaymentDate,
-          isEditable: event.isEditable
+          isEditable: event.isEditable,
+          client: event.client || '',
+          city: event.city || '',
+          startDate: event.startDate || null,
+          endDate: event.endDate || null
         },
         totals: {
           // Investimento Inicial (o que ela pagou do próprio bolso)
@@ -203,8 +214,13 @@ class GetEventSummary {
           totalKmCost += transaction.amount; // Gasolina paga hoje
         }
 
-        if (transaction.metadata.isReimbursement !== false) {
-          // Considera KM como reembolso
+        // Separa tempo de viagem para cálculo de reembolso (mas visualmente é honorário)
+        if (category === 'tempo_viagem') {
+          totalTravelTimeCost += transaction.amount;
+        }
+
+        if (category === 'km') {
+          // Apenas KM é considerado reembolso
           totalReimbursements += transaction.amount;
           reimbursements.push({
             id: transaction.id,
@@ -212,10 +228,20 @@ class GetEventSummary {
             amount: transaction.amount,
             category: transaction.metadata.category
           });
-        } else {
-          // Honorários (diaria, hora_extra)
+        } else if (category === 'diaria' || category === 'hora_extra' || category === 'tempo_viagem') {
+          // Honorários: Diárias, Horas Extras e Tempo de Viagem
           totalFees += transaction.amount;
           fees.push({
+            id: transaction.id,
+            description: transaction.description,
+            amount: transaction.amount,
+            category: transaction.metadata.category,
+            metadata: transaction.metadata // Inclui metadata completo para acesso a hours, etc
+          });
+        } else if (transaction.metadata.isReimbursement === true) {
+          // Outros reembolsos (caso existam outros tipos no futuro)
+          totalReimbursements += transaction.amount;
+          reimbursements.push({
             id: transaction.id,
             description: transaction.description,
             amount: transaction.amount,

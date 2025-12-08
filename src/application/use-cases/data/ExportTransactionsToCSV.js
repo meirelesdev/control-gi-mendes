@@ -71,7 +71,7 @@ export class ExportTransactionsToCSV {
    */
   _getTransactionType(transaction) {
     if (transaction.type === 'EXPENSE') {
-      return 'Insumo (Reembolso)';
+      return 'Compra (Reembolso)';
     }
 
     if (transaction.type === 'INCOME') {
