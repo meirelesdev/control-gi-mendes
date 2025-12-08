@@ -116,16 +116,6 @@ class DashboardView {
               </div>
             </div>
 
-            <!-- Total a Receber -->
-            <div style="padding: var(--spacing-sm); background: linear-gradient(135deg, #E3F2FD 0%, #E1F5FE 100%); border-radius: var(--radius-md); border-left: 3px solid #2196F3;">
-              <div style="font-size: 10px; color: #1565C0; font-weight: var(--font-weight-semibold); margin-bottom: 4px;">
-                📥 Total a Receber
-              </div>
-              <div style="font-size: var(--font-size-lg); font-weight: var(--font-weight-bold); color: #1565C0;">
-                ${this.formatCurrency(totalToReceive)}
-              </div>
-            </div>
-
             <!-- Lucro Líquido -->
             <div style="padding: var(--spacing-sm); background: linear-gradient(135deg, #E0F2F1 0%, #C8E6C9 100%); border-radius: var(--radius-md); border-left: 3px solid #26A69A;">
               <div style="font-size: 10px; color: #00897B; font-weight: var(--font-weight-semibold); margin-bottom: 4px;">
@@ -133,6 +123,23 @@ class DashboardView {
               </div>
               <div style="font-size: var(--font-size-lg); font-weight: var(--font-weight-bold); color: #00897B;">
                 ${this.formatCurrency(totalNetProfit)}
+              </div>
+            </div>
+          </div>
+          
+          <!-- Total a Receber em destaque completo (abaixo do grid) -->
+          <div style="padding: var(--spacing-lg); background: linear-gradient(135deg, #E3F2FD 0%, #BBDEFB 100%); border-radius: var(--radius-lg); border: 2px solid #2196F3; box-shadow: 0 4px 16px rgba(33, 150, 243, 0.25); margin-bottom: var(--spacing-md);">
+            <div style="display: flex; justify-content: space-between; align-items: center;">
+              <div>
+                <div style="font-size: var(--font-size-base); color: #1565C0; font-weight: var(--font-weight-bold); margin-bottom: var(--spacing-xs);">
+                  📥 Total a Receber
+                </div>
+                <div style="font-size: var(--font-size-xs); color: #1976D2;">
+                  Reembolsos (${this.formatCurrency(totalReimbursements)}) + Lucro (${this.formatCurrency(totalNetProfit)})
+                </div>
+              </div>
+              <div style="font-size: var(--font-size-2xl); font-weight: var(--font-weight-bold); color: #1565C0;">
+                ${this.formatCurrency(totalToReceive)}
               </div>
             </div>
           </div>
@@ -252,6 +259,14 @@ class DashboardView {
 
   renderEventItem(event) {
     const statusConfig = this._getStatusConfig(event.status);
+    
+    // Formata a data do evento (usa startDate/endDate se disponível, senão usa date)
+    let eventDateDisplay = '';
+    if (event.startDate && event.endDate && event.startDate !== event.endDate) {
+      eventDateDisplay = `${this.formatDate(event.startDate)} a ${this.formatDate(event.endDate)}`;
+    } else {
+      eventDateDisplay = this.formatDate(event.startDate || event.date);
+    }
 
     return `
       <div class="event-item" data-event-id="${event.id}">
@@ -261,7 +276,7 @@ class DashboardView {
             ${statusConfig.label}
           </span>
         </div>
-        <div class="event-item-date">${this.formatDate(event.date)}</div>
+        <div class="event-item-date">${eventDateDisplay}</div>
         ${event.expectedPaymentDate ? `
           <div class="text-muted" style="font-size: 0.9em; margin-top: var(--spacing-xs);">
             💰 Pagamento previsto: ${this.formatDate(event.expectedPaymentDate)}
@@ -324,6 +339,19 @@ class DashboardView {
   }
 
   formatDate(dateString) {
+    if (!dateString) return '';
+    
+    // Se a data está no formato YYYY-MM-DD, parse diretamente para evitar problemas de timezone
+    if (typeof dateString === 'string' && /^\d{4}-\d{2}-\d{2}$/.test(dateString)) {
+      const [year, month, day] = dateString.split('-').map(Number);
+      const date = new Date(year, month - 1, day);
+      return new Intl.DateTimeFormat('pt-BR', {
+        day: '2-digit',
+        month: 'short',
+        year: 'numeric'
+      }).format(date);
+    }
+    
     return Formatters.dateShort(dateString);
   }
 

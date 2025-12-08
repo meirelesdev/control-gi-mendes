@@ -56,6 +56,21 @@ class ReportView {
     const formatCurrency = (value) => Formatters.currency(value);
 
     const formatDate = (dateString) => {
+      if (!dateString) return '';
+      // Parse diretamente YYYY-MM-DD para evitar problemas de timezone
+      const parts = dateString.split('-');
+      if (parts.length === 3) {
+        const year = parseInt(parts[0], 10);
+        const month = parseInt(parts[1], 10) - 1; // JavaScript months are 0-indexed
+        const day = parseInt(parts[2], 10);
+        const date = new Date(year, month, day);
+        return new Intl.DateTimeFormat('pt-BR', {
+          day: '2-digit',
+          month: 'long',
+          year: 'numeric'
+        }).format(date);
+      }
+      // Fallback para formato antigo se necessário
       const date = new Date(dateString);
       return new Intl.DateTimeFormat('pt-BR', {
         day: '2-digit',
@@ -383,11 +398,11 @@ class ReportView {
         <p><strong>Combustível (KM):</strong> ${formatCurrency(data.summary.totalFuel || 0)}</p>
         <p><strong>Compras:</strong> ${formatCurrency(data.summary.totalPurchases || 0)}</p>
         <p><strong>Hotel:</strong> ${formatCurrency(data.summary.totalHotel || 0)}</p>
-        <p class="total-big"><strong>TOTAL GERAL: ${formatCurrency(data.summary.grandTotal || 0)}</strong></p>
+        <p class="total-big"><strong>TOTAL A RECEBER: ${formatCurrency(data.summary.totalToReceive || data.summary.grandTotal || 0)}</strong></p>
     </div>
 
     ${!isMonthly && data.header.eventDescription ? `
-    <div class="section">
+    <div class="section" style="margin-bottom: 30px;">
         <div style="font-size: 11pt; color: #333; line-height: 1.8;">
             <strong>Descrição do Evento:</strong><br>
             ${this._escapeHtml(data.header.eventDescription)}
@@ -396,13 +411,14 @@ class ReportView {
     ` : ''}
 
     ${isMonthly && data.events && data.events.length > 0 ? `
-    <div class="section">
+    <div class="section" style="margin-bottom: 30px;">
         <div class="section-title">Eventos do Mês</div>
         <table>
             <thead>
                 <tr>
-                    <th style="width: 60%;">Nome do Evento</th>
-                    <th style="width: 40%;">Data</th>
+                    <th style="width: 50%;">Nome do Evento</th>
+                    <th style="width: 30%;">Data</th>
+                    <th style="width: 20%;">Total de Horas</th>
                 </tr>
             </thead>
             <tbody>
@@ -410,130 +426,13 @@ class ReportView {
                 <tr>
                     <td>${this._escapeHtml(event.name)}</td>
                     <td>${formatDate(event.date)}</td>
+                    <td>${event.totalHours ? event.totalHours.toFixed(1) : '0'}h</td>
                 </tr>
                 `).join('')}
             </tbody>
         </table>
     </div>
     ` : ''}
-
-    <div class="section">
-        <div class="section-title">1. Serviços Prestados</div>
-        ${data.services.items.length > 0 ? `
-        <table>
-            <thead>
-                <tr>
-                    <th style="width: 40%;">Descrição</th>
-                    <th style="width: 20%;">Categoria</th>
-                    <th style="width: 20%;">Horas</th>
-                    <th style="width: 20%;">Valor (R$)</th>
-                </tr>
-            </thead>
-            <tbody>
-                ${data.services.items.map(item => `
-                <tr>
-                    <td>${this._escapeHtml(item.description)}${isMonthly && item.eventName ? ` <small style="color: #666;">(${this._escapeHtml(item.eventName)})</small>` : ''}</td>
-                    <td>${this._escapeHtml(item.category)}</td>
-                    <td>${item.hours ? item.hours.toFixed(1) : '-'}h</td>
-                    <td>${formatCurrency(item.amount)}</td>
-                </tr>
-                `).join('')}
-                <tr class="total-row">
-                    <td colspan="2"><strong>Total de Serviços</strong></td>
-                    <td><strong>${data.services.totalHours ? data.services.totalHours.toFixed(1) : '0'}h</strong></td>
-                    <td><strong>${formatCurrency(data.services.total)}</strong></td>
-                </tr>
-            </tbody>
-        </table>
-        ` : `
-        <div class="no-data">Nenhum serviço registrado</div>
-        `}
-    </div>
-
-    <div class="section">
-        <div class="section-title">2. Compras</div>
-        ${data.expenses.items.length > 0 ? `
-        <table>
-            <thead>
-                <tr>
-                    <th style="width: 50%;">Descrição</th>
-                    <th style="width: 25%;">Nota Fiscal</th>
-                    <th style="width: 25%;">Valor (R$)</th>
-                </tr>
-            </thead>
-            <tbody>
-                ${data.expenses.items.map(item => `
-                <tr>
-                    <td>
-                        ${this._escapeHtml(item.description)}${isMonthly && item.eventName ? ` <small style="color: #666;">(${this._escapeHtml(item.eventName)})</small>` : ''}
-                        ${item.category === 'accommodation' && item.dateRange ? `<br><small style="color: #666; font-style: italic;">Check-in/out: ${this._escapeHtml(item.dateRange)}</small>` : ''}
-                    </td>
-                    <td>${item.hasReceipt ? '✓ Sim' : '✗ Não'}</td>
-                    <td>${formatCurrency(item.amount)}</td>
-                </tr>
-                `).join('')}
-                <tr class="total-row">
-                    <td colspan="2"><strong>Total de Compras</strong></td>
-                    <td><strong>${formatCurrency(data.expenses.total)}</strong></td>
-                </tr>
-            </tbody>
-        </table>
-        ` : `
-        <div class="no-data">Nenhuma compra registrada</div>
-        `}
-    </div>
-
-    <div class="section">
-        <div class="section-title">3. Deslocamentos</div>
-        ${data.travel.items.length > 0 ? `
-        <table>
-            <thead>
-                <tr>
-                    <th style="width: 40%;">Descrição</th>
-                    <th style="width: 20%;">Tipo</th>
-                    <th style="width: 20%;">KM/Horas</th>
-                    <th style="width: 20%;">Valor (R$)</th>
-                </tr>
-            </thead>
-            <tbody>
-                ${data.travel.items.map(item => `
-                <tr>
-                    <td>${this._escapeHtml(item.description)}${isMonthly && item.eventName ? ` <small style="color: #666;">(${this._escapeHtml(item.eventName)})</small>` : ''}${item.origin && item.destination ? ` <br><small style="color: #666;">${this._escapeHtml(item.origin)} → ${this._escapeHtml(item.destination)}</small>` : ''}</td>
-                    <td style="text-align: center;">${item.category === 'tempo_viagem' ? '⏱️ Tempo' : '🚗 KM'}</td>
-                    <td style="text-align: center;">${item.category === 'tempo_viagem' ? `${item.hours || 0}h` : `${item.distance || 0} km`}</td>
-                    <td>${formatCurrency(item.amount)}</td>
-                </tr>
-                `).join('')}
-                <tr class="total-row">
-                    <td colspan="3"><strong>Total de Deslocamentos</strong></td>
-                    <td><strong>${formatCurrency(data.travel.total)}</strong></td>
-                </tr>
-            </tbody>
-        </table>
-        ` : `
-        <div class="no-data">Nenhum deslocamento registrado</div>
-        `}
-    </div>
-
-    <div class="summary">
-        <div class="summary-title">Resumo Financeiro</div>
-        <div class="summary-row">
-            <span>Total de Serviços:</span>
-            <span><strong>${formatCurrency(data.summary.totalServices)}</strong></span>
-        </div>
-        <div class="summary-row">
-            <span>Total de Compras:</span>
-            <span><strong>${formatCurrency(data.summary.totalExpenses)}</strong></span>
-        </div>
-        <div class="summary-row">
-            <span>Total de Deslocamentos:</span>
-            <span><strong>${formatCurrency(data.summary.totalTravel)}</strong></span>
-        </div>
-        <div class="summary-row total">
-            <span>TOTAL GERAL:</span>
-            <span>${formatCurrency(data.summary.grandTotal)}</span>
-        </div>
-    </div>
 
     <div class="summary payment-info" style="margin-top: 30px; border-top: 2px solid #000; padding-top: 20px;">
         <div class="summary-title">Dados para Pagamento</div>
@@ -546,7 +445,6 @@ class ReportView {
             <span><strong>${this._escapeHtml(data.paymentInfo.beneficiary || 'Gisele Mendes')}</strong></span>
         </div>
         <div style="margin-top: 15px; padding-top: 15px; border-top: 1px solid #ccc; font-size: 10pt; color: #666; text-align: center;">
-            <p style="margin: 5px 0;">Pagamento mediante apresentação de Nota Fiscal</p>
             <p style="margin: 5px 0;">Prazo: ${data.paymentInfo.paymentDays || DEFAULT_VALUES.DEFAULT_REIMBURSEMENT_DAYS} dias após apresentação da NF</p>
         </div>
     </div>

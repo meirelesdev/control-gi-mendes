@@ -89,17 +89,20 @@ class GenerateMonthlyReport {
       const totalTravel = allTravel.reduce((sum, t) => sum + t.amount, 0);
       const grandTotal = totalServices + totalExpenses + totalTravel;
 
-      // Calcula totais específicos para o resumo executivo (mesmo padrão do relatório de eventos)
-      const totalDailyValue = allServices.reduce((sum, s) => sum + s.amount, 0); // Honorários (horas de trabalho)
-      const totalFuel = allTravel.filter(t => t.category === 'km').reduce((sum, t) => sum + t.amount, 0); // KM Rodado
-      const totalPurchases = allExpenses.filter(e => e.category !== 'accommodation').reduce((sum, e) => sum + e.amount, 0); // Compras
-      const totalHotel = allExpenses.filter(e => e.category === 'accommodation').reduce((sum, e) => sum + e.amount, 0); // Hospedagem
-
       // Calcula horas de trabalho a partir dos serviços
       const totalWorkHours = allServices.reduce((sum, s) => sum + (s.hours || 0), 0);
 
       // Horas de deslocamento (tempo_viagem)
-      const totalTravelHours = allTravel.filter(t => t.category === 'tempo_viagem').reduce((sum, t) => sum + (t.hours || 0), 0);
+      const tempoViagemItems = allTravel.filter(t => t.category === 'tempo_viagem');
+      const totalTravelHours = tempoViagemItems.reduce((sum, t) => sum + (t.hours || 0), 0);
+
+      // Calcula totais específicos para o resumo executivo (mesmo padrão do relatório de eventos)
+      // Valor total da diária (Honorários) = Horas de Trabalho + Horas de Deslocamento
+      const totalDailyValue = allServices.reduce((sum, s) => sum + s.amount, 0) + // Honorários (horas de trabalho)
+        tempoViagemItems.reduce((sum, t) => sum + t.amount, 0); // Tempo de Viagem
+      const totalFuel = allTravel.filter(t => t.category === 'km').reduce((sum, t) => sum + t.amount, 0); // KM Rodado (apenas KM, não tempo_viagem)
+      const totalPurchases = allExpenses.filter(e => e.category !== 'accommodation').reduce((sum, e) => sum + e.amount, 0); // Compras
+      const totalHotel = allExpenses.filter(e => e.category === 'accommodation').reduce((sum, e) => sum + e.amount, 0); // Hospedagem
 
       // Total de horas
       const totalHours = totalWorkHours + totalTravelHours;
@@ -134,11 +137,31 @@ class GenerateMonthlyReport {
             paymentDays: settings.defaultReimbursementDays,
             emails: settings.contractorEmails
           },
-          events: monthEvents.map(event => ({
-            id: event.id,
-            name: event.name,
-            date: event.date,
-            status: event.status
+          events: await Promise.all(monthEvents.map(async event => {
+            // Calcula horas totais do evento (horas de trabalho + horas de deslocamento)
+            const eventTransactions = await this.transactionRepository.findByEventId(event.id);
+            const eventServices = this._extractServices(eventTransactions, event, settings);
+            const eventTravel = this._extractTravel(eventTransactions, event);
+            
+            // Horas de trabalho (diárias + hora_extra)
+            const workHours = eventServices
+              .filter(s => s.category === 'Diária' || s.category === 'Horas de Trabalho')
+              .reduce((sum, s) => sum + (s.hours || 0), 0);
+            
+            // Horas de deslocamento (tempo_viagem)
+            const travelHours = eventTravel
+              .filter(t => t.category === 'tempo_viagem')
+              .reduce((sum, t) => sum + (t.hours || 0), 0);
+            
+            const totalHours = workHours + travelHours;
+            
+            return {
+              id: event.id,
+              name: event.name,
+              date: event.date,
+              status: event.status,
+              totalHours: totalHours
+            };
           })),
           services: {
             items: allServices,

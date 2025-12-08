@@ -56,13 +56,15 @@ class GetEventSummary {
       // 1. Investimento Inicial (Saiu do Bolso): EXPENSE + KM (gasolina paga hoje)
       const upfrontCost = totals.totalExpenses + totals.totalKmCost;
       
-      // 2. Valor de Reembolso: EXPENSE + KM + Tempo de Viagem (tudo que volta)
-      const reimbursementValue = totals.totalExpenses + totals.totalKmCost + totals.totalTravelTimeCost;
+      // 2. Valor de Reembolso: EXPENSE + KM (tudo que volta como reembolso)
+      // Tempo de Viagem NÃO é reembolso, é honorário (lucro)
+      const reimbursementValue = totals.totalExpenses + totals.totalKmCost;
       
-      // 3. Lucro Líquido Real: Apenas Diárias + Horas Extras (único dinheiro realmente ganho)
-      const netProfit = totals.totalFees;
+      // 3. Lucro Líquido Real: Diárias + Horas Extras + Tempo de Viagem (dinheiro realmente ganho)
+      const netProfit = totals.totalFees; // Já inclui tempo_viagem
       
       // 4. Total a Receber: Reembolso + Lucro
+      // = (Despesas + KM) + (Diárias + Horas Extras + Tempo Viagem)
       const totalToReceive = reimbursementValue + netProfit;
 
       // Separa transações por tipo para as views

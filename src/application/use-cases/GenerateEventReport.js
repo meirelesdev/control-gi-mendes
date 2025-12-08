@@ -63,22 +63,18 @@ class GenerateEventReport {
       const totalServices = services.reduce((sum, s) => sum + s.amount, 0);
       const totalExpenses = expenses.reduce((sum, e) => sum + e.amount, 0);
       const totalTravel = travel.reduce((sum, t) => sum + t.amount, 0);
-      const grandTotal = totalServices + totalExpenses + totalTravel;
+      
+      // TOTAL A RECEBER = Tudo que será pago/reembolsado:
+      // - Despesas (Compras + Hotel) - serão reembolsadas
+      // - Honorários (Horas de Trabalho + Tempo de Viagem) - serão pagos
+      // - KM Rodado - será reembolsado
+      // Total = Despesas + Honorários + KM + Tempo Viagem
+      // Mas Services já inclui apenas horas de trabalho (não inclui tempo_viagem)
+      // E Travel inclui KM + tempo_viagem
+      // Então: Total = Despesas + Services + Travel = R$ 1.425,70 + R$ 750,00 + R$ 684,60 = R$ 2.860,30
+      const grandTotal = totalExpenses + totalServices + totalTravel;
 
-      // Calcula totais específicos para o resumo executivo
-      const totalDailyValue = services.reduce((sum, s) => sum + s.amount, 0); // Diárias + Horas Extras
-      const totalFuel = travel.reduce((sum, t) => sum + t.amount, 0); // KM Rodado
-      const totalPurchases = expenses
-        .filter(e => e.category !== 'accommodation')
-        .reduce((sum, e) => sum + e.amount, 0); // Compras (despesas que não são hospedagem)
-      const totalHotel = expenses
-        .filter(e => e.category === 'accommodation')
-        .reduce((sum, e) => sum + e.amount, 0); // Hospedagem
-
-      // Calcula horas de trabalho a partir dos serviços já extraídos
-      const totalWorkHours = services.reduce((sum, s) => sum + (s.hours || 0), 0);
-
-      // Horas de deslocamento (tempo_viagem)
+      // Horas de deslocamento (tempo_viagem) - precisa ser calculado antes para usar no totalDailyValue
       const tempoViagemTransactions = transactions.filter(t => 
         t.type === 'INCOME' && t.metadata.category === 'tempo_viagem'
       );
@@ -89,6 +85,21 @@ class GenerateEventReport {
         }
         return sum;
       }, 0);
+
+      // Calcula horas de trabalho a partir dos serviços já extraídos
+      const totalWorkHours = services.reduce((sum, s) => sum + (s.hours || 0), 0);
+
+      // Calcula totais específicos para o resumo executivo
+      // Valor total da diária (Honorários) = Horas de Trabalho + Horas de Deslocamento
+      const totalDailyValue = services.reduce((sum, s) => sum + s.amount, 0) + // Diárias + Horas Extras
+        tempoViagemTransactions.reduce((sum, t) => sum + t.amount, 0); // Tempo de Viagem
+      const totalFuel = travel.filter(t => t.category === 'km').reduce((sum, t) => sum + t.amount, 0); // KM Rodado (apenas KM, não tempo_viagem)
+      const totalPurchases = expenses
+        .filter(e => e.category !== 'accommodation')
+        .reduce((sum, e) => sum + e.amount, 0); // Compras (despesas que não são hospedagem)
+      const totalHotel = expenses
+        .filter(e => e.category === 'accommodation')
+        .reduce((sum, e) => sum + e.amount, 0); // Hospedagem
 
       // Total de horas
       const totalHours = totalWorkHours + totalTravelHours;

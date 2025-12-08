@@ -131,7 +131,11 @@ class EventDetailView {
           
           <!-- Informações do Evento -->
           <div style="margin-bottom: var(--spacing-md);">
-            <p class="text-muted" style="margin: 0 0 var(--spacing-sm) 0;">${this.formatDate(event.date)}</p>
+            ${event.startDate && event.endDate && event.startDate !== event.endDate ? `
+              <p class="text-muted" style="margin: 0 0 var(--spacing-sm) 0;">${this.formatDate(event.startDate)} a ${this.formatDate(event.endDate)}</p>
+            ` : `
+              <p class="text-muted" style="margin: 0 0 var(--spacing-sm) 0;">${this.formatDate(event.startDate || event.date)}</p>
+            `}
             ${event.description ? `<p style="margin: 0 0 var(--spacing-sm) 0; word-wrap: break-word;">${this.escapeHtml(event.description)}</p>` : ''}
             ${event.expectedPaymentDate ? `
               <p style="margin: var(--spacing-sm) 0 0 0;">
@@ -181,33 +185,33 @@ class EventDetailView {
             </div>
           </div>
 
-          <!-- Linha 2: Total a Receber (Azul) -->
-          <div style="display: flex; justify-content: space-between; align-items: center; padding: var(--spacing-md); background: linear-gradient(135deg, #E3F2FD 0%, #E1F5FE 100%); border-radius: var(--radius-md); margin-bottom: var(--spacing-md); border-left: 4px solid #2196F3;">
+          <!-- Linha 2: Seu Lucro Líquido (Verde) -->
+          <div style="display: flex; justify-content: space-between; align-items: center; padding: var(--spacing-md); background: linear-gradient(135deg, #E0F2F1 0%, #C8E6C9 100%); border-radius: var(--radius-md); margin-bottom: var(--spacing-md); border-left: 4px solid #26A69A;">
             <div>
-              <div style="font-size: var(--font-size-sm); color: #1565C0; font-weight: var(--font-weight-semibold); margin-bottom: var(--spacing-xs);">
-                📥 Total a Receber
-              </div>
-              <div style="font-size: var(--font-size-xs); color: #757575;">
-                Reembolsos (Compras + Deslocamentos) + Lucro (Honorários)
-              </div>
-            </div>
-            <div style="font-size: var(--font-size-xl); font-weight: var(--font-weight-bold); color: #1565C0;">
-              ${this.formatCurrency(totalToReceive)}
-            </div>
-          </div>
-
-          <!-- Destaque Principal: Lucro Líquido (Verde) -->
-          <div style="display: flex; justify-content: space-between; align-items: center; padding: var(--spacing-lg); background: linear-gradient(135deg, #E0F2F1 0%, #C8E6C9 100%); border-radius: var(--radius-lg); border: 2px solid #26A69A; box-shadow: 0 4px 12px rgba(38, 166, 154, 0.2);">
-            <div>
-              <div style="font-size: var(--font-size-base); color: #00897B; font-weight: var(--font-weight-bold); margin-bottom: var(--spacing-xs);">
+              <div style="font-size: var(--font-size-sm); color: #00897B; font-weight: var(--font-weight-semibold); margin-bottom: var(--spacing-xs);">
                 ✨ Seu Lucro Líquido
               </div>
-              <div style="font-size: var(--font-size-xs); color: #00695C;">
+              <div style="font-size: var(--font-size-xs); color: #757575;">
                 Apenas Diárias + Horas Extras (dinheiro realmente ganho)
               </div>
             </div>
-            <div style="font-size: var(--font-size-2xl); font-weight: var(--font-weight-bold); color: #00897B;">
+            <div style="font-size: var(--font-size-xl); font-weight: var(--font-weight-bold); color: #00897B;">
               ${this.formatCurrency(netProfit)}
+            </div>
+          </div>
+
+          <!-- Linha 3: Total a Receber (Azul) - Último para destaque -->
+          <div style="display: flex; justify-content: space-between; align-items: center; padding: var(--spacing-lg); background: linear-gradient(135deg, #E3F2FD 0%, #E1F5FE 100%); border-radius: var(--radius-lg); border: 2px solid #2196F3; box-shadow: 0 4px 12px rgba(33, 150, 243, 0.2);">
+            <div>
+              <div style="font-size: var(--font-size-base); color: #1565C0; font-weight: var(--font-weight-bold); margin-bottom: var(--spacing-xs);">
+                📥 Total a Receber
+              </div>
+              <div style="font-size: var(--font-size-xs); color: #00695C;">
+                Reembolsos (Compras + Deslocamentos) + Lucro (Honorários)
+              </div>
+            </div>
+            <div style="font-size: var(--font-size-2xl); font-weight: var(--font-weight-bold); color: #1565C0;">
+              ${this.formatCurrency(totalToReceive)}
             </div>
           </div>
         </div>
@@ -1658,6 +1662,19 @@ class EventDetailView {
   }
 
   formatDate(dateString) {
+    if (!dateString) return '';
+    
+    // Se a data está no formato YYYY-MM-DD, parse diretamente para evitar problemas de timezone
+    if (typeof dateString === 'string' && /^\d{4}-\d{2}-\d{2}$/.test(dateString)) {
+      const [year, month, day] = dateString.split('-').map(Number);
+      const date = new Date(year, month - 1, day);
+      return new Intl.DateTimeFormat('pt-BR', {
+        day: '2-digit',
+        month: 'long',
+        year: 'numeric'
+      }).format(date);
+    }
+    
     return Formatters.dateLong(dateString);
   }
 
