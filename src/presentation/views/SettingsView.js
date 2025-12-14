@@ -167,6 +167,22 @@ class SettingsView {
           </div>
         </div>
 
+        <div class="card" style="margin-top: var(--spacing-lg); border-left: 4px solid var(--color-info); background: linear-gradient(135deg, #E3F2FD 0%, #E1F5FE 100%);">
+          <h3 style="margin-bottom: var(--spacing-md); color: var(--color-info);">
+            🔄 Atualização do Sistema
+          </h3>
+          <p class="text-muted" style="margin-bottom: var(--spacing-md);">
+            Force a atualização do aplicativo para carregar as últimas versões dos arquivos. 
+            <strong>Seus dados serão preservados</strong> (eventos, transações e configurações).
+          </p>
+          <button class="btn btn-info" id="btn-force-update" style="width: 100%;">
+            🔄 Atualizar Aplicativo
+          </button>
+          <small class="text-muted" style="display: block; margin-top: var(--spacing-xs);">
+            Útil após fazer alterações no código ou quando o sistema não atualiza automaticamente.
+          </small>
+        </div>
+
         <div class="card" style="margin-top: var(--spacing-lg); border-left: 4px solid var(--color-danger); background: linear-gradient(135deg, #FFEBEE 0%, #FFF3E0 100%);">
           <h3 style="margin-bottom: var(--spacing-md); color: var(--color-danger);">
             ⚠️ Zona de Perigo
@@ -190,6 +206,12 @@ class SettingsView {
       // Event listeners para gestão de dados
       if (this.exportDataUseCase) {
         this._setupDataManagementListeners();
+      }
+
+      // Event listener para atualização forçada
+      const btnForceUpdate = document.getElementById('btn-force-update');
+      if (btnForceUpdate) {
+        btnForceUpdate.addEventListener('click', () => this.forceUpdate());
       }
     } catch (error) {
       container.innerHTML = `
@@ -505,6 +527,84 @@ class SettingsView {
       if (btn) {
         btn.disabled = false;
         btn.textContent = '🗑️ Apagar Tudo';
+      }
+    }
+  }
+
+  /**
+   * Força atualização do PWA sem perder dados
+   * Desregistra service workers, limpa cache e recarrega a página
+   */
+  async forceUpdate() {
+    try {
+      const btn = document.getElementById('btn-force-update');
+      const originalText = btn.textContent;
+      btn.disabled = true;
+      btn.textContent = '⏳ Atualizando...';
+
+      // Confirmação
+      const confirmed = window.confirm(
+        '🔄 Atualizar Aplicativo\n\n' +
+        'Esta ação irá:\n' +
+        '• Desregistrar o service worker atual\n' +
+        '• Limpar o cache do navegador\n' +
+        '• Recarregar a página com os arquivos mais recentes\n\n' +
+        '✅ Seus dados serão preservados (eventos, transações e configurações)\n\n' +
+        'Deseja continuar?'
+      );
+
+      if (!confirmed) {
+        btn.disabled = false;
+        btn.textContent = originalText;
+        return;
+      }
+
+      // Passo 1: Desregistrar todos os service workers
+      if ('serviceWorker' in navigator) {
+        const registrations = await navigator.serviceWorker.getRegistrations();
+        for (const registration of registrations) {
+          await registration.unregister();
+          console.log('✅ Service Worker desregistrado:', registration.scope);
+        }
+      }
+
+      // Passo 2: Limpar cache do navegador (Cache API)
+      if ('caches' in window) {
+        const cacheNames = await caches.keys();
+        await Promise.all(
+          cacheNames.map(cacheName => {
+            console.log('��️ Limpando cache:', cacheName);
+            return caches.delete(cacheName);
+          })
+        );
+        console.log('✅ Cache limpo');
+      }
+
+      // Passo 3: Limpar cache do localStorage relacionado ao service worker (se houver)
+      // Nota: Não limpamos os dados do app (eventos, transações, configurações)
+      // Apenas cache relacionado ao service worker
+
+      window.toast.success('Atualização concluída! A página será recarregada...');
+
+      // Passo 4: Recarregar a página com bypass do cache
+      // Usa window.location.reload(true) ou location.reload() com timestamp
+      setTimeout(() => {
+        // Força reload sem cache
+        window.location.reload(true);
+        // Fallback caso o navegador não suporte o parâmetro true
+        if (!window.location.reload(true)) {
+          window.location.href = window.location.href.split('?')[0] + '?v=' + Date.now();
+        }
+      }, 1000);
+
+    } catch (error) {
+      console.error('Erro ao forçar atualização:', error);
+      window.toast.error(`Erro ao atualizar: ${error.message}`);
+      
+      const btn = document.getElementById('btn-force-update');
+      if (btn) {
+        btn.disabled = false;
+        btn.textContent = '🔄 Atualizar Aplicativo';
       }
     }
   }
