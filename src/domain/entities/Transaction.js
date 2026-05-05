@@ -150,21 +150,11 @@ class Transaction {
         this.metadata.isReimbursement = false;
       }
       
-      // Para INCOME, pode ter category (diaria, hora_extra, km, tempo_viagem)
+      // Para INCOME, pode ter category (diaria, hora_extra, km)
       if (metadata.category) {
-        const validCategories = ['diaria', 'hora_extra', 'km', 'tempo_viagem'];
+        const validCategories = ['diaria', 'hora_extra', 'km'];
         if (!validCategories.includes(metadata.category)) {
           throw new Error(`Categoria inválida. Deve ser uma das: ${validCategories.join(', ')}`);
-        }
-        
-        // Para tempo_viagem, valida que tem hours no metadata
-        if (metadata.category === 'tempo_viagem') {
-          if (metadata.hours === undefined || metadata.hours === null) {
-            throw new Error('Horas são obrigatórias para tempo de viagem');
-          }
-          if (typeof metadata.hours !== 'number' || metadata.hours <= 0) {
-            throw new Error('Horas devem ser um número maior que zero');
-          }
         }
       }
     }

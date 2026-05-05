@@ -64,36 +64,14 @@ class GenerateEventReport {
       const totalExpenses = expenses.reduce((sum, e) => sum + e.amount, 0);
       const totalTravel = travel.reduce((sum, t) => sum + t.amount, 0);
       
-      // TOTAL A RECEBER = Tudo que será pago/reembolsado:
-      // - Despesas (Compras + Hotel) - serão reembolsadas
-      // - Honorários (Horas de Trabalho + Tempo de Viagem) - serão pagos
-      // - KM Rodado - será reembolsado
-      // Total = Despesas + Honorários + KM + Tempo Viagem
-      // Mas Services já inclui apenas horas de trabalho (não inclui tempo_viagem)
-      // E Travel inclui KM + tempo_viagem
-      // Então: Total = Despesas + Services + Travel = R$ 1.425,70 + R$ 750,00 + R$ 684,60 = R$ 2.860,30
       const grandTotal = totalExpenses + totalServices + totalTravel;
-
-      // Horas de deslocamento (tempo_viagem) - precisa ser calculado antes para usar no totalDailyValue
-      const tempoViagemTransactions = transactions.filter(t => 
-        t.type === 'INCOME' && t.metadata.category === 'tempo_viagem'
-      );
-      
-      const totalTravelHours = tempoViagemTransactions.reduce((sum, t) => {
-        if (t.metadata.hours) {
-          return sum + t.metadata.hours;
-        }
-        return sum;
-      }, 0);
 
       // Calcula horas de trabalho a partir dos serviços já extraídos
       const totalWorkHours = services.reduce((sum, s) => sum + (s.hours || 0), 0);
 
       // Calcula totais específicos para o resumo executivo
-      // Valor total da diária (Honorários) = Horas de Trabalho + Horas de Deslocamento
-      const totalDailyValue = services.reduce((sum, s) => sum + s.amount, 0) + // Diárias + Horas Extras
-        tempoViagemTransactions.reduce((sum, t) => sum + t.amount, 0); // Tempo de Viagem
-      const totalFuel = travel.filter(t => t.category === 'km').reduce((sum, t) => sum + t.amount, 0); // KM Rodado (apenas KM, não tempo_viagem)
+      const totalDailyValue = services.reduce((sum, s) => sum + s.amount, 0); // Honorários (Diárias + Horas Extras)
+      const totalFuel = travel.reduce((sum, t) => sum + t.amount, 0); // KM Rodado
       const totalPurchases = expenses
         .filter(e => e.category !== 'accommodation')
         .reduce((sum, e) => sum + e.amount, 0); // Compras (despesas que não são hospedagem)
@@ -101,8 +79,7 @@ class GenerateEventReport {
         .filter(e => e.category === 'accommodation')
         .reduce((sum, e) => sum + e.amount, 0); // Hospedagem
 
-      // Total de horas
-      const totalHours = totalWorkHours + totalTravelHours;
+      const totalHours = totalWorkHours;
 
       return {
         success: true,
@@ -151,7 +128,6 @@ class GenerateEventReport {
             grandTotal,
             // Resumo executivo
             totalWorkHours,
-            totalTravelHours,
             totalHours,
             totalDailyValue,
             totalFuel,
@@ -249,35 +225,22 @@ class GenerateEventReport {
   }
 
   /**
-   * Extrai deslocamentos: KM Rodado (combustível) e Tempo de Viagem
-   * Conforme contrato: "Relatório de custos de deslocamentos"
+   * Extrai deslocamentos: KM Rodado (combustível)
    * @private
    */
   _extractTravel(transactions) {
     return transactions
-      .filter(t => 
-        t.type === 'INCOME' && 
-        (t.metadata.category === 'km' || t.metadata.category === 'tempo_viagem')
-      )
-      .map(t => {
-        const travel = {
-          id: t.id,
-          description: t.description,
-          amount: t.amount,
-          createdAt: t.createdAt,
-          category: t.metadata.category
-        };
-        
-        if (t.metadata.category === 'km') {
-          travel.distance = t.metadata.distance || 0;
-          travel.origin = t.metadata.origin || null;
-          travel.destination = t.metadata.destination || null;
-        } else if (t.metadata.category === 'tempo_viagem') {
-          travel.hours = t.metadata.hours || 0;
-        }
-        
-        return travel;
-      })
+      .filter(t => t.type === 'INCOME' && t.metadata.category === 'km')
+      .map(t => ({
+        id: t.id,
+        description: t.description,
+        amount: t.amount,
+        createdAt: t.createdAt,
+        category: t.metadata.category,
+        distance: t.metadata.distance || 0,
+        origin: t.metadata.origin || null,
+        destination: t.metadata.destination || null
+      }))
       .sort((a, b) => new Date(a.createdAt) - new Date(b.createdAt));
   }
 }

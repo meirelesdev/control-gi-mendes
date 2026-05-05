@@ -9,7 +9,6 @@ import { ExpenseModal } from '../components/modals/ExpenseModal.js';
 import { FeeModal } from '../components/modals/FeeModal.js';
 import { KmTravelModal } from '../components/modals/KmTravelModal.js';
 import { AccommodationModal } from '../components/modals/AccommodationModal.js';
-import { TravelTimeModal } from '../components/modals/TravelTimeModal.js';
 
 class EventDetailView {
   constructor(eventRepository, transactionRepository, settingsRepository, addTransactionUseCase, deleteTransactionUseCase = null, generateEventReportUseCase = null, updateEventStatusUseCase = null, updateEventUseCase = null, updateTransactionUseCase = null, deleteEventUseCase = null, getEventSummaryUseCase = null) {
@@ -251,15 +250,6 @@ class EventDetailView {
               <span style="font-size: 9px; color: rgba(255,255,255,0.8);">(Reembolso)</span>
             </button>
           </div>
-          <div style="display: grid; grid-template-columns: repeat(2, 1fr); gap: var(--spacing-sm);">
-            <button class="btn btn-info" id="btn-add-travel-time" 
-                    style="padding: var(--spacing-md); border-radius: var(--radius-lg); font-size: 24px; line-height: 1; display: flex; flex-direction: column; align-items: center; gap: 2px; background: linear-gradient(135deg, #4facfe 0%, #00f2fe 100%); border: none; color: white;"
-                    title="Adicionar Tempo de Viagem (Horas de Deslocamento)">
-              <span>⏱️</span>
-              <span style="font-size: 11px; font-weight: var(--font-weight-medium);">Tempo Viagem</span>
-              <span style="font-size: 9px; color: rgba(255,255,255,0.8);">(Horas)</span>
-            </button>
-          </div>
         </div>
         ` : ''}
 
@@ -402,20 +392,6 @@ class EventDetailView {
             const modal = new AccommodationModal(
               this.addTransactionUseCase,
               this.eventRepository,
-              this.currentEventId,
-              reloadView
-            );
-            modal.show();
-          });
-        }
-
-        const btnAddTravelTime = document.getElementById('btn-add-travel-time');
-        if (btnAddTravelTime) {
-          btnAddTravelTime.addEventListener('click', () => {
-            const modal = new TravelTimeModal(
-              this.addTransactionUseCase,
-              this.eventRepository,
-              this.settingsRepository,
               this.currentEventId,
               reloadView
             );
@@ -693,8 +669,7 @@ class EventDetailView {
     const category = fee.category || fee.metadata?.category || '';
     const categoryLabels = {
       'diaria': 'Diária',
-      'hora_extra': 'Horas de Trabalho',
-      'tempo_viagem': 'Tempo de Viagem'
+      'hora_extra': 'Horas de Trabalho'
     };
     const categoryLabel = categoryLabels[category] || 'Honorário';
     
@@ -702,9 +677,9 @@ class EventDetailView {
       <div class="expense-item" style="border-left-color: var(--color-success); background-color: rgba(34, 197, 94, 0.05);">
         <div class="expense-item-info">
           <div class="expense-item-description">
-            <span>${category === 'tempo_viagem' ? '⏱️' : '💰'}</span>
+            <span>💰</span>
             <span>${this.escapeHtml(fee.description)}</span>
-            ${(category === 'tempo_viagem' || category === 'hora_extra') && fee.metadata?.hours ? `<small style="color: var(--color-text-secondary); margin-left: var(--spacing-xs);">(${fee.metadata.hours}h)</small>` : ''}
+            ${category === 'hora_extra' && fee.metadata?.hours ? `<small style="color: var(--color-text-secondary); margin-left: var(--spacing-xs);">(${fee.metadata.hours}h)</small>` : ''}
             <span class="badge badge-success">${categoryLabel}</span>
             <span class="badge badge-success" style="font-weight: bold;">Lucro</span>
           </div>

@@ -60,8 +60,8 @@ class GetEventSummary {
       // Tempo de Viagem NÃO é reembolso, é honorário (lucro)
       const reimbursementValue = totals.totalExpenses + totals.totalKmCost;
       
-      // 3. Lucro Líquido Real: Diárias + Horas Extras + Tempo de Viagem (dinheiro realmente ganho)
-      const netProfit = totals.totalFees; // Já inclui tempo_viagem
+      // 3. Lucro Líquido Real: Diárias + Horas Extras (dinheiro realmente ganho)
+      const netProfit = totals.totalFees;
       
       // 4. Total a Receber: Reembolso + Lucro
       // = (Despesas + KM) + (Diárias + Horas Extras + Tempo Viagem)
@@ -74,13 +74,9 @@ class GetEventSummary {
       const reimbursements = incomes.filter(i => 
         i.metadata.category === 'km'
       );
-      // Honorários: Diárias, Horas Extras e Tempo de Viagem (todos são lucro)
-      // tempo_viagem sempre aparece em honorários, independente de isReimbursement
+      // Honorários: Diárias e Horas Extras (todos são lucro)
       const fees = incomes.filter(i => {
         const category = i.metadata.category;
-        if (category === 'tempo_viagem') {
-          return true; // tempo_viagem sempre é honorário
-        }
         if (category === 'diaria' || category === 'hora_extra') {
           return i.metadata.isReimbursement !== true;
         }
@@ -115,7 +111,6 @@ class GetEventSummary {
           // Totais individuais
           totalExpenses: totals.totalExpenses,
           totalKmCost: totals.totalKmCost,
-          totalTravelTimeCost: totals.totalTravelTimeCost,
           totalReimbursements: totals.totalReimbursements,
           totalFees: totals.totalFees,
           totalIncomes: totals.totalIncome,
@@ -171,7 +166,6 @@ class GetEventSummary {
     let totalReimbursements = 0; // Receitas marcadas como reembolso
     let totalFees = 0; // Receitas marcadas como honorário
     let totalKmCost = 0; // Custo de KM (gasolina paga hoje)
-    let totalTravelTimeCost = 0; // Custo de tempo de viagem
     let expensesWithReceipt = 0;
     let expensesWithoutReceipt = 0;
     let expenseCount = 0;
@@ -216,11 +210,6 @@ class GetEventSummary {
           totalKmCost += transaction.amount; // Gasolina paga hoje
         }
 
-        // Separa tempo de viagem para cálculo de reembolso (mas visualmente é honorário)
-        if (category === 'tempo_viagem') {
-          totalTravelTimeCost += transaction.amount;
-        }
-
         if (category === 'km') {
           // Apenas KM é considerado reembolso
           totalReimbursements += transaction.amount;
@@ -230,8 +219,8 @@ class GetEventSummary {
             amount: transaction.amount,
             category: transaction.metadata.category
           });
-        } else if (category === 'diaria' || category === 'hora_extra' || category === 'tempo_viagem') {
-          // Honorários: Diárias, Horas Extras e Tempo de Viagem
+        } else if (category === 'diaria' || category === 'hora_extra') {
+          // Honorários: Diárias e Horas Extras
           totalFees += transaction.amount;
           fees.push({
             id: transaction.id,
@@ -259,7 +248,6 @@ class GetEventSummary {
       totalReimbursements,
       totalFees,
       totalKmCost, // Custo de KM (gasolina)
-      totalTravelTimeCost, // Custo de tempo de viagem
       expensesWithReceipt,
       expensesWithoutReceipt,
       expenseCount,

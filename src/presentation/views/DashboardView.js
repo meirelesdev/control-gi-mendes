@@ -417,15 +417,6 @@ class DashboardView {
               <textarea class="form-input" id="event-description" rows="3" 
                         placeholder="Detalhes sobre o evento..."></textarea>
             </div>
-            <div class="form-group">
-              <label style="display: flex; align-items: center; gap: var(--spacing-sm); cursor: pointer;">
-                <input type="checkbox" id="auto-create-daily" checked style="cursor: pointer;">
-                <span>Lançar Diária Padrão Automaticamente (<span id="daily-rate-display">${this.formatCurrency(dailyRate)}</span>)</span>
-              </label>
-              <small class="text-muted" style="display: block; margin-top: var(--spacing-xs); margin-left: 24px;">
-                Cria automaticamente uma receita de "Diária Técnica Padrão" ao criar o evento
-              </small>
-            </div>
             <div class="modal-footer">
               <button type="button" class="btn btn-secondary" id="btn-cancel-create">Cancelar</button>
               <button type="submit" class="btn btn-primary">Criar Evento</button>
@@ -561,8 +552,6 @@ class DashboardView {
     const clientInput = modal.querySelector('#event-client');
     const cityInput = modal.querySelector('#event-city');
     const descriptionInput = modal.querySelector('#event-description');
-    const autoCreateDailyInput = modal.querySelector('#auto-create-daily');
-
     if (!nameInput || !startDateInput || !clientInput || !cityInput) {
       console.error('Campos do formulário não encontrados');
       window.toast.error('Erro ao processar formulário. Tente novamente.');
@@ -575,8 +564,6 @@ class DashboardView {
     const client = clientInput.value.trim();
     const city = cityInput.value.trim();
     const description = descriptionInput ? descriptionInput.value.trim() : '';
-    const autoCreateDaily = autoCreateDailyInput ? autoCreateDailyInput.checked : false;
-    
     // Validação de datas
     if (!startDate) {
       window.toast.warning('Data de início é obrigatória.');
@@ -631,8 +618,7 @@ class DashboardView {
         city,
         description: description || null,
         startDate: startDate,
-        endDate: endDate || null,
-        autoCreateDaily
+        endDate: endDate || null
       });
 
       if (result.success) {

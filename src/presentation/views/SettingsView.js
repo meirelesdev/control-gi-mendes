@@ -69,7 +69,7 @@ class SettingsView {
               <label class="form-label">Taxa de Hora Extra (R$)</label>
               <input type="number" class="form-input" id="settings-overtime-rate" 
                      step="0.01" min="0" value="${settings.overtimeRate || DEFAULT_VALUES.OVERTIME_RATE}" required>
-              <small class="text-muted">Valor por hora extra (trabalho adicional e tempo de viagem)</small>
+              <small class="text-muted">Valor por hora extra (trabalho adicional)</small>
             </div>
 
             <hr style="margin: var(--spacing-xl) 0; border: none; border-top: 2px solid var(--color-border);">

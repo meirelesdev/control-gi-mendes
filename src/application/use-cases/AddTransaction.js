@@ -46,12 +46,6 @@ class AddTransaction {
    */
   async execute(input) {
     try {
-      // Debug: log do input recebido
-      if (input.category === 'tempo_viagem') {
-        console.log('AddTransaction - Input recebido para tempo_viagem:', input);
-        console.log('AddTransaction - input.hours:', input.hours, 'tipo:', typeof input.hours);
-      }
-      
       // Validação de entrada
       this._validateInput(input);
 
@@ -114,46 +108,6 @@ class AddTransaction {
             input.origin || null,
             input.destination || null
           );
-        } else if (input.category === 'tempo_viagem') {
-          // Transação de Tempo de Viagem - calcula valor automaticamente baseado nas horas
-          console.log('AddTransaction - Processando tempo_viagem');
-          console.log('AddTransaction - input.hours:', input.hours, 'tipo:', typeof input.hours, 'isNaN:', isNaN(input.hours));
-          
-          // Validação mais robusta
-          if (input.hours === undefined) {
-            console.error('AddTransaction - hours é undefined');
-            throw new Error('Horas são obrigatórias para tempo de viagem (undefined)');
-          }
-          if (input.hours === null) {
-            console.error('AddTransaction - hours é null');
-            throw new Error('Horas são obrigatórias para tempo de viagem (null)');
-          }
-          const hoursNum = Number(input.hours);
-          if (isNaN(hoursNum)) {
-            console.error('AddTransaction - hours não é um número válido:', input.hours);
-            throw new Error('Horas devem ser um número válido para tempo de viagem');
-          }
-          if (hoursNum <= 0) {
-            console.error('AddTransaction - hours é menor ou igual a zero:', hoursNum);
-            throw new Error('Horas devem ser maiores que zero para tempo de viagem');
-          }
-          
-          const settings = await this._getSettings();
-          // Usa a taxa de hora extra para calcular o valor
-          const amount = hoursNum * (settings?.overtimeRate || DEFAULT_VALUES.OVERTIME_RATE);
-          console.log('AddTransaction - Calculando amount:', hoursNum, '*', (settings?.overtimeRate || DEFAULT_VALUES.OVERTIME_RATE), '=', amount);
-          
-          // Cria a transação com o metadata completo incluindo hours
-          // Isso evita erro na validação que verifica hours quando category é tempo_viagem
-          transaction = Transaction.createIncome(
-            input.eventId,
-            input.description || `Tempo de Viagem (${hoursNum}h)`,
-            amount,
-            input.isReimbursement !== undefined ? input.isReimbursement : true,
-            'tempo_viagem',
-            { hours: hoursNum } // Passa hours no metadata desde o início
-          );
-          console.log('AddTransaction - Transação criada com sucesso');
         } else {
           // Outras receitas (diária, hora extra) - valor deve ser informado
           if (!input.amount && input.amount !== 0) {
@@ -265,8 +219,8 @@ class AddTransaction {
 
     if (input.type === 'INCOME') {
       // Para KM, não precisa validar amount aqui pois será calculado automaticamente
-      if (input.category && !['diaria', 'hora_extra', 'km', 'tempo_viagem'].includes(input.category)) {
-        throw new Error('Categoria inválida. Deve ser: diaria, hora_extra, km ou tempo_viagem');
+      if (input.category && !['diaria', 'hora_extra', 'km'].includes(input.category)) {
+        throw new Error('Categoria inválida. Deve ser: diaria, hora_extra ou km');
       }
     }
   }

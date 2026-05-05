@@ -434,8 +434,6 @@ class ReportView {
 
     <div class="summary-box">
         <hr>
-        <p><strong>Horas de trabalho:</strong> ${data.summary.totalWorkHours ? data.summary.totalWorkHours.toFixed(1) : '0'}h</p>
-        <p><strong>Horas de deslocamento:</strong> ${data.summary.totalTravelHours ? data.summary.totalTravelHours.toFixed(1) : '0'}h</p>
         <p><strong>Total de horas:</strong> ${data.summary.totalHours ? data.summary.totalHours.toFixed(1) : '0'}h</p>
         <hr>
         <p><strong>Valor total da diária:</strong> ${formatCurrency(data.summary.totalDailyValue || 0)}</p>
